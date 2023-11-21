@@ -9,7 +9,7 @@ export default function Home() {
       <Hero/>
       <Featured />
       <section className={styles.shop}>
-
+        <h3>Shop Coming Soon</h3>
       </section>
     </main>
   )

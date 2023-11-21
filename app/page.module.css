@@ -4,4 +4,14 @@
   background-repeat: no-repeat;
   background-position: center;
   height: 40vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.shop h3 {
+  font-family: 'Quiapo';
+  color: #FEF8E8;
+  font-size: 50px;
+  text-align: center;
 }

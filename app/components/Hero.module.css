@@ -1,0 +1,36 @@
+.section {
+    background:linear-gradient(-180deg, rgba(0,0,0,0.50), rgba(0,0,0,0.50)), url(../../public/titosHero.jpg);
+    background-size: cover;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Quiapo';
+}
+
+.section h1 {
+    font-size: 75px;
+    color:#e3e3e3;
+    margin: 0 auto 40px;
+}
+
+.section p{
+    font-size: 40px;
+    color:#e3e3e3;
+    margin: 0 auto 40px;
+}
+.section button {
+    background-color: #fab233;
+    border-radius: 10px;
+    color: #e4e3e3;
+    border: none;
+    margin: 0px auto;
+    padding: 15px 25px;
+    font-family: 'Quiapo';
+    font-size: 30px;
+}
+
+.section button:hover {
+    color: #000;
+}

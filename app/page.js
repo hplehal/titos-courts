@@ -5,7 +5,14 @@ import Hero from './components/Hero'
 export default function Home() {
   return (
     <main className={styles.main}>
-      <Hero/>
+      <Image 
+        src="/titos.png"
+        alt="Titos Logo"
+        width={400}
+        height={200}
+        priority
+      />
+      <h2>COMING SOON</h2>
     </main>
   )
 }

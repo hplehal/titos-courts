@@ -4,10 +4,12 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    position: fixed;
+    width:100%;
 }
 
 .nav_header {
-    color: white;
+    color: #FEF8E8;
     padding-left: 50px;
 }
 
@@ -27,9 +29,9 @@
 }
 
 .nav_menu li:hover{ 
-    color: rgba(255, 255, 255, 0.95); 
+    color: #FEF8E8; 
 }
 
 .nav_menu li a.active {
-    color: rgba(255, 255, 255, 0.95); 
+    color: #FEF8E8; 
 }

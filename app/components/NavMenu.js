@@ -10,8 +10,8 @@ export default function NavMenu() {
                 <Image 
                  src="/titos.png"
                  alt="Titos Logo"
-                 width={100}
-                 height={70}
+                 width={130}
+                 height={40}
                  priority
                 />
             </Link>

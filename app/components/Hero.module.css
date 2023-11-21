@@ -11,7 +11,7 @@
 
 .section h1 {
     font-size: 75px;
-    color:#e3e3e3;
+    color:#FEF8E8;
     margin: 0 auto 40px;
     text-align: center;
 }
@@ -24,13 +24,13 @@
 .section p{
     line-height: 55px;
     font-size: 35px;
-    color:#e3e3e3;
+    color:#FEF8E8;
   
 }
 .section button {
     background-color: #fab233;
     border-radius: 10px;
-    color: #e4e3e3;
+    color: #FEF8E8;
     border: none;
     margin: 0px auto;
     padding: 15px 25px;

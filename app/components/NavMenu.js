@@ -21,7 +21,7 @@ export default function NavMenu() {
                 <Link href={'/'}>Home</Link>
             </li>
             <li>
-                <Link href={'/league'}>League</Link>
+                <Link href={'/leagues'}>Leagues</Link>
             </li>
             <li>
                 <Link href={'/register'}>Register</Link>

@@ -1,10 +1,40 @@
 .section {
     background-color: #FF6D1D;
     height: 50vh;
-    padding: 50px 75px;
+    padding: 50px;
 }
 
 .section h3 {
     font-family: 'Quiapo';
     font-size: 40px;
+    text-align: center;
+}
+
+.teamSlider{
+    display: inline-block;
+    /* flex-direction: row;
+    justify-content: space-between; */
+    width: 100vw;
+    overflow: hidden;
+}
+
+.teamsItemList{
+    display: flex;
+    justify-content: space-evenly;
+    flex-direction: row;
+    /* justify-content: space-between; */
+    /* width: 100vw;
+    overflow: hidden; */
+}
+.teamsItem{
+    display: flex;
+    justify-content: space-evenly;
+    flex-direction: row;
+    /* justify-content: space-between; */
+    /* width: 100vw;
+    overflow: hidden; */
+}
+
+.section li {
+    padding: 5px;
 }

@@ -10,7 +10,8 @@ export default function Home() {
       <Hero/>
       <Featured />
       <section className={styles.shop}>
-        <h3>Shop Coming Soon</h3>
+        <h3>Be Part of the Community!</h3>
+        <a href="https://www.instagram.com/titoscourts?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==">Follow Us!</a>
       </section>
     </main>
   )

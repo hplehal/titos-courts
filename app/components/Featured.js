@@ -14,7 +14,8 @@ export default function Featured() {
             width={100}
             height={100}
             priority
-        /></a>Winter Season Teams
+        /></a>
+        {"TITO'S VOLLEYBALL LEAGUE"}
         <a><Image 
             src="/tvl.svg"
             alt="Titos Volleyball Logo"
@@ -22,15 +23,13 @@ export default function Featured() {
             height={100}
             priority
         /></a></h3>
-        <Splide  options={ {
+        {/* <Splide  options={ {
             rewind : true,
             perPage: 6,
             height : '90px',
             gap    : '.5rem',
             pagination : false
           } }>
-        {/* <div class={styles.teamSlider}>
-          <div class={styles.teamsItemList}> */}
             {teams.map((item, index) => {
               return (
                 <SplideSlide key={index}>
@@ -44,9 +43,7 @@ export default function Featured() {
                 </SplideSlide>
               )
             })}
-          {/* </div>
-        </div> */}
-        </Splide>
+        </Splide> */}
       </section>
     );
 }

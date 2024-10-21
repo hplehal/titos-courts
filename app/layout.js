@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata = {
   title: 'Tito\'s Courts | TVL',
   description: 'Come to the world of Titos where everyone can come and enjoy the game!',
+  images: '../public/tvl.png',
 }
 
 export default function RootLayout({ children }) {

@@ -8,11 +8,11 @@ export default function NavMenu() {
         <h1 className={styles.nav_header}>
             <Link href={'/'}>
                 <Image 
-                 src="/titos.png"
-                 alt="Titos Logo"
-                 width={130}
-                 height={40}
-                 priority
+                src="/titos.png"
+                alt="Titos Logo"
+                width={130}
+                height={40}
+                priority
                 />
             </Link>
         </h1>

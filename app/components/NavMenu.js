@@ -8,11 +8,11 @@ export default function NavMenu() {
         <h1 className={styles.nav_header}>
             <Link href={'/'}>
                 <Image 
-                 src="/titos.png"
-                 alt="Titos Logo"
-                 width={100}
-                 height={70}
-                 priority
+                src="/titos.png"
+                alt="Titos Logo"
+                width={130}
+                height={40}
+                priority
                 />
             </Link>
         </h1>
@@ -21,7 +21,7 @@ export default function NavMenu() {
                 <Link href={'/'}>Home</Link>
             </li>
             <li>
-                <Link href={'/league'}>League</Link>
+                <Link href={'/leagues'}>Leagues</Link>
             </li>
             <li>
                 <Link href={'/register'}>Register</Link>

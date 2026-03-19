@@ -1,3 +1,10 @@
+.shop {
+  background:linear-gradient(-180deg, rgba(0,0,0,0.50), rgba(0,0,0,0.50)), url(../public/shop.jpg);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 40vh;
+  display: flex;
 .main {
   background-color: #fab233;
   height: 100vh;
@@ -7,6 +14,10 @@
   align-items: center;
 }
 
+.shop h3 {
+  font-family: 'Quiapo';
+  color: #FEF8E8;
+  font-size: 50px;
 .main h2 {
   font-family: 'Quiapo';
   font-size: 40px;

@@ -5,10 +5,12 @@ import styles from './Hero.module.css';
 export default function Hero() {
     return(
       <section className={styles.section}>
-        <h1>Register Now</h1>
-        <p>We are now open for registration on our Winter Season!</p>
+        <h1>Titos Volleyball League</h1>
+        <div>
+            <p>Be Part of something Bigger!</p>
+            <p>The Best Adult Volleyball League in the GTA!</p>
+        </div>
         <Link href={'/register'} passHref><button component="a">Register</button></Link>
-        
       </section>
     );
 }

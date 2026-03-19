@@ -5,6 +5,11 @@
   background-position: center;
   height: 40vh;
   display: flex;
+.main {
+  background-color: #fab233;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
@@ -13,5 +18,8 @@
   font-family: 'Quiapo';
   color: #FEF8E8;
   font-size: 50px;
+.main h2 {
+  font-family: 'Quiapo';
+  font-size: 40px;
   text-align: center;
 }

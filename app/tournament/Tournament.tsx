@@ -115,7 +115,7 @@ function Sched({teams,scores,setScores,mobile}){
   const upd=(p,gi,si,f,v)=>{const n=JSON.parse(JSON.stringify(scores));n[p][gi].sets[si][f]=v;setScores(n)};
   if(mobile)return(<div style={{padding:12}}><SH sub="Tap a pool to enter scores" mobile>Pool Play</SH><Pills sel={ap} onChange={sAP} mobile/>{scores[ap]?.map((g,gi)=>(<GCard key={gi} pool={ap} game={g} gi={gi} teams={teams} upd={upd}/>))}</div>);
   return(<div style={{padding:16,overflowX:"auto"}}><SH sub="All courts running simultaneously">Pool Play Schedule</SH>
-    <div style={{background:T.srf,borderRadius:14,border:`2px solid ${T.bdr}`,boxShadow:"0 2px 12px rgba(0,0,0,0.04)"}}>
+    <div style={{background:T.srf,borderRadius:14,border:`2px solid ${T.bdr}`,overflow:"hidden",boxShadow:"0 2px 12px rgba(0,0,0,0.04)"}}>
     <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,fontFamily:fb}}>
       <thead><tr><th style={{padding:"12px 10px",background:T.chD,color:"#fff",fontFamily:ff,letterSpacing:1,fontSize:13}}>TIME</th>
         {POOLS.map((p,ci)=>(<th key={p} style={{padding:"12px 8px",textAlign:"center",background:PT[p].h,color:"#fff",fontFamily:ff,letterSpacing:1,fontSize:13}}>Court {ci+1}  Pool {p}</th>))}</tr></thead>
@@ -154,11 +154,11 @@ function Playoff({teams,scores,ps,setPS,mobile}){
   const gQF=[{id:"QF1",l:"QF1",t1:sd("A",0),t2:sd("B",1),ct:1,tm:"1:00 PM"},{id:"QF2",l:"QF2",t1:sd("C",0),t2:sd("D",1),ct:2,tm:"1:00 PM"},{id:"QF5",l:"QF5",t1:sd("A",1),t2:sd("B",0),ct:1,tm:"1:45 PM"},{id:"QF6",l:"QF6",t1:sd("C",1),t2:sd("D",0),ct:2,tm:"1:45 PM"}];
   const sQF=[{id:"QF3",l:"QF3",t1:sd("A",2),t2:sd("B",3),ct:3,tm:"1:00 PM"},{id:"QF4",l:"QF4",t1:sd("C",2),t2:sd("D",3),ct:4,tm:"1:00 PM"},{id:"QF7",l:"QF7",t1:sd("A",3),t2:sd("B",2),ct:3,tm:"1:45 PM"},{id:"QF8",l:"QF8",t1:sd("C",3),t2:sd("D",2),ct:4,tm:"1:45 PM"}];
   const W=id=>{const m=ps[id];if(!m)return null;let a=0,b=0;m.sets.forEach(s=>{const x=parseInt(s.s1)||0,y=parseInt(s.s2)||0;if(x>y)a++;else if(y>x)b++});return a>b?m.t1:b>a?m.t2:null};
-  const gSF=[{id:"GS1",l:"Gold SF1",t1:W("QF1")||"W QF1",t2:W("QF5")||"W QF5",ct:1,tm:"2:30 PM"},{id:"GS2",l:"Gold SF2",t1:W("QF2")||"W QF2",t2:W("QF6")||"W QF6",ct:2,tm:"2:30 PM"}];
-  const sSF=[{id:"SS1",l:"Silver SF1",t1:W("QF3")||"W QF3",t2:W("QF7")||"W QF7",ct:3,tm:"2:30 PM"},{id:"SS2",l:"Silver SF2",t1:W("QF4")||"W QF4",t2:W("QF8")||"W QF8",ct:4,tm:"2:30 PM"}];
-  const gF={id:"GF",l:"GOLD FINAL",t1:W("GS1")||"W GS1",t2:W("GS2")||"W GS2",ct:"1&2",tm:"3:15 PM"};
-  const sF={id:"SF",l:"SILVER FINAL",t1:W("SS1")||"W SS1",t2:W("SS2")||"W SS2",ct:"3&4",tm:"3:15 PM"};
-  const upd=(id,t1,t2,si,f,v)=>{setPS(p=>{const m=p[id]||{t1,t2,sets:[{s1:"",s2:""},{s1:"",s2:""}]};const ns=[...m.sets];ns[si]={...ns[si],[f]:v};return{...p,[id]:{...m,t1,t2,sets:ns}}})};
+  const gSF=[{id:"GS1",l:"Gold SF1",t1:W("QF1")||"W QF1",t2:W("QF2")||"W QF2",ct:1,tm:"2:30 PM"},{id:"GS2",l:"Gold SF2",t1:W("QF5")||"W QF5",t2:W("QF6")||"W QF6",ct:2,tm:"2:30 PM"}];
+  const sSF=[{id:"SS1",l:"Silver SF1",t1:W("QF3")||"W QF3",t2:W("QF4")||"W QF4",ct:3,tm:"2:30 PM"},{id:"SS2",l:"Silver SF2",t1:W("QF7")||"W QF7",t2:W("QF8")||"W QF8",ct:4,tm:"2:30 PM"}];
+  const gF={id:"GF",l:"GOLD FINAL",t1:W("GS1")||"W GS1",t2:W("GS2")||"W GS2",ct:1,tm:"3:15 PM"};
+  const sF={id:"SF",l:"SILVER FINAL",t1:W("SS1")||"W SS1",t2:W("SS2")||"W SS2",ct:3,tm:"3:15 PM"};
+  const upd=(id,t1,t2,si,f,v)=>{setPS(p=>{const m=p[id]||{t1,t2,sets:[{s1:"",s2:""},{s1:"",s2:""},{s1:"",s2:""}]};const ns=[...m.sets];ns[si]={...ns[si],[f]:v};return{...p,[id]:{...m,t1,t2,sets:ns}}})};
 
   const MC=({match,div})=>{const isG=div==="gold",bg=isG?T.gBg:T.sBg,bc=isG?T.gBd:T.sBd,hbg=isG?T.gDk:T.sil,m=ps[match.id],w=W(match.id),isFin=match.l.includes("FINAL");
     return(<div style={{background:bg,borderRadius:14,border:`2px solid ${bc}`,overflow:"hidden",flex:mobile?"1 1 100%":"1 1 calc(50% - 6px)",boxShadow:isFin?`0 4px 20px ${bc}44`:`0 2px 8px ${bc}15`}}>
@@ -169,9 +169,9 @@ function Playoff({teams,scores,ps,setPS,mobile}){
       <div style={{padding:10}}>{[match.t1,match.t2].map((team,ti)=>{const isW=w===team;return(
         <div key={ti} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:10,marginBottom:ti===0?4:0,background:isW?`${T.acc}12`:"transparent",border:isW?`2px solid ${T.acc}33`:"2px solid transparent"}}>
           <span style={{flex:1,fontFamily:fb,fontSize:13,fontWeight:isW?800:500,color:isW?T.acc:T.ch}}>{isW?"\u2713 ":""}{team}</span>
-          <div style={{display:"flex",gap:4}}>{[0,1].map(si=>(<input key={si} type="number" inputMode="numeric" min="0" max="99"
+           <div style={{display:"flex",gap:4}}>{[0,1,2].map(si=>(<input key={si} type="number" inputMode="numeric" min="0" max="99"
             value={m?.sets[si]?.[ti===0?"s1":"s2"]||""} onChange={e=>upd(match.id,match.t1,match.t2,si,ti===0?"s1":"s2",e.target.value)}
-            onFocus={e=>{if(!ps[match.id])setPS(p=>({...p,[match.id]:{t1:match.t1,t2:match.t2,sets:[{s1:"",s2:""},{s1:"",s2:""}]}}));e.target.select()}}
+            onFocus={e=>{if(!ps[match.id])setPS(p=>({...p,[match.id]:{t1:match.t1,t2:match.t2,sets:[{s1:"",s2:""},{s1:"",s2:""},{s1:"",s2:""}]}}));e.target.select()}}
             style={{width:38,height:34,textAlign:"center",border:`2px solid ${T.bdr}`,borderRadius:8,fontSize:14,fontWeight:800,fontFamily:fm,WebkitAppearance:"none",MozAppearance:"textfield",background:T.srf,color:T.ch}} placeholder="-"/>))}</div>
         </div>)})}</div></div>)};
 

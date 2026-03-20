@@ -115,10 +115,10 @@ function Sched({teams,scores,setScores,mobile}){
   const upd=(p,gi,si,f,v)=>{const n=JSON.parse(JSON.stringify(scores));n[p][gi].sets[si][f]=v;setScores(n)};
   if(mobile)return(<div style={{padding:12}}><SH sub="Tap a pool to enter scores" mobile>Pool Play</SH><Pills sel={ap} onChange={sAP} mobile/>{scores[ap]?.map((g,gi)=>(<GCard key={gi} pool={ap} game={g} gi={gi} teams={teams} upd={upd}/>))}</div>);
   return(<div style={{padding:16,overflowX:"auto"}}><SH sub="All courts running simultaneously">Pool Play Schedule</SH>
-    <div style={{background:T.srf,borderRadius:14,border:`2px solid ${T.bdr}`,overflow:"hidden",boxShadow:"0 2px 12px rgba(0,0,0,0.04)"}}>
+    <div style={{background:T.srf,borderRadius:14,border:`2px solid ${T.bdr}`,boxShadow:"0 2px 12px rgba(0,0,0,0.04)"}}>
     <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,fontFamily:fb}}>
       <thead><tr><th style={{padding:"12px 10px",background:T.chD,color:"#fff",fontFamily:ff,letterSpacing:1,fontSize:13}}>TIME</th>
-        {POOLS.map((p,ci)=>(<th key={p} style={{padding:"12px 8px",textAlign:"center",background:PT[p].h,color:"#fff",fontFamily:ff,letterSpacing:1,fontSize:13}}>Court {ci+1} \u2014 Pool {p}</th>))}</tr></thead>
+        {POOLS.map((p,ci)=>(<th key={p} style={{padding:"12px 8px",textAlign:"center",background:PT[p].h,color:"#fff",fontFamily:ff,letterSpacing:1,fontSize:13}}>Court {ci+1}  Pool {p}</th>))}</tr></thead>
       <tbody>{RR.map((m,gi)=>(<tr key={gi} style={{borderBottom:`1px solid ${T.bdr}`,background:gi%2===0?T.alt:T.srf}}>
         <td style={{padding:"10px",fontFamily:fm,fontWeight:700,fontSize:13,textAlign:"center",whiteSpace:"nowrap"}}>{TIMES[gi]} <span style={{color:T.mut,fontSize:11}}>R{REFS[gi]}</span></td>
         {POOLS.map(pool=>{const t1=RR[gi][0],t2=RR[gi][1],g=scores[pool]?.[gi];return(
@@ -138,7 +138,7 @@ function Stand({teams,scores,mobile}){
       <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,fontFamily:fb}}>
         <thead><tr style={{background:pc.bg}}>{["#","TEAM","SW","SL","+/-"].map(h=>(<th key={h} style={{padding:"10px 8px",textAlign:h==="TEAM"?"left":"center",fontWeight:800,fontSize:10,color:pc.t,fontFamily:ff,letterSpacing:1,borderBottom:`2px solid ${pc.b}33`}}>{h}</th>))}</tr></thead>
         <tbody>{st.map((s,i)=>(<tr key={s.idx} style={{background:i===0?`${T.gold}15`:i===1?`${T.sil}08`:"transparent",borderBottom:`1px solid ${T.bdr}`}}>
-          <td style={{padding:"12px 8px",textAlign:"center",fontWeight:800,fontFamily:fm,fontSize:13}}>{i===0?"\u{1F947}":i===1?"\u{1F948}":i===2?"\u{1F949}":`${i+1}`}</td>
+          <td style={{padding:"12px 8px",textAlign:"center",fontWeight:800,fontFamily:fm,fontSize:13}}>{i===0?"\u{1F947}":i===1?"\u{1F947}":i===2?"\u{1F948}":"\u{1F948}"}</td>
           <td style={{padding:"12px 8px",fontWeight:600,color:T.ch}}>{s.name}</td>
           <td style={{padding:"12px 8px",textAlign:"center",fontFamily:fm,fontWeight:700,color:T.acc}}>{s.sW}</td>
           <td style={{padding:"12px 8px",textAlign:"center",fontFamily:fm,fontWeight:700,color:"#D4700A"}}>{s.sL}</td>
@@ -184,12 +184,12 @@ function Playoff({teams,scores,ps,setPS,mobile}){
     <Sec title="Semi Finals" matches={sfs} div={div}/><Sec title="Championship" matches={[final]} div={div}/></div>);
 
   return(<div style={{padding:mobile?12:16}}>
-    <SH sub="Crossover single elimination \u2014 auto-seeded from standings" mobile={mobile}>Playoff Bracket</SH>
+    <SH sub="Crossover single elimination  auto-seeded from standings" mobile={mobile}>Playoff Bracket</SH>
     <div style={{display:"flex",flexDirection:mobile?"column":"row",gap:24}}>
       <Div title="GOLD DIVISION" emoji={"\u{1F947}"} color={T.gDk} bc={T.gBd} qfs={gQF} sfs={gSF} final={gF} div="gold"/>
       <Div title="SILVER DIVISION" emoji={"\u{1F948}"} color={T.sil} bc={T.sBd} qfs={sQF} sfs={sSF} final={sF} div="silver"/>
     </div>
-    <div style={{marginTop:24,padding:16,background:`linear-gradient(135deg,${T.chD},${T.chL})`,borderRadius:14,textAlign:"center",color:"#fff",fontFamily:ff,fontSize:mobile?14:18,letterSpacing:2}}>{"\u{1F3C6}"} 4:00 - 5:00 PM \u2014 AWARDS + CLEAN UP</div>
+    <div style={{marginTop:24,padding:16,background:`linear-gradient(135deg,${T.chD},${T.chL})`,borderRadius:14,textAlign:"center",color:"#fff",fontFamily:ff,fontSize:mobile?14:18,letterSpacing:2}}>{"\u{1F3C6}"} 4:00 - 5:00 PM  AWARDS + CLEAN UP</div>
   </div>)}
 
 export default function Tournament(){

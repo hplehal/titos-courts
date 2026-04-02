@@ -6,12 +6,262 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─── LEAGUE SYSTEM ───
+
+model League {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  dayOfWeek       String
+  description     String?
+  registrationFee Int
+  maxTeams        Int
+  tiersPerSlot    Int
+  teamsPerTier    Int      @default(3)
+  isActive        Boolean  @default(true)
+  seasons         Season[]
+  createdAt       DateTime @default(now())
+}
+
+model Season {
+  id           String   @id @default(cuid())
+  leagueId     String
+  league       League   @relation(fields: [leagueId], references: [id])
+  name         String
+  seasonNumber Int
+  startDate    DateTime
+  endDate      DateTime
+  totalWeeks   Int      @default(11)
+  playoffWeeks Int      @default(1)
+  status       String   @default("registration")
+  teams        Team[]
+  tiers        Tier[]
+  weeks        Week[]
+  createdAt    DateTime @default(now())
+}
+
+model Team {
+  id             String          @id @default(cuid())
+  name           String
+  slug           String
+  seasonId       String
+  season         Season          @relation(fields: [seasonId], references: [id])
+  captainName    String
+  captainEmail   String
+  captainPhone   String?
+  players        Player[]
+  tierPlacements TierPlacement[]
+  homeMatches    Match[]         @relation("HomeTeam")
+  awayMatches    Match[]         @relation("AwayTeam")
+  refMatches     Match[]         @relation("RefTeam")
+  createdAt      DateTime        @default(now())
+
+  @@unique([seasonId, slug])
+}
+
+model Player {
+  id           String       @id @default(cuid())
+  name         String
+  teamId       String
+  team         Team         @relation(fields: [teamId], references: [id])
+  jerseyNumber Int?
+  waiverSigned Boolean      @default(false)
+  stats        PlayerStat[]
+}
+
+model Tier {
+  id          String          @id @default(cuid())
+  seasonId    String
+  season      Season          @relation(fields: [seasonId], references: [id])
+  tierNumber  Int
+  courtNumber Int
+  timeSlot    String
+  placements  TierPlacement[]
+
+  @@unique([seasonId, tierNumber])
+}
+
+model TierPlacement {
+  id             String  @id @default(cuid())
+  tierId         String
+  tier           Tier    @relation(fields: [tierId], references: [id])
+  teamId         String
+  team           Team    @relation(fields: [teamId], references: [id])
+  weekId         String
+  week           Week    @relation(fields: [weekId], references: [id])
+  finishPosition Int?
+  movement       String?
+
+  @@unique([teamId, weekId])
+}
+
+model Week {
+  id             String          @id @default(cuid())
+  seasonId       String
+  season         Season          @relation(fields: [seasonId], references: [id])
+  weekNumber     Int
+  date           DateTime
+  isPlayoff      Boolean         @default(false)
+  status         String          @default("upcoming")
+  matches        Match[]
+  tierPlacements TierPlacement[]
+
+  @@unique([seasonId, weekNumber])
+}
+
+model Match {
+  id          String       @id @default(cuid())
+  weekId      String
+  week        Week         @relation(fields: [weekId], references: [id])
+  homeTeamId  String
+  homeTeam    Team         @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeamId  String
+  awayTeam    Team         @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  refTeamId   String?
+  refTeam     Team?        @relation("RefTeam", fields: [refTeamId], references: [id])
+  courtNumber Int
+  tierNumber  Int
+  roundNumber Int
+  gameOrder   Int
+  status      String       @default("scheduled")
+  scores      SetScore[]
+  playerStats PlayerStat[]
+  createdAt   DateTime     @default(now())
+}
+
+model SetScore {
+  id        String @id @default(cuid())
+  matchId   String
+  match     Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  setNumber Int
+  homeScore Int
+  awayScore Int
+
+  @@unique([matchId, setNumber])
+}
+
+model PlayerStat {
+  id       String @id @default(cuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+  matchId  String
+  match    Match  @relation(fields: [matchId], references: [id])
+  kills    Int    @default(0)
+  assists  Int    @default(0)
+  digs     Int    @default(0)
+  blocks   Int    @default(0)
+  aces     Int    @default(0)
+  errors   Int    @default(0)
+
+  @@unique([playerId, matchId])
+}
+
+// ─── TOURNAMENT SYSTEM ───
+
 model Tournament {
-  id            String   @id @default("current")
-  teams         Json
-  scores        Json
-  playoffScores Json     @default("{}")
-  started       Boolean  @default(false)
+  id                   String             @id @default(cuid())
+  name                 String
+  slug                 String             @unique
+  date                 DateTime
+  description          String?
+  format               String?
+  registrationFee      Int?
+  maxTeams             Int?
+  registrationDeadline DateTime?
+  status               String             @default("registration")
+  pools                TournamentPool[]
+  brackets             TournamentBracket[]
+  tournamentTeams      TournamentTeam[]
+  createdAt            DateTime           @default(now())
+}
+
+model TournamentTeam {
+  id           String           @id @default(cuid())
+  tournamentId String
+  tournament   Tournament       @relation(fields: [tournamentId], references: [id])
+  name         String
+  captainName  String
+  captainEmail String?
+  captainPhone String?
+  poolId       String?
+  pool         TournamentPool?  @relation(fields: [poolId], references: [id])
+  seed         Int?
+  homeMatches  TournamentMatch[] @relation("TournHomeTeam")
+  awayMatches  TournamentMatch[] @relation("TournAwayTeam")
+}
+
+model TournamentPool {
+  id           String            @id @default(cuid())
+  tournamentId String
+  tournament   Tournament        @relation(fields: [tournamentId], references: [id])
+  name         String
+  teams        TournamentTeam[]
+  matches      TournamentMatch[]
+}
+
+model TournamentBracket {
+  id           String            @id @default(cuid())
+  tournamentId String
+  tournament   Tournament        @relation(fields: [tournamentId], references: [id])
+  division     String
+  matches      TournamentMatch[]
+}
+
+model TournamentMatch {
+  id              String               @id @default(cuid())
+  poolId          String?
+  pool            TournamentPool?      @relation(fields: [poolId], references: [id])
+  bracketId       String?
+  bracket         TournamentBracket?   @relation(fields: [bracketId], references: [id])
+  homeTeamId      String?
+  homeTeam        TournamentTeam?      @relation("TournHomeTeam", fields: [homeTeamId], references: [id])
+  awayTeamId      String?
+  awayTeam        TournamentTeam?      @relation("TournAwayTeam", fields: [awayTeamId], references: [id])
+  courtNumber     Int?
+  scheduledTime   DateTime?
+  status          String               @default("scheduled")
+  bracketRound    Int?
+  bracketPosition Int?
+  scores          TournamentSetScore[]
+}
+
+model TournamentSetScore {
+  id        String          @id @default(cuid())
+  matchId   String
+  match     TournamentMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  setNumber Int
+  homeScore Int
+  awayScore Int
+
+  @@unique([matchId, setNumber])
+}
+
+// ─── REGISTRATION & CONTACT ───
+
+model Registration {
+  id            String   @id @default(cuid())
+  type          String
+  leagueSlug    String?
+  tournamentId  String?
+  teamName      String?
+  captainName   String
+  captainEmail  String
+  captainPhone  String?
+  playerCount   Int?
+  playerNames   String?
+  skillLevel    String?
+  preferredDay  String?
+  paymentStatus String   @default("pending")
+  notes         String?
+  heardAboutUs  String?
   createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
 }

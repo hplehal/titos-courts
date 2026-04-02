@@ -1,7 +1,7 @@
-"use client";
+import LiveClient from './LiveClient'
 
-import LiveTournament from "./LiveTournament";
+export const metadata = { title: 'Live Scores' }
 
 export default function LivePage() {
-  return <LiveTournament />;
+  return <LiveClient />
 }

@@ -28,6 +28,39 @@ export async function GET(request) {
   }
 }
 
+// PATCH: Update week status
+export async function PATCH(request) {
+  try {
+    const body = await request.json()
+    const { weekId, status } = body
+
+    if (!weekId || !status) {
+      return NextResponse.json({ error: 'weekId and status required' }, { status: 400 })
+    }
+
+    const week = await prisma.week.update({
+      where: { id: weekId },
+      data: { status },
+    })
+
+    // When activating a week, also set the season to active
+    if (status === 'active') {
+      const fullWeek = await prisma.week.findUnique({ where: { id: weekId }, select: { seasonId: true } })
+      if (fullWeek) {
+        await prisma.season.update({
+          where: { id: fullWeek.seasonId },
+          data: { status: 'active' },
+        })
+      }
+    }
+
+    return NextResponse.json({ success: true, week })
+  } catch (error) {
+    console.error('Week PATCH error:', error)
+    return NextResponse.json({ error: 'Failed to update week' }, { status: 500 })
+  }
+}
+
 // POST: Add a week or generate matches
 export async function POST(request) {
   try {
@@ -41,6 +74,10 @@ export async function POST(request) {
       return await handleGenerateMatches(body)
     }
 
+    if (body.action === 'set-placements') {
+      return await handleSetPlacements(body)
+    }
+
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
   } catch (error) {
     console.error('Weeks POST error:', error)
@@ -50,7 +87,7 @@ export async function POST(request) {
 
 // ─── ADD NEXT WEEK ───
 
-async function handleAddWeek({ seasonId }) {
+async function handleAddWeek({ seasonId, date }) {
   if (!seasonId) {
     return NextResponse.json({ error: 'seasonId required' }, { status: 400 })
   }
@@ -62,9 +99,22 @@ async function handleAddWeek({ seasonId }) {
   })
 
   const nextWeekNumber = lastWeek ? lastWeek.weekNumber + 1 : 1
-  const nextDate = lastWeek
-    ? new Date(new Date(lastWeek.date).getTime() + 7 * 24 * 60 * 60 * 1000)
-    : new Date()
+
+  // Use provided date, or default to +7 days from last week
+  const nextDate = date
+    ? new Date(date + 'T12:00:00Z')
+    : lastWeek
+    ? (() => {
+        const d = new Date(lastWeek.date)
+        d.setDate(d.getDate() + 7)
+        d.setUTCHours(12, 0, 0, 0)
+        return d
+      })()
+    : (() => {
+        const d = new Date()
+        d.setUTCHours(12, 0, 0, 0)
+        return d
+      })()
 
   // Create the new week
   const newWeek = await prisma.week.create({
@@ -77,8 +127,14 @@ async function handleAddWeek({ seasonId }) {
     },
   })
 
-  // Copy tier placements from the most recent week that has placements
-  // If the last completed week has movements, use those to determine new placements
+  // Weeks 1-2: manual tier assignment (admin uses "Setup Tiers" button)
+  // Weeks 3+: auto-generate from previous week's movements
+  if (nextWeekNumber <= 2) {
+    // Don't auto-assign tiers — admin will do it manually
+    return NextResponse.json({ success: true, week: newWeek })
+  }
+
+  // Auto-copy tier placements from the most recent week that has placements
   const latestWeekWithPlacements = await prisma.week.findFirst({
     where: {
       seasonId,
@@ -263,4 +319,52 @@ async function handleGenerateMatches({ weekId }) {
   }
 
   return NextResponse.json({ success: true, matchCount })
+}
+
+// ─── SET MANUAL TIER PLACEMENTS (Week 1 Placement) ───
+
+async function handleSetPlacements({ weekId, tierAssignments }) {
+  if (!weekId || !tierAssignments) {
+    return NextResponse.json({ error: 'weekId and tierAssignments required' }, { status: 400 })
+  }
+
+  const week = await prisma.week.findUnique({
+    where: { id: weekId },
+    include: { season: { include: { tiers: true } } },
+  })
+
+  if (!week) {
+    return NextResponse.json({ error: 'Week not found' }, { status: 404 })
+  }
+
+  // Clear any existing placements for this week
+  await prisma.tierPlacement.deleteMany({ where: { weekId } })
+
+  // Build a map of tierNumber -> tier record
+  const tierMap = {}
+  for (const t of week.season.tiers) {
+    tierMap[t.tierNumber] = t
+  }
+
+  // Create placements
+  let count = 0
+  for (const [tierNumber, teamIds] of Object.entries(tierAssignments)) {
+    const tier = tierMap[parseInt(tierNumber)]
+    if (!tier) continue
+
+    for (const teamId of teamIds) {
+      await prisma.tierPlacement.create({
+        data: {
+          tierId: tier.id,
+          teamId,
+          weekId,
+          finishPosition: null,
+          movement: null,
+        },
+      })
+      count++
+    }
+  }
+
+  return NextResponse.json({ success: true, count })
 }

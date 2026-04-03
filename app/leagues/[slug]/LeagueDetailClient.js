@@ -1,14 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import Link from 'next/link'
-import { Calendar, Users, Trophy, ArrowUp, ArrowDown, Minus, MapPin } from 'lucide-react'
+import { Calendar, Users, Trophy, ArrowUp, ArrowDown, ArrowRight, Minus, MapPin } from 'lucide-react'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { cn, formatDate, getTierColor, getDivisionInfo, getMovementIcon, getTeamAbbreviation, getLeagueTimeDisplay } from '@/lib/utils'
 
 export default function LeagueDetailClient({ data }) {
   const { league, season, standings, weeks } = data
-  const [tab, setTab] = useState('standings')
+  const [tab, setTab] = useState('results')
 
   if (!season) {
     return (
@@ -20,10 +20,10 @@ export default function LeagueDetailClient({ data }) {
   }
 
   const tabs = [
-    { id: 'standings', label: 'Standings' },
-    { id: 'thisweek', label: 'This Week' },
-    { id: 'teams', label: 'Teams' },
+    { id: 'results', label: 'Results' },
     { id: 'schedule', label: 'Schedule' },
+    { id: 'standings', label: 'Standings' },
+    { id: 'teams', label: 'Teams' },
   ]
 
   const currentWeek = weeks.find(w => w.status === 'upcoming') || weeks.find(w => w.status === 'active') || weeks[weeks.length - 1]
@@ -145,8 +145,13 @@ export default function LeagueDetailClient({ data }) {
           </div>
         )}
 
-        {/* This Week Tab */}
-        {tab === 'thisweek' && (
+        {/* Results Tab */}
+        {tab === 'results' && (
+          <ResultsTab weeks={weeks} league={league} completedWeeks={completedWeeks} lastCompletedWeek={lastCompletedWeek} currentWeek={currentWeek} />
+        )}
+
+        {/* OLD This Week — replaced by Results tab */}
+        {false && (
           <div>
             {currentWeek ? (
               <div>
@@ -393,35 +398,391 @@ export default function LeagueDetailClient({ data }) {
 
         {/* Schedule Tab */}
         {tab === 'schedule' && (
+          <ScheduleTab weeks={weeks} league={league} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Schedule Tab Component ───
+// ─── Results Tab Component ───
+function ResultsTab({ weeks, league, completedWeeks, lastCompletedWeek, currentWeek }) {
+  const [selectedWeekNum, setSelectedWeekNum] = useState(lastCompletedWeek?.weekNumber || null)
+
+  const isMens = league.slug?.includes('sunday') || league.slug?.includes('mens')
+  const selectedWeek = weeks.find(w => w.weekNumber === selectedWeekNum) || lastCompletedWeek
+  const nextUpcoming = weeks.find(w => w.status === 'upcoming')
+  const activeWeek = weeks.find(w => w.status === 'active')
+
+  // Available weeks to select (completed only, skip week 1 placement)
+  const selectableWeeks = completedWeeks.filter(w => w.weekNumber > 1)
+
+  if (!selectedWeek && !activeWeek && !nextUpcoming) {
+    return <p className="text-titos-gray-400 text-center py-8">No results available yet. Check back after Week 2.</p>
+  }
+
+  // Build tier data for selected week
+  const tierGroups = {}
+  if (selectedWeek) {
+    for (const p of (selectedWeek.tierPlacements || [])) {
+      const tn = p.tier?.tierNumber
+      if (!tn) continue
+      if (!tierGroups[tn]) tierGroups[tn] = { tier: p.tier, teams: [], matches: [] }
+      tierGroups[tn].teams.push({ ...p.team, finishPosition: p.finishPosition, movement: p.movement })
+    }
+    for (const m of (selectedWeek.matches || [])) {
+      if (tierGroups[m.tierNumber]) tierGroups[m.tierNumber].matches.push(m)
+    }
+  }
+  const tiers = Object.values(tierGroups).sort((a, b) => a.tier.tierNumber - b.tier.tierNumber)
+
+  return (
+    <div>
+      {/* Active games banner */}
+      {activeWeek && (
+        <Link href="/live" className="mb-6 flex items-center gap-3 p-4 rounded-xl bg-status-live/10 border border-status-live/30 hover:bg-status-live/15 transition-colors">
+          <span className="live-dot" />
+          <span className="text-status-live font-bold text-sm">Games in progress — View Live Scores</span>
+          <ArrowRight className="w-4 h-4 text-status-live ml-auto" />
+        </Link>
+      )}
+
+      {/* Week selector */}
+      {selectableWeeks.length > 0 && (
+        <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-2">
+          <span className="text-titos-gray-400 text-xs font-bold uppercase tracking-wider flex-shrink-0">Week:</span>
+          {selectableWeeks.map(w => (
+            <button
+              key={w.weekNumber}
+              onClick={() => setSelectedWeekNum(w.weekNumber)}
+              className={cn(
+                'px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex-shrink-0',
+                selectedWeekNum === w.weekNumber
+                  ? 'bg-titos-gold/15 text-titos-gold border border-titos-gold/30'
+                  : 'bg-titos-card text-titos-gray-400 border border-titos-border hover:text-titos-white'
+              )}
+            >
+              {w.weekNumber}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Selected week results */}
+      {selectedWeek && tiers.length > 0 && (
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <h3 className="font-display text-lg font-black text-titos-white">
+              Week {selectedWeek.weekNumber} Results
+            </h3>
+            <span className="text-titos-gray-400 text-sm">{formatDate(selectedWeek.date)}</span>
+            <StatusBadge status={selectedWeek.status} />
+          </div>
+
+          {/* Tier blocks — same layout as before */}
           <div className="space-y-3">
-            {weeks.map(week => (
-              <div key={week.id} className="card rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className={cn(
-                      'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold',
-                      week.isPlayoff ? 'bg-titos-gold/20 text-titos-gold' : 'bg-titos-card text-titos-gray-300'
-                    )}>
-                      {week.weekNumber}
+            {tiers.map(({ tier, teams, matches }) => {
+              const tc = getTierColor(tier.tierNumber)
+              const sortedTeams = [...teams].sort((a, b) => (a.finishPosition || 99) - (b.finishPosition || 99))
+              return (
+                <div key={tier.tierNumber} className="card-flat rounded-2xl overflow-hidden">
+                  <div className={`px-5 py-3 flex items-center justify-between ${tc.bg}`} style={{ borderLeft: `3px solid var(--color-${tc.accent})` }}>
+                    <span className={`font-display text-lg font-black ${tc.text}`}>T{tier.tierNumber}</span>
+                    <span className="text-titos-gray-400 text-xs">Court {tier.courtNumber}</span>
+                  </div>
+                  <div className="p-4 space-y-2">
+                    {sortedTeams.map((t, idx) => (
+                      <div key={t.id} className={cn(
+                        'flex items-center justify-between px-4 py-3 rounded-xl transition-colors',
+                        idx === 0 ? 'bg-titos-gold/[0.07] border border-titos-gold/20' :
+                        idx === 2 ? 'bg-status-live/[0.05] border border-status-live/15' :
+                        'bg-titos-elevated border border-titos-border/50'
+                      )}>
+                        <div className="flex items-center gap-3">
+                          <span className={cn('w-7 h-7 rounded-full flex items-center justify-center text-xs font-black',
+                            idx === 0 ? 'bg-titos-gold/20 text-titos-gold' :
+                            idx === 2 ? 'bg-status-live/15 text-status-live' :
+                            'bg-titos-charcoal text-titos-gray-400'
+                          )}>{t.finishPosition || idx + 1}</span>
+                          <span className="text-titos-white font-bold text-base">{t.name}</span>
+                        </div>
+                        {t.movement && (
+                          <span className={cn('text-sm font-black px-2 py-0.5 rounded',
+                            t.movement === 'up' ? 'text-status-success bg-status-success/10' :
+                            t.movement === 'down' ? 'text-status-live bg-status-live/10' :
+                            'text-titos-gray-500'
+                          )}>
+                            {t.movement === 'up' ? '↑ UP' : t.movement === 'down' ? '↓ DOWN' : '— STAY'}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* No results yet */}
+      {(!selectedWeek || tiers.length === 0) && !activeWeek && (
+        <div className="card rounded-xl p-8 text-center">
+          <p className="text-titos-gray-400">No completed results yet. Check back after Week 2.</p>
+        </div>
+      )}
+
+      {/* Coming up preview */}
+      {nextUpcoming && (
+        <div className="mt-8">
+          <div className="section-line mb-6" />
+          <h4 className="text-titos-gray-400 text-xs font-bold uppercase tracking-[0.15em] mb-4">Coming Up — Week {nextUpcoming.weekNumber}</h4>
+          <div className="opacity-60">
+            {(() => {
+              const upcomingTiers = {}
+              for (const p of (nextUpcoming.tierPlacements || [])) {
+                const tn = p.tier?.tierNumber
+                if (!tn) continue
+                if (!upcomingTiers[tn]) upcomingTiers[tn] = { tier: p.tier, teams: [] }
+                upcomingTiers[tn].teams.push(p.team)
+              }
+              const upcoming = Object.values(upcomingTiers).sort((a, b) => a.tier.tierNumber - b.tier.tierNumber)
+              if (!upcoming.length) return <p className="text-titos-gray-500 text-sm">Tier assignments not yet available.</p>
+              return (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                  {upcoming.map(({ tier, teams }) => {
+                    const tc = getTierColor(tier.tierNumber)
+                    return (
+                      <div key={tier.tierNumber} className="bg-titos-surface rounded-lg p-2.5" style={{ borderLeft: `2px solid var(--color-${tc.accent})` }}>
+                        <span className={`text-[10px] font-bold ${tc.text}`}>T{tier.tierNumber}</span>
+                        <div className="mt-1 space-y-0.5">
+                          {teams.map(t => <span key={t.id} className="block text-titos-gray-300 text-xs">{t.name}</span>)}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ScheduleTab({ weeks, league }) {
+  const [expandedWeek, setExpandedWeek] = useState(null)
+  const [teamFilter, setTeamFilter] = useState('')
+
+  // Collect all unique team names for the filter
+  const allTeams = new Set()
+  for (const week of weeks) {
+    for (const match of (week.matches || [])) {
+      if (match.homeTeam?.name) allTeams.add(match.homeTeam.name)
+      if (match.awayTeam?.name) allTeams.add(match.awayTeam.name)
+    }
+    for (const p of (week.tierPlacements || [])) {
+      if (p.team?.name) allTeams.add(p.team.name)
+    }
+  }
+  const teamList = [...allTeams].sort()
+
+  // Auto-expand the active or most recent week
+  const activeWeek = weeks.find(w => w.status === 'active') || weeks.find(w => w.status === 'upcoming')
+  if (expandedWeek === null && activeWeek) {
+    // Use a ref-free approach: just set on first render logic
+  }
+
+  const isMens = league.slug?.includes('sunday') || league.slug?.includes('mens')
+  const timeDisplay = isMens ? '9 PM – 12 AM' : '8 PM – 12 AM'
+
+  return (
+    <div>
+      {/* Team filter */}
+      <div className="mb-6">
+        <select
+          value={teamFilter}
+          onChange={(e) => setTeamFilter(e.target.value)}
+          className="px-4 py-2.5 bg-titos-card border border-titos-border rounded-lg text-titos-white text-sm focus:outline-none focus:border-titos-gold/50 min-w-[200px]"
+        >
+          <option value="">All Teams</option>
+          {teamList.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+      </div>
+
+      {/* Week list */}
+      <div className="space-y-3">
+        {weeks.map(week => {
+          const isExpanded = expandedWeek === week.id
+          const hasMatches = (week.matches?.length || 0) > 0
+
+          // Group matches by tier
+          const tierGroups = {}
+          for (const p of (week.tierPlacements || [])) {
+            const tn = p.tier?.tierNumber
+            if (!tn) continue
+            if (!tierGroups[tn]) tierGroups[tn] = { tier: p.tier, teams: [], matches: [] }
+            tierGroups[tn].teams.push(p.team)
+          }
+          for (const m of (week.matches || [])) {
+            if (tierGroups[m.tierNumber]) tierGroups[m.tierNumber].matches.push(m)
+          }
+
+          // Filter by team
+          const tiers = Object.values(tierGroups).sort((a, b) => a.tier.tierNumber - b.tier.tierNumber)
+          const filteredTiers = teamFilter
+            ? tiers.filter(t => t.teams.some(tm => tm.name === teamFilter) || t.matches.some(m => m.homeTeam?.name === teamFilter || m.awayTeam?.name === teamFilter))
+            : tiers
+
+          // If filtering and no matches in this week for this team, dim it
+          const hasTeamInWeek = !teamFilter || filteredTiers.length > 0
+
+          return (
+            <div key={week.id} className={cn('card-flat rounded-xl overflow-hidden', !hasTeamInWeek && 'opacity-40')}>
+              {/* Week header — clickable */}
+              <button
+                onClick={() => setExpandedWeek(isExpanded ? null : week.id)}
+                className="w-full p-4 flex items-center justify-between hover:bg-titos-white/[0.02] transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <span className={cn(
+                    'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0',
+                    week.weekNumber === 1 ? 'bg-titos-gold/20 text-titos-gold' : 'bg-titos-charcoal text-titos-gray-300'
+                  )}>
+                    {week.weekNumber}
+                  </span>
+                  <div>
+                    <span className="text-titos-white text-sm font-bold">
+                      {week.weekNumber === 1 ? 'Placement Week' : week.isPlayoff ? 'Playoffs' : `Week ${week.weekNumber}`}
                     </span>
-                    <div>
-                      <span className="text-titos-white text-sm font-medium">
-                        {week.isPlayoff ? 'Playoffs' : week.weekNumber === 1 ? 'Placement Week' : `Week ${week.weekNumber}`}
-                      </span>
-                      <span className="text-titos-gray-400 text-sm ml-2">{formatDate(week.date)}</span>
-                    </div>
+                    <span className="text-titos-gray-400 text-sm ml-2">{formatDate(week.date)}</span>
                   </div>
                   <StatusBadge status={week.status} />
+                  {hasMatches && <span className="text-titos-gray-500 text-xs">{week.matches.length} games</span>}
                 </div>
-                {week.status === 'completed' && (
-                  <p className="text-titos-gray-400 text-xs mt-2 ml-11">
-                    {week.matches.length} matches played
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+                <svg className={cn('w-4 h-4 text-titos-gray-400 transition-transform', isExpanded && 'rotate-180')} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </button>
+
+              {/* Expanded content */}
+              {isExpanded && (
+                <div className="border-t border-titos-border/30 p-4">
+                  {filteredTiers.length > 0 ? (
+                    <div className="space-y-4">
+                      {filteredTiers.map(({ tier, teams, matches }) => {
+                        const tc = getTierColor(tier.tierNumber)
+                        return (
+                          <div key={tier.tierNumber} className="bg-titos-surface rounded-xl overflow-hidden border border-titos-border/30">
+                            <div className={`px-4 py-2.5 flex items-center justify-between ${tc.bg}`}>
+                              <span className={`font-display font-bold text-sm ${tc.text}`}>Tier {tier.tierNumber} (Court {tier.courtNumber})</span>
+                            </div>
+
+                            {matches.length > 0 ? (
+                              <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] divide-y sm:divide-y-0 sm:divide-x divide-titos-border/20">
+                                {/* Left: Roster */}
+                                <div className="p-3 space-y-1.5">
+                                  <span className="text-titos-gray-500 text-[9px] font-bold uppercase tracking-wider">Roster</span>
+                                  {teams.map(t => (
+                                    <div key={t.id} className={cn(
+                                      'flex items-center gap-2 px-2 py-1 rounded',
+                                      teamFilter === t.name ? 'bg-titos-gold/15' : ''
+                                    )}>
+                                      <span className="text-titos-gold text-[10px] font-bold w-6">{getTeamAbbreviation(t.name)}</span>
+                                      <span className={cn('text-xs font-medium truncate', teamFilter === t.name ? 'text-titos-gold' : 'text-titos-white')}>{t.name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Right: Match table */}
+                                <div className="p-3">
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                      <thead>
+                                        <tr className="text-titos-gray-500 text-[9px] font-bold uppercase tracking-wider">
+                                          <th className="text-left pb-1.5 w-[45%]">Match</th>
+                                          <th className="text-center pb-1.5 w-[25%]">Score</th>
+                                          <th className="text-right pb-1.5 w-[30%]">Ref</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {(() => {
+                                          // Group by round
+                                          const rounds = {}
+                                          matches.forEach(m => {
+                                            if (!rounds[m.roundNumber]) rounds[m.roundNumber] = []
+                                            rounds[m.roundNumber].push(m)
+                                          })
+                                          return Object.entries(rounds).map(([roundNum, roundMatches]) => (
+                                            <Fragment key={roundNum}>
+                                              {parseInt(roundNum) > 1 && (
+                                                <tr><td colSpan={3} className="py-1"><div className="border-t border-dashed border-titos-border/30" /></td></tr>
+                                              )}
+                                              <tr><td colSpan={3} className="text-titos-gray-600 text-[9px] uppercase tracking-wider font-bold pb-0.5 pt-1">Round {roundNum}</td></tr>
+                                              {roundMatches.map(m => {
+                                                const isMyMatch = teamFilter && (m.homeTeam?.name === teamFilter || m.awayTeam?.name === teamFilter)
+                                                const score = m.scores?.[0]
+                                                const homeWon = score && score.homeScore > score.awayScore
+                                                const awayWon = score && score.awayScore > score.homeScore
+                                                return (
+                                                  <tr key={m.id} className={cn(
+                                                    'transition-colors',
+                                                    isMyMatch && 'bg-titos-gold/[0.05]'
+                                                  )}>
+                                                    <td className="py-1.5 pr-2">
+                                                      <span className={cn('font-medium', homeWon ? 'text-titos-gold' : 'text-titos-white')}>{getTeamAbbreviation(m.homeTeam?.name)}</span>
+                                                      <span className="text-titos-gray-600 mx-1.5">v</span>
+                                                      <span className={cn('font-medium', awayWon ? 'text-titos-gold' : 'text-titos-white')}>{getTeamAbbreviation(m.awayTeam?.name)}</span>
+                                                    </td>
+                                                    <td className="py-1.5 text-center">
+                                                      {score ? (
+                                                        <span className="font-mono text-xs">
+                                                          <span className={homeWon ? 'text-titos-gold font-bold' : 'text-titos-gray-300'}>{score.homeScore}</span>
+                                                          <span className="text-titos-gray-600"> - </span>
+                                                          <span className={awayWon ? 'text-titos-gold font-bold' : 'text-titos-gray-300'}>{score.awayScore}</span>
+                                                        </span>
+                                                      ) : (
+                                                        <span className="text-titos-gray-600 text-xs">—</span>
+                                                      )}
+                                                    </td>
+                                                    <td className="py-1.5 text-right text-titos-gray-400 text-xs">
+                                                      {m.refTeam?.name || '—'}
+                                                    </td>
+                                                  </tr>
+                                                )
+                                              })}
+                                            </Fragment>
+                                          ))
+                                        })()}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="p-4">
+                                <div className="flex flex-wrap gap-2 mb-2">
+                                  {teams.map(t => (
+                                    <span key={t.id} className="px-2.5 py-1 rounded-lg text-xs font-medium bg-titos-elevated text-titos-white border border-titos-border/50">{t.name}</span>
+                                  ))}
+                                </div>
+                                <p className="text-titos-gray-500 text-xs">Schedule not generated yet.</p>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : !hasMatches && (week.tierPlacements || []).length === 0 ? (
+                    <p className="text-titos-gray-500 text-sm text-center py-4">No schedule available for this week yet.</p>
+                  ) : teamFilter ? (
+                    <p className="text-titos-gray-500 text-sm text-center py-4">{teamFilter} is not in this week&apos;s schedule.</p>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

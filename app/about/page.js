@@ -24,11 +24,11 @@ export default function AboutPage() {
               <div className="lg:col-span-3">
                 <p className="text-titos-gray-200 leading-relaxed mb-4">
                   Tito&apos;s Courts started the way all great things do — with a group of friends who just wanted to play volleyball.
-                  In 2023, Hartej gathered a handful of people, booked a court at Pakmen, and set up what was supposed to be a one-time thing.
+                  In 2023, Tej and Christian gathered a handful of people, booked a court at Pakmen, and set up what was supposed to be a one-time thing.
                 </p>
                 <p className="text-titos-gray-200 leading-relaxed mb-4">
                   It wasn&apos;t. That first game turned into a weekly session, which turned into a proper league with teams,
-                  standings, tiers, and playoffs. Word spread fast across the GTA — turns out a lot of people were looking for
+                  standings, tiers, and playoffs. Word spread fast across the GTA,turns out a lot of people were looking for
                   exactly this kind of community.
                 </p>
                 <p className="text-titos-gray-200 leading-relaxed">
@@ -93,22 +93,38 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Founder */}
+        {/* Founders */}
         <section>
-          <SectionHeading label="THE FOUNDER" title="Meet Hartej" />
-          <div className="mt-10 card rounded-xl p-8">
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              <div className="w-24 h-24 rounded-full bg-titos-charcoal flex items-center justify-center flex-shrink-0">
-                <User className="w-10 h-10 text-titos-gold/50" />
+          <SectionHeading label="THE FOUNDERS" title="Meet Tej & Christian" />
+          <div className="mt-10 grid sm:grid-cols-2 gap-4">
+            <div className="card rounded-xl p-8">
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="w-20 h-20 rounded-full bg-titos-charcoal flex items-center justify-center flex-shrink-0">
+                  <User className="w-9 h-9 text-titos-gold/50" />
+                </div>
+                <div>
+                  <h3 className="font-display text-xl font-bold text-titos-white mb-1">Tej</h3>
+                  <p className="text-titos-gold text-sm font-semibold mb-3">Co-Founder</p>
+                  <p className="text-titos-gray-300 text-sm leading-relaxed">
+                    The tech and operations mind behind Tito&apos;s Courts. From building the live score system to
+                    managing league logistics, Tej keeps everything running smooth week after week.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-display text-xl font-bold text-titos-white mb-2">Hartej</h3>
-                <p className="text-titos-gold text-sm font-semibold mb-3">Founder & League Organizer</p>
-                <p className="text-titos-gray-300 leading-relaxed">
-                  Volleyball lover, community builder, and the engine behind Tito&apos;s Courts. Hartej handles everything from
-                  scheduling and venue booking to live score tracking and making sure the vibes stay immaculate.
-                  When he&apos;s not organizing the league, you&apos;ll find him on the court trying to land a jump serve.
-                </p>
+            </div>
+            <div className="card rounded-xl p-8">
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="w-20 h-20 rounded-full bg-titos-charcoal flex items-center justify-center flex-shrink-0">
+                  <User className="w-9 h-9 text-titos-gold/50" />
+                </div>
+                <div>
+                  <h3 className="font-display text-xl font-bold text-titos-white mb-1">Christian</h3>
+                  <p className="text-titos-gold text-sm font-semibold mb-3">Co-Founder</p>
+                  <p className="text-titos-gray-300 text-sm leading-relaxed">
+                    The community and competition driver behind Tito&apos;s Courts. Christian brings the energy,
+                    builds the culture, and makes sure every game night feels like an event.
+                  </p>
+                </div>
               </div>
             </div>
           </div>

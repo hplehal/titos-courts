@@ -62,7 +62,8 @@ function generateSetScore() {
 
 function addDays(date, days) {
   const d = new Date(date)
-  d.setDate(d.getDate() + days)
+  d.setUTCDate(d.getUTCDate() + days)
+  d.setUTCHours(12, 0, 0, 0)
   return d
 }
 
@@ -296,8 +297,8 @@ async function main() {
       leagueId: tuesdayLeague.id,
       name: 'Season 10 — Spring 2026',
       seasonNumber: 10,
-      startDate: new Date('2026-04-01'),
-      endDate: new Date('2026-06-10'),
+      startDate: new Date('2026-04-01T12:00:00Z'),
+      endDate: new Date('2026-06-10T12:00:00Z'),
       totalWeeks: 11,
       playoffWeeks: 1,
       status: 'active',
@@ -309,8 +310,8 @@ async function main() {
       leagueId: sundayLeague.id,
       name: 'Season 10 — Spring 2026',
       seasonNumber: 10,
-      startDate: new Date('2026-04-12'),
-      endDate: new Date('2026-06-21'),
+      startDate: new Date('2026-04-12T12:00:00Z'),
+      endDate: new Date('2026-06-21T12:00:00Z'),
       totalWeeks: 11,
       playoffWeeks: 1,
       status: 'active',
@@ -322,8 +323,8 @@ async function main() {
       leagueId: thursdayLeague.id,
       name: 'Season 1',
       seasonNumber: 1,
-      startDate: new Date('2026-05-07'),
-      endDate: new Date('2026-07-16'),
+      startDate: new Date('2026-05-07T12:00:00Z'),
+      endDate: new Date('2026-07-16T12:00:00Z'),
       totalWeeks: 11,
       playoffWeeks: 1,
       status: 'registration',
@@ -401,7 +402,7 @@ async function main() {
   // Week 1 = placement (completed), Weeks 2-11 = upcoming
   const tueWeeks = []
   for (let w = 1; w <= 11; w++) {
-    const weekDate = addDays(new Date('2026-04-01'), (w - 1) * 7)
+    const weekDate = addDays(new Date('2026-04-01T12:00:00Z'), (w - 1) * 7)
     let status = 'upcoming'
     if (w === 1) status = 'completed'
     const week = await prisma.week.create({
@@ -421,7 +422,7 @@ async function main() {
   // ALL weeks upcoming — season hasn't started yet
   const sunWeeks = []
   for (let w = 1; w <= 11; w++) {
-    const weekDate = addDays(new Date('2026-04-12'), (w - 1) * 7)
+    const weekDate = addDays(new Date('2026-04-12T12:00:00Z'), (w - 1) * 7)
     const week = await prisma.week.create({
       data: {
         seasonId: sundaySeason.id,
@@ -648,12 +649,12 @@ async function seedTournaments() {
     data: {
       name: 'Spring Showdown',
       slug: 'spring-showdown',
-      date: new Date('2026-03-22'),
+      date: new Date('2026-03-22T12:00:00Z'),
       description: 'Our annual spring volleyball tournament featuring 16 teams competing across 4 pools for gold and silver brackets.',
       format: '4 pools of 4, Gold/Silver bracket',
       registrationFee: 200,
       maxTeams: 16,
-      registrationDeadline: new Date('2026-03-15'),
+      registrationDeadline: new Date('2026-03-15T12:00:00Z'),
       status: 'completed',
     },
   })
@@ -982,12 +983,12 @@ async function seedTournaments() {
     data: {
       name: 'Easter Classic',
       slug: 'easter-classic',
-      date: new Date('2026-04-18'),
+      date: new Date('2026-04-18T12:00:00Z'),
       description: 'A fun Easter-themed volleyball tournament. Open to all skill levels!',
       format: '3 pools of 4, single elimination bracket',
       registrationFee: 200,
       maxTeams: 12,
-      registrationDeadline: new Date('2026-04-11'),
+      registrationDeadline: new Date('2026-04-11T12:00:00Z'),
       status: 'registration',
     },
   })
@@ -997,12 +998,12 @@ async function seedTournaments() {
     data: {
       name: 'May Madness',
       slug: 'may-madness',
-      date: new Date('2026-05-09'),
+      date: new Date('2026-05-09T12:00:00Z'),
       description: 'Spring is in full swing! Join us for an exciting day of competitive volleyball.',
       format: '4 pools of 4, Gold/Silver bracket',
       registrationFee: 200,
       maxTeams: 16,
-      registrationDeadline: new Date('2026-05-02'),
+      registrationDeadline: new Date('2026-05-02T12:00:00Z'),
       status: 'registration',
     },
   })
@@ -1012,12 +1013,12 @@ async function seedTournaments() {
     data: {
       name: 'Summer Slam',
       slug: 'summer-slam',
-      date: new Date('2026-06-06'),
+      date: new Date('2026-06-06T12:00:00Z'),
       description: 'Kick off summer with our biggest tournament of the year!',
       format: '4 pools of 4, Gold/Silver bracket',
       registrationFee: 200,
       maxTeams: 16,
-      registrationDeadline: new Date('2026-05-30'),
+      registrationDeadline: new Date('2026-05-30T12:00:00Z'),
       status: 'registration',
     },
   })

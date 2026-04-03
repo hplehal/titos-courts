@@ -60,6 +60,8 @@ async function getLeagueData(slug) {
 
   for (const week of season.weeks) {
     if (week.status !== 'completed') continue
+    // Skip Week 1 (placement) — doesn't count toward standings
+    if (week.weekNumber === 1) continue
     const weekTeamSets = {}
 
     for (const match of week.matches) {

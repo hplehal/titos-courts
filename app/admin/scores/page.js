@@ -27,15 +27,31 @@ export default function ScoreEntryPage() {
     })
   }, [])
 
-  // Load weeks when league changes
+  // Load weeks when league changes — fetch ALL seasons for this league, not just active
   useEffect(() => {
     if (!selectedLeague) return
-    fetch(`/api/leagues/${selectedLeague}/schedule`).then(r => r.json()).then(data => {
-      setWeeks(data.weeks || [])
-      // Default to first non-completed week or last completed
-      const upcoming = data.weeks?.find(w => w.status === 'upcoming')
-      const lastCompleted = [...(data.weeks || [])].reverse().find(w => w.status === 'completed')
-      setSelectedWeek(upcoming?.id || lastCompleted?.id || '')
+    // First get the league's seasons (including registration status)
+    fetch(`/api/admin/seasons`).then(r => r.json()).then(async (data) => {
+      const seasons = data.seasons || []
+      // Find the latest season for this league (by season number)
+      const leagueSeasons = seasons
+        .filter(s => s.league?.slug === selectedLeague)
+        .sort((a, b) => b.seasonNumber - a.seasonNumber)
+      const season = leagueSeasons[0]
+      if (!season) { setWeeks([]); setSelectedWeek(''); return }
+
+      // Fetch weeks for this season
+      const weeksRes = await fetch(`/api/admin/weeks?seasonId=${season.id}`)
+      const weeksData = await weeksRes.json()
+      const allWeeks = weeksData.weeks || []
+      setWeeks(allWeeks)
+
+      // Default to active week first, then first with matches, then upcoming
+      const activeW = allWeeks.find(w => w.status === 'active')
+      const withMatches = allWeeks.find(w => (w._count?.matches || 0) > 0 && w.status !== 'completed')
+      const upcoming = allWeeks.find(w => w.status === 'upcoming')
+      const lastCompleted = [...allWeeks].reverse().find(w => w.status === 'completed')
+      setSelectedWeek(activeW?.id || withMatches?.id || lastCompleted?.id || upcoming?.id || '')
     })
   }, [selectedLeague])
 
@@ -184,7 +200,7 @@ export default function ScoreEntryPage() {
               <option value="">Select week...</option>
               {weeks.map(w => (
                 <option key={w.id} value={w.id}>
-                  Week {w.weekNumber} {w.isPlayoff ? '(Playoffs)' : ''} — {w.status}
+                  Week {w.weekNumber} {w.isPlayoff ? '(Playoffs)' : ''} — {w.status} — {w._count?.matches || 0} matches
                 </option>
               ))}
             </select>

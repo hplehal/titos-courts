@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { Trophy } from 'lucide-react'
 import SectionHeading from '@/components/ui/SectionHeading'
 import LeagueSelector from '@/components/ui/LeagueSelector'
+import TeamFilter from '@/components/ui/TeamFilter'
+import { useMyTeam } from '@/lib/hooks/useMyTeam'
 import { cn, getDivisionInfo, getTierColor, getMovementIcon, getLeagueTimeDisplay } from '@/lib/utils'
 
 export default function StandingsClient({ leagues }) {
@@ -12,6 +14,7 @@ export default function StandingsClient({ leagues }) {
   const [tierView, setTierView] = useState(null)
   const [view, setView] = useState('overall')
   const [loading, setLoading] = useState(true)
+  const [myTeam, setMyTeam] = useMyTeam(selected)
 
   useEffect(() => {
     if (!selected) return
@@ -27,7 +30,7 @@ export default function StandingsClient({ leagues }) {
       <div className="max-w-6xl mx-auto">
         <SectionHeading label="RANKINGS" title="Season Standings" description="Overall league standings and current tier placements." />
 
-        <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
           <LeagueSelector leagues={leagues} selected={selected} onSelect={setSelected} />
 
           <div className="flex gap-2">
@@ -47,6 +50,13 @@ export default function StandingsClient({ leagues }) {
             ))}
           </div>
         </div>
+
+        {/* Team filter */}
+        {standings && standings.length > 0 && (
+          <div className="mb-6">
+            <TeamFilter teams={standings.map(t => t.name)} selected={myTeam} onSelect={setMyTeam} />
+          </div>
+        )}
 
         {loading ? (
           <div className="space-y-3">
@@ -73,7 +83,7 @@ export default function StandingsClient({ leagues }) {
                     const leagueType = (selected.includes('sunday') || selected.includes('mens')) ? 'mens' : 'coed'
                     const div = getDivisionInfo(team.rank, standings.length, leagueType)
                     return (
-                      <tr key={team.id} className={`border-b border-titos-border/30 hover:bg-titos-card/50 ${div.bgClass}`}>
+                      <tr key={team.id} className={cn('border-b border-titos-border/30 hover:bg-titos-card/50', div.bgClass, myTeam === team.name && 'bg-titos-gold/[0.08] border-l-2 border-l-titos-gold')}>
                         <td className="px-3 py-3 text-center">
                           <span className={cn('inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold', team.rank <= 3 ? 'bg-titos-gold/20 text-titos-gold' : 'text-titos-gray-400')}>{team.rank}</span>
                         </td>

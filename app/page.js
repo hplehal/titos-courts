@@ -15,6 +15,7 @@ import {
   Clock,
 } from 'lucide-react'
 import StatCounter from '@/components/ui/StatCounter'
+import LatestResults from '@/components/home/LatestResults'
 
 const leagues = [
   {
@@ -76,18 +77,13 @@ export default function HomePage() {
         <div className="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-l from-titos-gold/[0.04] to-transparent" />
         <div className="absolute bottom-0 left-0 w-full h-[40%] bg-gradient-to-t from-titos-surface to-transparent z-[1]" />
 
-        {/* Diagonal line accent */}
-        <div className="absolute top-0 right-[20%] w-px h-full bg-gradient-to-b from-titos-gold/20 via-titos-gold/5 to-transparent" />
-        <div className="absolute top-[20%] right-[40%] w-px h-[60%] bg-gradient-to-b from-titos-gold/10 to-transparent" />
-
         <div className="relative z-10 max-w-7xl mx-auto w-full">
-          <div className="grid lg:grid-cols-2 gap-8 items-end">
-            {/* Left: Copy */}
+          <div className="max-w-2xl">
             <div>
               <div className="mb-6 animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
                 <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-titos-gold/10 border border-titos-gold/20 rounded-full text-titos-gold text-xs font-bold uppercase tracking-wider">
                   <span className="w-1.5 h-1.5 bg-titos-gold rounded-full" />
-                  Season 10 Now Playing
+                  COED Season 9 Now Playing
                 </span>
               </div>
 
@@ -116,23 +112,32 @@ export default function HomePage() {
                 Pakmen Courts, Mississauga
                 <span className="text-titos-border">|</span>
                 <Clock className="w-3.5 h-3.5" />
-                Tue · Thu 8PM–12AM · Sun 9PM–12AM
+                Tue 8PM–12AM · Sun 9PM–12AM
+              </div>
+              <div className="mt-3 flex items-center gap-3 text-titos-gray-400 text-xs uppercase tracking-wider animate-fade-in" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
+                <MapPin className="w-3.5 h-3.5" />
+                Michael Power - St. Joseph High School, Etobicoke
+                <span className="text-titos-border">|</span>
+                <Clock className="w-3.5 h-3.5" />
+                Thu 8PM–12AM
               </div>
             </div>
 
-            {/* Right: Logo */}
-            <div className="hidden lg:flex justify-end items-end animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
-              <Image
-                src="/images/titosvl.png"
-                alt="Tito's Volleyball League"
-                width={420}
-                height={200}
-                className="w-auto h-auto max-h-[280px] opacity-80"
-                priority
-              />
+            {/* Social links */}
+            <div className="mt-8 flex items-center gap-3 animate-fade-in" style={{ animationDelay: '0.55s', animationFillMode: 'both' }}>
+              <a href="https://www.instagram.com/titoscourts" target="_blank" rel="noopener noreferrer"
+                className="p-2 rounded-lg bg-titos-white/5 text-titos-gray-400 hover:text-titos-gold hover:bg-titos-white/10 transition-colors" aria-label="Instagram">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" /></svg>
+              </a>
+              <a href="https://www.youtube.com/@titoscourts" target="_blank" rel="noopener noreferrer"
+                className="p-2 rounded-lg bg-titos-white/5 text-titos-gray-400 hover:text-titos-gold hover:bg-titos-white/10 transition-colors" aria-label="YouTube">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
+              </a>
             </div>
           </div>
         </div>
+
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-titos-surface to-transparent" />
       </section>
 
       {/* ═══ STATS BAR ═══ */}
@@ -147,6 +152,9 @@ export default function HomePage() {
         </div>
         <div className="section-line" />
       </section>
+
+      {/* ═══ LATEST RESULTS ═══ */}
+      <LatestResults />
 
       {/* ═══ LEAGUES ═══ */}
       <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
@@ -284,6 +292,69 @@ export default function HomePage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ HIGHLIGHTS / MEDIA ═══ */}
+      <section className="py-20 sm:py-24 px-4 sm:px-6 lg:px-8 bg-titos-elevated/50 noise">
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+            <div>
+              <span className="text-titos-gold text-xs font-bold uppercase tracking-[0.2em] mb-2 block">Follow Us</span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-titos-white leading-none">
+                CATCH THE<br />
+                <span className="text-titos-gray-400">ACTION.</span>
+              </h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <a href="https://www.instagram.com/titoscourts" target="_blank" rel="noopener noreferrer"
+                className="btn-ghost text-sm flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" /></svg>
+                @titoscourts
+              </a>
+              <a href="https://www.youtube.com/@titoscourts" target="_blank" rel="noopener noreferrer"
+                className="btn-ghost text-sm flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
+                YouTube
+              </a>
+            </div>
+          </div>
+
+          {/* Photo grid — using available images + placeholders for more */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="col-span-2 row-span-2 relative rounded-xl overflow-hidden aspect-[4/3]">
+              <Image src="/images/titosHero.jpg" alt="Tito's Courts game night" fill className="object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              <div className="absolute bottom-4 left-4">
+                <span className="text-titos-white text-sm font-bold">Game Night at Pakmen</span>
+              </div>
+            </div>
+            <div className="relative rounded-xl overflow-hidden aspect-square">
+              <Image src="/images/IMG_20231005_001649_419.jpg" alt="Tito's Courts team" fill className="object-cover" />
+            </div>
+            <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center">
+              <div className="text-center p-4">
+                <svg className="w-8 h-8 text-titos-gold mx-auto mb-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" /></svg>
+                <a href="https://www.instagram.com/titoscourts" target="_blank" rel="noopener noreferrer" className="text-titos-gold text-xs font-bold uppercase tracking-wider hover:text-titos-gold-light">
+                  Follow on IG
+                </a>
+              </div>
+            </div>
+            <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center">
+              <div className="text-center p-4">
+                <svg className="w-8 h-8 text-titos-gold mx-auto mb-2" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
+                <a href="https://www.youtube.com/@titoscourts" target="_blank" rel="noopener noreferrer" className="text-titos-gold text-xs font-bold uppercase tracking-wider hover:text-titos-gold-light">
+                  Watch on YT
+                </a>
+              </div>
+            </div>
+            <div className="relative rounded-xl overflow-hidden aspect-square bg-gradient-to-br from-titos-gold/10 to-titos-surface flex items-center justify-center border border-titos-border/30">
+              <div className="text-center">
+                <span className="text-titos-gold text-3xl font-black font-display block">150+</span>
+                <span className="text-titos-gray-400 text-xs uppercase tracking-wider">Players</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>

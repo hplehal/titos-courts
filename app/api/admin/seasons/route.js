@@ -17,6 +17,7 @@ export async function GET() {
       include: {
         league: { select: { id: true, name: true, slug: true } },
         _count: { select: { teams: true } },
+        tiers: { orderBy: { tierNumber: 'asc' } },
         teams: {
           include: {
             players: true,
@@ -96,13 +97,48 @@ export async function POST(request) {
         leagueId,
         name,
         seasonNumber: parseInt(seasonNumber),
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
+        startDate: new Date(startDate + 'T12:00:00Z'),
+        endDate: new Date(endDate + 'T12:00:00Z'),
         totalWeeks: 11,
         playoffWeeks: 1,
         status: 'registration',
       },
     })
+
+    // Auto-create tiers based on league configuration
+    const league = await prisma.league.findUnique({ where: { id: leagueId } })
+    if (league) {
+      const isMens = league.slug.includes('sunday') || league.slug.includes('mens')
+
+      if (isMens) {
+        // MENS: 5 tiers, 5 courts (6-10), single time slot
+        const mensTiers = [
+          { tierNumber: 1, courtNumber: 7, timeSlot: 'single' },
+          { tierNumber: 2, courtNumber: 6, timeSlot: 'single' },
+          { tierNumber: 3, courtNumber: 8, timeSlot: 'single' },
+          { tierNumber: 4, courtNumber: 9, timeSlot: 'single' },
+          { tierNumber: 5, courtNumber: 10, timeSlot: 'single' },
+        ]
+        for (const t of mensTiers) {
+          await prisma.tier.create({ data: { seasonId: season.id, ...t } })
+        }
+      } else {
+        // COED: 8 tiers, courts 6-9, early/late slots
+        const coedTiers = [
+          { tierNumber: 1, courtNumber: 7, timeSlot: 'early' },
+          { tierNumber: 2, courtNumber: 6, timeSlot: 'early' },
+          { tierNumber: 3, courtNumber: 8, timeSlot: 'early' },
+          { tierNumber: 4, courtNumber: 9, timeSlot: 'early' },
+          { tierNumber: 5, courtNumber: 7, timeSlot: 'late' },
+          { tierNumber: 6, courtNumber: 6, timeSlot: 'late' },
+          { tierNumber: 7, courtNumber: 8, timeSlot: 'late' },
+          { tierNumber: 8, courtNumber: 9, timeSlot: 'late' },
+        ]
+        for (const t of coedTiers) {
+          await prisma.tier.create({ data: { seasonId: season.id, ...t } })
+        }
+      }
+    }
 
     return NextResponse.json({ success: true, season })
   } catch (error) {
@@ -162,10 +198,51 @@ export async function DELETE(request) {
     const playerId = searchParams.get('playerId')
     const action = searchParams.get('action')
 
+    // Remove a single player (query param based)
     if (action === 'remove-player' && playerId) {
-      await prisma.player.delete({
-        where: { id: playerId },
-      })
+      await prisma.player.delete({ where: { id: playerId } })
+      return NextResponse.json({ success: true })
+    }
+
+    // Delete an entire season (body based)
+    const body = await request.json().catch(() => ({}))
+    if (body.seasonId) {
+      const seasonId = body.seasonId
+
+      // Delete in correct order due to foreign keys
+      // 1. SetScores (via matches)
+      const matches = await prisma.match.findMany({ where: { week: { seasonId } }, select: { id: true } })
+      const matchIds = matches.map(m => m.id)
+      if (matchIds.length > 0) {
+        await prisma.setScore.deleteMany({ where: { matchId: { in: matchIds } } })
+        await prisma.playerStat.deleteMany({ where: { matchId: { in: matchIds } } })
+      }
+
+      // 2. Matches
+      await prisma.match.deleteMany({ where: { week: { seasonId } } })
+
+      // 3. TierPlacements
+      await prisma.tierPlacement.deleteMany({ where: { week: { seasonId } } })
+
+      // 4. Weeks
+      await prisma.week.deleteMany({ where: { seasonId } })
+
+      // 5. Players (via teams)
+      const teams = await prisma.team.findMany({ where: { seasonId }, select: { id: true } })
+      const teamIds = teams.map(t => t.id)
+      if (teamIds.length > 0) {
+        await prisma.player.deleteMany({ where: { teamId: { in: teamIds } } })
+      }
+
+      // 6. Teams
+      await prisma.team.deleteMany({ where: { seasonId } })
+
+      // 7. Tiers
+      await prisma.tier.deleteMany({ where: { seasonId } })
+
+      // 8. Season
+      await prisma.season.delete({ where: { id: seasonId } })
+
       return NextResponse.json({ success: true })
     }
 

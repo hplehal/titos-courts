@@ -265,3 +265,21 @@ model ContactMessage {
   message   String
   createdAt DateTime @default(now())
 }
+
+model Waiver {
+  id               String   @id @default(cuid())
+  fullName         String
+  email            String
+  phone            String?
+  dateOfBirth      String?
+  emergencyName    String?
+  emergencyPhone   String?
+  leagueDay        String?
+  teamName         String?
+  agreedToTerms    Boolean  @default(false)
+  agreedToLiability Boolean @default(false)
+  agreedToMedia    Boolean  @default(false)
+  signatureName    String
+  signedAt         DateTime @default(now())
+  createdAt        DateTime @default(now())
+}

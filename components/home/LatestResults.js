@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Trophy } from 'lucide-react'
-import { cn, formatDate, getTierColor, getMovementIcon } from '@/lib/utils'
+import { cn, formatDate, getTierColor } from '@/lib/utils'
 
 export default function LatestResults() {
   const [results, setResults] = useState([])

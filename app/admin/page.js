@@ -251,6 +251,7 @@ export default function AdminPage() {
                 { title: 'Seasons', desc: 'Manage seasons & teams', href: '/admin/seasons', icon: Calendar },
                 { title: 'Tournaments', desc: 'Manage tournaments', href: '/admin/tournaments', icon: Trophy },
                 { title: 'Registrations', desc: 'View signups', href: '/admin/registrations', icon: Users },
+                { title: 'Waivers', desc: 'View signed waivers', href: '/admin/waivers', icon: Shield },
                 { title: 'Player Stats', desc: 'Coming soon', href: '#', icon: BarChart3, disabled: true },
               ].map(item => (
                 <Link key={item.title} href={item.href}

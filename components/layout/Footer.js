@@ -4,16 +4,16 @@ import { Mail, MapPin } from 'lucide-react'
 
 const quickNav = [
   { href: '/leagues', label: 'Leagues' },
-  { href: '/tournaments', label: 'Tournaments' },
   { href: '/standings', label: 'Standings' },
   { href: '/schedule', label: 'Schedule' },
-  { href: '/live', label: 'Live Scores' },
+  { href: '/champions', label: 'Champions' },
 ]
 
 const infoLinks = [
   { href: '/about', label: 'About Us' },
   { href: '/rules', label: 'Rules & Info' },
   { href: '/register', label: 'Register' },
+  { href: '/waiver', label: 'Player Waiver' },
   { href: '/contact', label: 'Contact' },
 ]
 
@@ -98,7 +98,11 @@ export default function Footer() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-titos-gray-400 text-sm">
                 <MapPin className="w-4 h-4 flex-shrink-0" />
-                <span>Pakmen Courts, 1775 Sismet Rd, Mississauga, ON</span>
+                <span>Pakmen Courts, 1775 Sismet Rd, Mississauga</span>
+              </div>
+              <div className="flex items-center gap-2 text-titos-gray-400 text-sm">
+                <MapPin className="w-4 h-4 flex-shrink-0" />
+                <span>Michael Power — St. Joseph HS, Etobicoke</span>
               </div>
               <div className="flex items-center gap-2 text-titos-gray-400 text-sm">
                 <Mail className="w-4 h-4 flex-shrink-0" />

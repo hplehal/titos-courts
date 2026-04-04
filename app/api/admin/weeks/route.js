@@ -28,19 +28,23 @@ export async function GET(request) {
   }
 }
 
-// PATCH: Update week status
+// PATCH: Update week status or date
 export async function PATCH(request) {
   try {
     const body = await request.json()
-    const { weekId, status } = body
+    const { weekId, status, date } = body
 
-    if (!weekId || !status) {
-      return NextResponse.json({ error: 'weekId and status required' }, { status: 400 })
+    if (!weekId) {
+      return NextResponse.json({ error: 'weekId required' }, { status: 400 })
     }
+
+    const updateData = {}
+    if (status) updateData.status = status
+    if (date) updateData.date = new Date(date)
 
     const week = await prisma.week.update({
       where: { id: weekId },
-      data: { status },
+      data: updateData,
     })
 
     // When activating a week, also set the season to active
@@ -367,4 +371,45 @@ async function handleSetPlacements({ weekId, tierAssignments }) {
   }
 
   return NextResponse.json({ success: true, count })
+}
+
+// ─── DELETE WEEK OR MATCHES ───
+
+export async function DELETE(request) {
+  try {
+    const body = await request.json()
+    const { weekId, matchesOnly } = body
+
+    if (!weekId) {
+      return NextResponse.json({ error: 'weekId required' }, { status: 400 })
+    }
+
+    if (matchesOnly) {
+      // Delete only matches and their scores for this week
+      const matches = await prisma.match.findMany({ where: { weekId }, select: { id: true } })
+      const matchIds = matches.map(m => m.id)
+      if (matchIds.length > 0) {
+        await prisma.setScore.deleteMany({ where: { matchId: { in: matchIds } } })
+        await prisma.playerStat.deleteMany({ where: { matchId: { in: matchIds } } })
+      }
+      await prisma.match.deleteMany({ where: { weekId } })
+      return NextResponse.json({ success: true, deleted: matchIds.length })
+    }
+
+    // Delete entire week: scores → matches → placements → week
+    const matches = await prisma.match.findMany({ where: { weekId }, select: { id: true } })
+    const matchIds = matches.map(m => m.id)
+    if (matchIds.length > 0) {
+      await prisma.setScore.deleteMany({ where: { matchId: { in: matchIds } } })
+      await prisma.playerStat.deleteMany({ where: { matchId: { in: matchIds } } })
+    }
+    await prisma.match.deleteMany({ where: { weekId } })
+    await prisma.tierPlacement.deleteMany({ where: { weekId } })
+    await prisma.week.delete({ where: { id: weekId } })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Week delete error:', error)
+    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
+  }
 }

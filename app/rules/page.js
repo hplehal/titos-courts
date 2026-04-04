@@ -79,13 +79,13 @@ const sections = [
 
 const faqs = [
   { title: 'What skill level are the leagues for?', content: 'We have options for all levels. The Tuesday and Sunday leagues are competitive rec — you should be comfortable with basic volleyball skills. Thursday REC COED is designed for beginners and casual players.' },
-  { title: 'Where do games take place?', content: 'All games are at Pakmen Courts, 1775 Sismet Road, Mississauga, ON. We use Courts 6, 7, 8, and 9.' },
+  { title: 'Where do games take place?', content: 'Tuesday COED and Sunday MENS play at Pakmen Courts, 1775 Sismet Road, Mississauga. Thursday REC COED plays at Michael Power — St. Joseph High School in Etobicoke, Toronto.' },
   { title: 'How do I pay?', content: 'Payment is via e-transfer to info@titoscourts.com with your team name as the memo. Fee details are shared upon registration confirmation.' },
   { title: 'What\'s the difference between leagues and tournaments?', content: 'Leagues are 11-week seasons with weekly games, tier movement, and playoffs. Tournaments are standalone one-day events with pool play and elimination brackets.' },
   { title: 'How does the tier system work?', content: 'Teams are grouped in tiers of 3. Each week you play round-robin within your tier. 1st place moves up a tier, 2nd stays, 3rd drops down. By season end, cumulative standings determine playoff divisions.' },
   { title: 'What if my team can\'t make a week?', content: 'Contact the organizer ASAP. If you don\'t show up, standard forfeit rules apply (25-0, 25-0). Repeated no-shows may result in removal from the league.' },
   { title: 'Can individual players (free agents) sign up?', content: 'Yes! Register as a free agent and we\'ll place you on a team that needs players.' },
-  { title: 'What equipment do I need?', content: 'Indoor court shoes with non-marking soles are required. We provide volleyballs and nets. Knee pads are recommended but optional.' },
+  { title: 'What equipment do I need?', content: 'Indoor court shoes with non-marking soles are required.' },
 ]
 
 export default function RulesPage() {

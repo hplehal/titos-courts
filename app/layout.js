@@ -19,7 +19,7 @@ export const metadata = {
     template: "%s | Tito's Courts",
   },
   description:
-    "Mississauga's premier recreational volleyball leagues and tournaments. Multiple weekly leagues for all skill levels at Pakmen Courts. Join the community for friendly competition, fitness, and fun.",
+    "Mississauga and Toronto's premier recreational volleyball leagues and tournaments. Multiple weekly leagues for all skill levels at Pakmen Courts and Michael Power HS. Join the community.",
   openGraph: {
     title: "Tito's Courts Volleyball Leagues",
     description:

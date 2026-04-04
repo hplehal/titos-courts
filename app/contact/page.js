@@ -61,7 +61,19 @@ export default function ContactPage() {
                 </a>
                 <div className="flex items-start gap-3 text-titos-gray-300">
                   <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">Pakmen Courts<br />1775 Sismet Road<br />Mississauga, ON</span>
+                  <div className="text-sm">
+                    <p className="font-semibold text-titos-white">Pakmen Courts</p>
+                    <p>1775 Sismet Road, Mississauga, ON</p>
+                    <p className="text-titos-gray-500 text-xs mt-0.5">Tue COED · Sun MENS</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 text-titos-gray-300">
+                  <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-semibold text-titos-white">Michael Power — St. Joseph HS</p>
+                    <p>Etobicoke, Toronto, ON</p>
+                    <p className="text-titos-gray-500 text-xs mt-0.5">Thu REC COED</p>
+                  </div>
                 </div>
               </div>
             </div>

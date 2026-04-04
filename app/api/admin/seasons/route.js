@@ -1,14 +1,8 @@
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { slugify } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
-
-function slugify(text) {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-}
 
 // GET: List all seasons with league info
 export async function GET() {
@@ -204,8 +198,28 @@ export async function DELETE(request) {
       return NextResponse.json({ success: true })
     }
 
-    // Delete an entire season (body based)
+    // Delete a team (body based)
     const body = await request.json().catch(() => ({}))
+    if (body.teamId) {
+      const teamId = body.teamId
+      // Delete in order: playerStats → setScores (via matches) → matches → tierPlacements → players → team
+      const matches = await prisma.match.findMany({
+        where: { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }, { refTeamId: teamId }] },
+        select: { id: true },
+      })
+      const matchIds = matches.map(m => m.id)
+      if (matchIds.length > 0) {
+        await prisma.setScore.deleteMany({ where: { matchId: { in: matchIds } } })
+        await prisma.playerStat.deleteMany({ where: { matchId: { in: matchIds } } })
+      }
+      await prisma.match.deleteMany({ where: { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }, { refTeamId: teamId }] } })
+      await prisma.tierPlacement.deleteMany({ where: { teamId } })
+      await prisma.player.deleteMany({ where: { teamId } })
+      await prisma.team.delete({ where: { id: teamId } })
+      return NextResponse.json({ success: true })
+    }
+
+    // Delete an entire season (body based)
     if (body.seasonId) {
       const seasonId = body.seasonId
 

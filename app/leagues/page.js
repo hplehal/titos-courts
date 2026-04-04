@@ -37,7 +37,7 @@ export default async function LeaguesPage() {
         <SectionHeading
           label="OUR LEAGUES"
           title="Volleyball Leagues"
-          description="Competitive tier-based leagues running every week at Pakmen Courts, Mississauga."
+          description="Competitive tier-based leagues running every week across Mississauga and Etobicoke."
         />
 
         {/* League Cards */}

@@ -1,9 +1,8 @@
 'use client'
 
 import Image from 'next/image'
-import { Heart, Target, Users, Trophy, MapPin, User } from 'lucide-react'
+import { Heart, Target, Users, MapPin, User } from 'lucide-react'
 import SectionHeading from '@/components/ui/SectionHeading'
-import StatCounter from '@/components/ui/StatCounter'
 
 const values = [
   { icon: Users, title: 'Community', description: 'Building lasting friendships through volleyball. Every player is part of the Tito\'s family.' },
@@ -59,36 +58,40 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Venue */}
+        {/* Venues */}
         <section className="mb-20">
-          <SectionHeading label="THE VENUE" title="Pakmen Courts" />
-          <div className="mt-10 card rounded-xl p-8">
-            <div className="flex items-start gap-4">
-              <MapPin className="w-6 h-6 text-titos-gold flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-display text-lg font-bold text-titos-white mb-2">1775 Sismet Road, Mississauga, ON</h3>
-                <p className="text-titos-gray-300 leading-relaxed mb-4">
-                  Pakmen is one of the premier volleyball facilities in the GTA. We use Courts 6, 7, 8, and 9 —
-                  four full-size indoor courts running simultaneously on game nights from 8 PM to midnight.
-                  Professional nets, hardwood floors, and a great atmosphere.
-                </p>
-                <p className="text-titos-gray-400 text-sm">
-                  Tip: The parking lot gets busy for the 8 PM slot. Arrive a few minutes early to grab a spot.
-                </p>
+          <SectionHeading label="OUR VENUES" title="Where We Play" />
+          <div className="mt-10 grid md:grid-cols-2 gap-4">
+            <div className="card rounded-xl p-6">
+              <div className="flex items-start gap-4">
+                <MapPin className="w-5 h-5 text-titos-gold flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-display text-base font-bold text-titos-white mb-1">Pakmen Courts</h3>
+                  <p className="text-titos-gray-400 text-sm mb-3">1775 Sismet Road, Mississauga, ON</p>
+                  <p className="text-titos-gray-300 text-sm leading-relaxed mb-2">
+                    Our primary home. Four full-size indoor courts (Courts 6–9) with professional nets and hardwood floors.
+                  </p>
+                  <div className="flex items-center gap-3 mt-3 text-titos-gray-400 text-xs">
+                    <span className="px-2 py-0.5 bg-titos-card rounded border border-titos-border/30">Tue COED</span>
+                    <span className="px-2 py-0.5 bg-titos-card rounded border border-titos-border/30">Sun MENS</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* By the Numbers */}
-        <section className="mb-20">
-          <SectionHeading label="BY THE NUMBERS" title="The League at a Glance" />
-          <div className="mt-10 card rounded-xl p-6 sm:p-8">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCounter value="9" label="Seasons" icon={Trophy} />
-              <StatCounter value="150" suffix="+" label="Players" icon={Users} />
-              <StatCounter value="3" label="Leagues Weekly" icon={Target} />
-              <StatCounter value="4" label="Courts" icon={MapPin} />
+            <div className="card rounded-xl p-6">
+              <div className="flex items-start gap-4">
+                <MapPin className="w-5 h-5 text-titos-gold flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-display text-base font-bold text-titos-white mb-1">Michael Power — St. Joseph High School</h3>
+                  <p className="text-titos-gray-400 text-sm mb-3">Etobicoke, Toronto, ON</p>
+                  <p className="text-titos-gray-300 text-sm leading-relaxed mb-2">
+                    Our second location for the Thursday REC COED league. A great gym space in the heart of Etobicoke.
+                  </p>
+                  <div className="flex items-center gap-3 mt-3 text-titos-gray-400 text-xs">
+                    <span className="px-2 py-0.5 bg-titos-card rounded border border-titos-border/30">Thu REC COED</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -104,10 +107,9 @@ export default function AboutPage() {
                 </div>
                 <div>
                   <h3 className="font-display text-xl font-bold text-titos-white mb-1">Tej</h3>
-                  <p className="text-titos-gold text-sm font-semibold mb-3">Co-Founder</p>
+                  <p className="text-titos-gold text-sm font-semibold mb-3">Co-Founder · Operations</p>
                   <p className="text-titos-gray-300 text-sm leading-relaxed">
-                    The tech and operations mind behind Tito&apos;s Courts. From building the live score system to
-                    managing league logistics, Tej keeps everything running smooth week after week.
+                    The behind-the-scenes engine of Tito&apos;s Courts. Tej handles all the operations — from building the scoring system and managing league logistics to venue coordination and making sure everything runs seamlessly every game night.
                   </p>
                 </div>
               </div>
@@ -119,10 +121,9 @@ export default function AboutPage() {
                 </div>
                 <div>
                   <h3 className="font-display text-xl font-bold text-titos-white mb-1">Christian</h3>
-                  <p className="text-titos-gold text-sm font-semibold mb-3">Co-Founder</p>
+                  <p className="text-titos-gold text-sm font-semibold mb-3">Co-Founder · Community & Media</p>
                   <p className="text-titos-gray-300 text-sm leading-relaxed">
-                    The community and competition driver behind Tito&apos;s Courts. Christian brings the energy,
-                    builds the culture, and makes sure every game night feels like an event.
+                    The face and voice of Tito&apos;s Courts. Christian runs the social media, captures all the photos and videos, and keeps the lines open with players and captains. If you&apos;ve seen it on the gram, Christian made it happen.
                   </p>
                 </div>
               </div>

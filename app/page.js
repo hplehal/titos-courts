@@ -6,16 +6,32 @@ import {
   ArrowRight,
   Users,
   Trophy,
-  Calendar,
   ChevronRight,
-  Star,
-  TrendingUp,
   ArrowUpDown,
   MapPin,
   Clock,
 } from 'lucide-react'
-import StatCounter from '@/components/ui/StatCounter'
 import LatestResults from '@/components/home/LatestResults'
+
+const coedChampions = [
+  { season: 1, team: 'Safe Sets', image: null },
+  { season: 2, team: 'Tip Pics', image: '/images/tipPics.jpg' },
+  { season: 3, team: 'Despicable Pookies', image: null },
+  { season: 4, team: 'Setsy & We Know It', image: null },
+  { season: 5, team: 'Sauce Walkas', image: null },
+  { season: 6, team: 'BounceTown', image: null },
+  { season: 7, team: 'Net Losses', image: null },
+  { season: 8, team: 'Net Losses', image: null },
+]
+
+const mensChampions = [
+  { season: 1, team: 'Sets With Jerhomies', image: null },
+  { season: 2, team: 'High & Holy', image: null },
+  { season: 3, team: 'Sari Sari Squad', image: null },
+  { season: 4, team: "David's Dictatorship", image: null },
+  { season: 5, team: "Brandy's Angels", image: null },
+  { season: 6, team: 'Spartans', image: null },
+]
 
 const leagues = [
   {
@@ -26,7 +42,7 @@ const leagues = [
     teams: 24,
     tiers: 8,
     tagline: 'The original. The biggest. 24 teams across 8 tiers.',
-    status: 'SEASON 10 ACTIVE',
+    status: 'SEASON 9 ACTIVE',
     statusColor: 'text-status-success',
   },
   {
@@ -37,7 +53,7 @@ const leagues = [
     teams: 15,
     tiers: 5,
     tagline: 'High-level men\'s volleyball. 15 teams, 5 tiers.',
-    status: 'SEASON 10 ACTIVE',
+    status: 'SEASON 7 ACTIVE',
     statusColor: 'text-status-success',
   },
   {
@@ -53,18 +69,6 @@ const leagues = [
   },
 ]
 
-const stats = [
-  { value: '150', suffix: '+', label: 'Players', icon: Users },
-  { value: '10', label: 'Seasons', icon: Trophy },
-  { value: '3', label: 'Weekly Leagues', icon: Calendar },
-  { value: '500', suffix: '+', label: 'Matches', icon: TrendingUp },
-]
-
-const testimonials = [
-  { quote: "Best rec league in the GTA. The tier system keeps every game competitive and fresh.", name: "Alex M.", team: "Block Party" },
-  { quote: "Joined as a free agent. Now my team is chasing Diamond division. The community is unreal.", name: "Sarah K.", team: "Net Worth" },
-  { quote: "Tuesday nights at Pakmen are the highlight of my week. The organization is top tier.", name: "Dev P.", team: "Ace Ventura" },
-]
 
 export default function HomePage() {
   return (
@@ -84,6 +88,10 @@ export default function HomePage() {
                 <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-titos-gold/10 border border-titos-gold/20 rounded-full text-titos-gold text-xs font-bold uppercase tracking-wider">
                   <span className="w-1.5 h-1.5 bg-titos-gold rounded-full" />
                   COED Season 9 Now Playing
+                </span>
+                <span className="ml-3 inline-flex items-center gap-2 px-3 py-1.5 bg-titos-gold/10 border border-titos-gold/20 rounded-full text-titos-gold text-xs font-bold uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 bg-titos-gold rounded-full" />
+                  Mens Season 7 Now Playing
                 </span>
               </div>
 
@@ -140,14 +148,27 @@ export default function HomePage() {
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-titos-surface to-transparent" />
       </section>
 
-      {/* ═══ STATS BAR ═══ */}
+      {/* ═══ INFO STRIP ═══ */}
       <section className="relative -mt-1 z-10">
         <div className="section-line" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((stat) => (
-              <StatCounter key={stat.label} value={stat.value} suffix={stat.suffix} label={stat.label} icon={stat.icon} />
-            ))}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="text-center">
+              <span className="font-display text-3xl sm:text-4xl font-black text-titos-white">3</span>
+              <span className="block text-titos-gray-400 text-[10px] uppercase tracking-wider mt-1">Leagues Per Week</span>
+            </div>
+            <div className="text-center">
+              <span className="font-display text-3xl sm:text-4xl font-black text-titos-white">Tue · Sun · Thu</span>
+              <span className="block text-titos-gray-400 text-[10px] uppercase tracking-wider mt-1">Game Nights</span>
+            </div>
+            <div className="text-center">
+              <span className="font-display text-3xl sm:text-4xl font-black text-titos-gold">11</span>
+              <span className="block text-titos-gray-400 text-[10px] uppercase tracking-wider mt-1">Weeks Per Season</span>
+            </div>
+            <div className="text-center">
+              <span className="font-display text-3xl sm:text-4xl font-black text-titos-white">Pakmen</span>
+              <span className="block text-titos-gray-400 text-[10px] uppercase tracking-wider mt-1">Home Court · Mississauga</span>
+            </div>
           </div>
         </div>
         <div className="section-line" />
@@ -260,38 +281,64 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══ TESTIMONIALS ═══ */}
+      {/* ═══ COMMUNITY ═══ */}
       <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
             <div>
               <span className="text-titos-gold text-xs font-bold uppercase tracking-[0.2em] mb-2 block">Community</span>
               <h2 className="text-4xl sm:text-5xl font-black text-titos-white leading-none">
-                THE PLAYERS<br />
-                <span className="text-titos-gray-400">HAVE SPOKEN.</span>
+                MORE THAN<br />
+                <span className="text-titos-gray-400">A LEAGUE.</span>
               </h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <a href="https://www.instagram.com/titoscourts" target="_blank" rel="noopener noreferrer"
+                className="btn-ghost text-sm flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" /></svg>
+                @titoscourts
+              </a>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
-            {testimonials.map((t, i) => (
-              <div key={i} className="card-flat rounded-2xl p-6 sm:p-8 flex flex-col justify-between">
-                <div>
-                  <div className="flex gap-0.5 mb-5">
-                    {Array.from({ length: 5 }).map((_, j) => (
-                      <Star key={j} className="w-4 h-4 text-titos-gold fill-titos-gold" />
-                    ))}
-                  </div>
-                  <p className="text-titos-gray-100 text-base leading-relaxed mb-6">
-                    &ldquo;{t.quote}&rdquo;
-                  </p>
-                </div>
-                <div className="pt-4 border-t border-titos-border/50">
-                  <p className="font-bold text-titos-white text-sm">{t.name}</p>
-                  <p className="text-titos-gray-400 text-xs uppercase tracking-wider">{t.team}</p>
-                </div>
+          {/* Photo grid — placeholder images, replace with real photos */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="col-span-2 row-span-2 relative rounded-xl overflow-hidden aspect-[4/3]">
+              <Image src="/images/titosHero.jpg" alt="Game night at Pakmen Courts" fill className="object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+              <div className="absolute bottom-4 left-4">
+                <span className="text-titos-white font-display text-lg font-black">Game Night</span>
+                <span className="block text-titos-gray-200 text-xs">Pakmen Courts, Mississauga</span>
               </div>
-            ))}
+            </div>
+            <div className="relative rounded-xl overflow-hidden aspect-square">
+              <Image src="/images/IMG_20231005_001649_419.jpg" alt="Tito's Courts players" fill className="object-cover" />
+            </div>
+            {/* Placeholder cards — replace these with real photos */}
+            <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center border border-titos-border/30">
+              <div className="text-center p-4">
+                <span className="text-titos-gold text-4xl font-black font-display block">🏐</span>
+                <span className="text-titos-gray-400 text-[9px] uppercase tracking-wider mt-2 block">Add Photo</span>
+              </div>
+            </div>
+            <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center border border-titos-border/30">
+              <div className="text-center p-4">
+                <span className="text-titos-gold text-4xl font-black font-display block">🏐</span>
+                <span className="text-titos-gray-400 text-[9px] uppercase tracking-wider mt-2 block">Add Photo</span>
+              </div>
+            </div>
+            <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center border border-titos-border/30">
+              <div className="text-center p-4">
+                <span className="text-titos-gold text-4xl font-black font-display block">🏐</span>
+                <span className="text-titos-gray-400 text-[9px] uppercase tracking-wider mt-2 block">Add Photo</span>
+              </div>
+            </div>
+            <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center border border-titos-border/30">
+              <div className="text-center p-4">
+                <span className="text-titos-gold text-4xl font-black font-display block">🏐</span>
+                <span className="text-titos-gray-400 text-[9px] uppercase tracking-wider mt-2 block">Add Photo</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -359,6 +406,55 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ═══ HALL OF CHAMPIONS TEASER ═══ */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+            <div>
+              <span className="text-titos-gold text-xs font-bold uppercase tracking-[0.2em] mb-2 block">Hall of Champions</span>
+              <h2 className="text-4xl sm:text-5xl font-black text-titos-white leading-none">
+                DIAMOND<br />
+                <span className="text-titos-gray-400">DIVISION WINNERS.</span>
+              </h2>
+            </div>
+            <Link href="/champions" className="text-titos-gold text-sm font-bold uppercase tracking-wider flex items-center gap-2 hover:gap-3 transition-all">
+              View All Champions <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Latest champions teaser */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            {/* COED defending */}
+            <Link href="/champions" className="group card-flat rounded-2xl overflow-hidden">
+              <div className="p-6 flex items-center gap-5">
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-titos-gold/20 to-titos-card flex items-center justify-center flex-shrink-0 border border-titos-gold/30">
+                  <Trophy className="w-7 h-7 text-titos-gold" />
+                </div>
+                <div>
+                  <span className="text-titos-gray-400 text-[9px] font-bold uppercase tracking-wider block">COED · Defending Champion</span>
+                  <h3 className="font-display text-xl font-black text-titos-white group-hover:text-titos-gold transition-colors">{coedChampions[0].team}</h3>
+                  <span className="text-titos-gray-500 text-xs">Season {coedChampions[0].season} · Back-to-back 🏆🏆</span>
+                </div>
+              </div>
+            </Link>
+
+            {/* MENS defending */}
+            <Link href="/champions" className="group card-flat rounded-2xl overflow-hidden">
+              <div className="p-6 flex items-center gap-5">
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-titos-gold/20 to-titos-card flex items-center justify-center flex-shrink-0 border border-titos-gold/30">
+                  <Trophy className="w-7 h-7 text-titos-gold" />
+                </div>
+                <div>
+                  <span className="text-titos-gray-400 text-[9px] font-bold uppercase tracking-wider block">MENS · Defending Champion</span>
+                  <h3 className="font-display text-xl font-black text-titos-white group-hover:text-titos-gold transition-colors">{mensChampions[0].team}</h3>
+                  <span className="text-titos-gray-500 text-xs">Season {mensChampions[0].season}</span>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ═══ CTA ═══ */}
       <section className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 noise">
         <div className="absolute inset-0 bg-gradient-to-br from-titos-gold/[0.06] to-transparent" />
@@ -368,7 +464,7 @@ export default function HomePage() {
             <span className="gradient-text">HIT THE COURT?</span>
           </h2>
           <p className="text-titos-gray-300 text-lg mb-10 max-w-xl mx-auto">
-            Whether you&apos;re chasing Diamond or just learning to serve, there&apos;s a tier waiting for you.
+            Whether you&apos;re chasing a championship or just learning the game, there&apos;s a place for you at Tito&apos;s Courts.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/register" className="btn-primary">

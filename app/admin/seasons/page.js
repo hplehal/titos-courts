@@ -312,56 +312,13 @@ export default function SeasonsPage() {
                             weeksBySeason[season.id].length > 0 ? (
                               <div className="space-y-2">
                                 {weeksBySeason[season.id].map(week => (
-                                  <div key={week.id} className="card-flat rounded-lg p-3">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                      <div className="flex items-center gap-3">
-                                        <span className={cn('w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0',
-                                          week.weekNumber <= 2 ? 'bg-titos-gold/20 text-titos-gold' : 'bg-titos-charcoal text-titos-gray-300'
-                                        )}>{week.weekNumber}</span>
-                                        <div>
-                                          <span className="text-titos-white text-sm font-medium">
-                                            {week.weekNumber === 1 ? 'Placement' : week.weekNumber === 2 ? 'Week 2 (Manual)' : week.isPlayoff ? 'Playoffs' : `Week ${week.weekNumber}`}
-                                          </span>
-                                          <span className="text-titos-gray-400 text-xs ml-2">{new Date(week.date).toLocaleDateString()}</span>
-                                        </div>
-                                        <span className={cn('px-1.5 py-0.5 rounded text-[9px] font-bold uppercase',
-                                          week.status === 'completed' ? 'bg-status-success/15 text-status-success' :
-                                          week.status === 'active' ? 'bg-titos-gold/15 text-titos-gold' : 'bg-titos-gray-400/15 text-titos-gray-400'
-                                        )}>{week.status}</span>
-                                        <span className="text-titos-gray-500 text-xs">{week._count?.matches || 0} matches · {week._count?.tierPlacements || 0} placements</span>
-                                      </div>
-
-                                      <div className="flex items-center gap-1.5 flex-wrap">
-                                        {/* Setup Tiers — for weeks 1-2 with no placements */}
-                                        {week.weekNumber <= 2 && (week._count?.tierPlacements || 0) === 0 && (
-                                          <SetupTiersButton weekId={week.id} seasonId={season.id} teams={season.teams || []} tiers={season.tiers || []} onDone={() => loadWeeks(season.id)} />
-                                        )}
-                                        {/* Edit Tiers — for weeks 1-2 WITH placements */}
-                                        {week.weekNumber <= 2 && (week._count?.tierPlacements || 0) > 0 && week.status !== 'completed' && (
-                                          <SetupTiersButton weekId={week.id} seasonId={season.id} teams={season.teams || []} tiers={season.tiers || []} onDone={() => loadWeeks(season.id)} editMode />
-                                        )}
-                                        {/* Gen Matches */}
-                                        {(week._count?.matches || 0) === 0 && (week._count?.tierPlacements || 0) > 0 && (
-                                          <button onClick={() => handleGenerateMatches(week.id, season.id)} disabled={generatingMatches[week.id]}
-                                            className="px-2.5 py-1 rounded text-[10px] font-semibold bg-titos-card text-titos-gray-300 border border-titos-border hover:text-titos-white transition-colors flex items-center gap-1">
-                                            {generatingMatches[week.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Gen Matches
-                                          </button>
-                                        )}
-                                        {/* Status controls */}
-                                        {week.status === 'upcoming' && (
-                                          <button onClick={() => handleWeekStatus(week.id, 'active', season.id)}
-                                            className="px-2.5 py-1 rounded text-[10px] font-bold uppercase bg-titos-gold/10 text-titos-gold border border-titos-gold/30 hover:bg-titos-gold/20 transition-colors">Activate</button>
-                                        )}
-                                        {week.status === 'active' && (
-                                          <button onClick={() => handleWeekStatus(week.id, 'completed', season.id)}
-                                            className="px-2.5 py-1 rounded text-[10px] font-bold uppercase bg-status-success/10 text-status-success border border-status-success/30 hover:bg-status-success/20 transition-colors">Complete</button>
-                                        )}
-                                        {(week._count?.matches || 0) > 0 && week.status !== 'completed' && (
-                                          <a href="/admin/scores" className="px-2.5 py-1 rounded text-[10px] font-semibold bg-status-info/10 text-status-info border border-status-info/30 hover:bg-status-info/20 transition-colors">Scores</a>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
+                                  <WeekCard key={week.id} week={week} season={season}
+                                    onGenerateMatches={(wId) => handleGenerateMatches(wId, season.id)}
+                                    generatingMatches={generatingMatches}
+                                    onStatusChange={(wId, s) => handleWeekStatus(wId, s, season.id)}
+                                    onReload={() => loadWeeks(season.id)}
+                                    onReloadAll={loadData}
+                                  />
                                 ))}
                               </div>
                             ) : <p className="text-titos-gray-500 text-sm">No weeks yet. Add one above.</p>
@@ -415,6 +372,13 @@ export default function SeasonsPage() {
                                               className={cn('px-2 py-1 rounded text-[10px] font-semibold border flex items-center gap-1 transition-colors',
                                                 expandedPlayers[team.id] ? 'bg-titos-gold/15 text-titos-gold border-titos-gold/30' : 'bg-titos-card text-titos-gray-300 border-titos-border hover:text-titos-white')}>
                                               <Users className="w-3 h-3" /> Players ({team.players?.length || 0})
+                                            </button>
+                                            <button onClick={async () => {
+                                              if (!confirm(`Delete "${team.name}"? This removes the team and all their match data.`)) return
+                                              await fetch('/api/admin/seasons', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ teamId: team.id }) })
+                                              loadData()
+                                            }} className="px-2 py-1 rounded text-[10px] font-semibold bg-status-live/5 text-status-live/60 border border-status-live/15 hover:text-status-live hover:bg-status-live/10 transition-colors flex items-center gap-1">
+                                              <Trash2 className="w-3 h-3" />
                                             </button>
                                           </>
                                         )}
@@ -473,6 +437,168 @@ export default function SeasonsPage() {
 }
 
 // ─── Setup Tiers Button + Modal ───
+// ─── Week Card with full controls ───
+function WeekCard({ week, season, onGenerateMatches, generatingMatches, onStatusChange, onReload, onReloadAll }) {
+  const [expanded, setExpanded] = useState(false)
+  const [editingDate, setEditingDate] = useState(false)
+  const [newDate, setNewDate] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deletingMatches, setDeletingMatches] = useState(false)
+
+  const matchCount = week._count?.matches || 0
+  const placementCount = week._count?.tierPlacements || 0
+
+  const handleUpdateDate = async () => {
+    if (!newDate) return
+    await fetch('/api/admin/weeks', { method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weekId: week.id, date: newDate + 'T12:00:00Z' }) })
+    setEditingDate(false)
+    onReload()
+  }
+
+  const handleDeleteWeek = async () => {
+    if (!confirm(`Delete Week ${week.weekNumber}? This removes all matches, scores, and tier placements for this week.`)) return
+    setDeleting(true)
+    await fetch('/api/admin/weeks', { method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weekId: week.id }) })
+    setDeleting(false)
+    onReload()
+  }
+
+  const handleDeleteMatches = async () => {
+    if (!confirm(`Delete all ${matchCount} matches for Week ${week.weekNumber}? You can regenerate them after.`)) return
+    setDeletingMatches(true)
+    await fetch('/api/admin/weeks', { method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weekId: week.id, matchesOnly: true }) })
+    setDeletingMatches(false)
+    onReload()
+  }
+
+  const handleResetStatus = async (newStatus) => {
+    await fetch('/api/admin/weeks', { method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weekId: week.id, status: newStatus }) })
+    onReload()
+  }
+
+  return (
+    <div className="card-flat rounded-xl overflow-hidden">
+      {/* Header row — click to expand */}
+      <button onClick={() => setExpanded(!expanded)} className="w-full px-4 py-3 flex items-center justify-between hover:bg-titos-white/[0.02] transition-colors text-left">
+        <div className="flex items-center gap-3">
+          <span className={cn('w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0',
+            week.weekNumber <= 2 ? 'bg-titos-gold/20 text-titos-gold' : 'bg-titos-charcoal text-titos-gray-300'
+          )}>{week.weekNumber}</span>
+          <div>
+            <span className="text-titos-white text-sm font-medium">
+              {week.weekNumber === 1 ? 'Placement' : week.weekNumber === 2 ? 'Week 2 (Manual)' : week.isPlayoff ? 'Playoffs' : `Week ${week.weekNumber}`}
+            </span>
+            <span className="text-titos-gray-400 text-xs ml-2">{new Date(week.date).toLocaleDateString()}</span>
+          </div>
+          <span className={cn('px-1.5 py-0.5 rounded text-[9px] font-bold uppercase',
+            week.status === 'completed' ? 'bg-status-success/15 text-status-success' :
+            week.status === 'active' ? 'bg-titos-gold/15 text-titos-gold' : 'bg-titos-gray-400/15 text-titos-gray-400'
+          )}>{week.status}</span>
+          <span className="text-titos-gray-500 text-xs">{matchCount}m · {placementCount}p</span>
+        </div>
+        <svg className={cn('w-4 h-4 text-titos-gray-400 transition-transform flex-shrink-0', expanded && 'rotate-180')} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+      </button>
+
+      {/* Expanded controls */}
+      {expanded && (
+        <div className="border-t border-titos-border/20 px-4 py-3 bg-titos-surface/30 space-y-3">
+          {/* Quick actions row */}
+          <div className="flex flex-wrap gap-2">
+            {/* Status changes */}
+            {week.status === 'upcoming' && (
+              <button onClick={() => onStatusChange(week.id, 'active')}
+                className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-titos-gold/10 text-titos-gold border border-titos-gold/30 hover:bg-titos-gold/20 transition-colors">
+                Activate
+              </button>
+            )}
+            {week.status === 'active' && (
+              <button onClick={() => onStatusChange(week.id, 'completed')}
+                className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-status-success/10 text-status-success border border-status-success/30 hover:bg-status-success/20 transition-colors">
+                Complete
+              </button>
+            )}
+            {week.status === 'completed' && (
+              <button onClick={() => handleResetStatus('active')}
+                className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-titos-gold/10 text-titos-gold border border-titos-gold/30 hover:bg-titos-gold/20 transition-colors">
+                Reopen (Active)
+              </button>
+            )}
+            {(week.status === 'active' || week.status === 'completed') && (
+              <button onClick={() => handleResetStatus('upcoming')}
+                className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-titos-card text-titos-gray-300 border border-titos-border hover:text-titos-white transition-colors">
+                Reset to Upcoming
+              </button>
+            )}
+
+            {/* Score entry */}
+            {matchCount > 0 && (
+              <a href="/admin/scores" className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-status-info/10 text-status-info border border-status-info/30 hover:bg-status-info/20 transition-colors">
+                Enter Scores
+              </a>
+            )}
+          </div>
+
+          {/* Tier & Match actions */}
+          <div className="flex flex-wrap gap-2">
+            {/* Setup/Edit Tiers */}
+            {week.weekNumber <= 2 && placementCount === 0 && (
+              <SetupTiersButton weekId={week.id} seasonId={season.id} teams={season.teams || []} tiers={season.tiers || []} onDone={onReload} />
+            )}
+            {week.weekNumber <= 2 && placementCount > 0 && (
+              <SetupTiersButton weekId={week.id} seasonId={season.id} teams={season.teams || []} tiers={season.tiers || []} onDone={onReload} editMode />
+            )}
+
+            {/* Generate Matches */}
+            {matchCount === 0 && placementCount > 0 && (
+              <button onClick={() => onGenerateMatches(week.id)} disabled={generatingMatches[week.id]}
+                className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-titos-card text-titos-gray-300 border border-titos-border hover:text-titos-white transition-colors flex items-center gap-1">
+                {generatingMatches[week.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Generate Matches
+              </button>
+            )}
+
+            {/* Delete Matches (to regenerate) */}
+            {matchCount > 0 && (
+              <button onClick={handleDeleteMatches} disabled={deletingMatches}
+                className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-status-live/5 text-status-live/70 border border-status-live/15 hover:bg-status-live/10 hover:text-status-live transition-colors flex items-center gap-1">
+                {deletingMatches ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />} Delete Matches ({matchCount})
+              </button>
+            )}
+          </div>
+
+          {/* Edit Date */}
+          <div className="flex items-center gap-2">
+            {editingDate ? (
+              <>
+                <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)}
+                  className="px-3 py-1.5 bg-titos-elevated border border-titos-border rounded-lg text-titos-white text-xs focus:outline-none focus:border-titos-gold/50 [color-scheme:dark]" />
+                <button onClick={handleUpdateDate} className="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-titos-gold/10 text-titos-gold border border-titos-gold/30">Save</button>
+                <button onClick={() => setEditingDate(false)} className="px-3 py-1.5 rounded-lg text-[10px] text-titos-gray-400 hover:text-titos-white">Cancel</button>
+              </>
+            ) : (
+              <button onClick={() => { setEditingDate(true); setNewDate('') }}
+                className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-titos-card text-titos-gray-300 border border-titos-border hover:text-titos-white transition-colors flex items-center gap-1">
+                <Pencil className="w-3 h-3" /> Change Date
+              </button>
+            )}
+
+            <div className="flex-1" />
+
+            {/* Delete Week */}
+            <button onClick={handleDeleteWeek} disabled={deleting}
+              className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-status-live/5 text-status-live/60 border border-status-live/15 hover:bg-status-live/10 hover:text-status-live transition-colors flex items-center gap-1">
+              {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />} Delete Week
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function SetupTiersButton({ weekId, seasonId, teams, tiers: initialTiers, onDone, editMode = false }) {
   const [open, setOpen] = useState(false)
   const [assignments, setAssignments] = useState({})

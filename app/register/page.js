@@ -146,7 +146,8 @@ export default function RegisterPage() {
               <ul className="space-y-2 text-sm text-titos-gray-300">
                 <li>11-week seasons (placement + 9 regular + playoffs)</li>
                 <li>Games: 8 PM – 12 AM on league night</li>
-                <li>Venue: Pakmen Courts, Mississauga</li>
+                <li>Tue/Sun: Pakmen Courts, Mississauga</li>
+                <li>Thu: Michael Power HS, Etobicoke</li>
                 <li>Courts 6, 7, 8, 9</li>
               </ul>
             </div>
@@ -160,6 +161,14 @@ export default function RegisterPage() {
                 <li>&bull; Community events</li>
               </ul>
             </div>
+            <a href="/waiver" className="card rounded-xl p-6 block group hover:border-titos-gold/40 transition-all">
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-xl">📋</span>
+                <h3 className="font-display font-bold text-titos-white group-hover:text-titos-gold transition-colors">Player Waiver</h3>
+              </div>
+              <p className="text-titos-gray-400 text-xs">All players must sign the waiver before playing. Sign it online — takes 2 minutes.</p>
+              <span className="text-titos-gold text-xs font-bold uppercase tracking-wider mt-2 block">Sign Waiver →</span>
+            </a>
           </div>
         </div>
       </div>

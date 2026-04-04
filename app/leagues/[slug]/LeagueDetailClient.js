@@ -150,7 +150,7 @@ export default function LeagueDetailClient({ data }) {
 
         {/* Results Tab */}
         {tab === 'results' && (
-          <ResultsTab weeks={weeks} league={league} completedWeeks={completedWeeks} lastCompletedWeek={lastCompletedWeek} currentWeek={currentWeek} />
+          <ResultsTab weeks={weeks} league={league} completedWeeks={completedWeeks} lastCompletedWeek={lastCompletedWeek} currentWeek={currentWeek} standings={standings} />
         )}
 
         {/* OLD This Week — replaced by Results tab */}
@@ -410,7 +410,12 @@ export default function LeagueDetailClient({ data }) {
 
 // ─── Schedule Tab Component ───
 // ─── Results Tab Component ───
-function ResultsTab({ weeks, league, completedWeeks, lastCompletedWeek, currentWeek }) {
+function ResultsTab({ weeks, league, completedWeeks, lastCompletedWeek, currentWeek, standings }) {
+  // Build a lookup for overall rank
+  const rankLookup = {}
+  for (const s of (standings || [])) {
+    rankLookup[s.id] = s.rank
+  }
   const [selectedWeekNum, setSelectedWeekNum] = useState(lastCompletedWeek?.weekNumber || null)
 
   const selectedWeek = weeks.find(w => w.weekNumber === selectedWeekNum) || lastCompletedWeek
@@ -471,79 +476,108 @@ function ResultsTab({ weeks, league, completedWeeks, lastCompletedWeek, currentW
               const rounds = {}
               matches.forEach(m => { if (!rounds[m.roundNumber]) rounds[m.roundNumber] = []; rounds[m.roundNumber].push(m) })
 
+              // Compute per-team stats for this week
+              const teamWeekStats = {}
+              for (const t of sortedTeams) {
+                teamWeekStats[t.id] = { wins: 0, losses: 0, pointDiff: 0 }
+              }
+              for (const m of matches) {
+                const score = m.scores?.[0]
+                if (!score) continue
+                const diff = score.homeScore - score.awayScore
+                if (score.homeScore > score.awayScore) {
+                  if (teamWeekStats[m.homeTeamId]) { teamWeekStats[m.homeTeamId].wins++; teamWeekStats[m.homeTeamId].pointDiff += diff }
+                  if (teamWeekStats[m.awayTeamId]) { teamWeekStats[m.awayTeamId].losses++; teamWeekStats[m.awayTeamId].pointDiff -= diff }
+                } else {
+                  if (teamWeekStats[m.awayTeamId]) { teamWeekStats[m.awayTeamId].wins++; teamWeekStats[m.awayTeamId].pointDiff += Math.abs(diff) }
+                  if (teamWeekStats[m.homeTeamId]) { teamWeekStats[m.homeTeamId].losses++; teamWeekStats[m.homeTeamId].pointDiff -= Math.abs(diff) }
+                }
+              }
+
               return (
                 <div key={tier.tierNumber} className="card-flat rounded-2xl overflow-hidden">
+                  {/* Tier header */}
                   <div className={cn('px-5 py-3 flex items-center justify-between', slot.bg)} style={{ borderLeft: `3px solid var(--color-${slotVar})` }}>
                     <span className={cn('font-display text-base font-black', slot.color)}>Tier {tier.tierNumber}</span>
                     <span className="text-titos-gray-400 text-xs font-medium">Court {tier.courtNumber}</span>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] divide-y lg:divide-y-0 lg:divide-x divide-titos-border/20">
-                    {/* LEFT: Standings */}
-                    <div className="p-4">
-                      <span className="text-titos-gray-500 text-[9px] font-bold uppercase tracking-wider block mb-3">Standings</span>
-                      <div className="space-y-2">
-                        {sortedTeams.map((t, idx) => (
-                          <div key={t.id} className={cn(
-                            'flex items-center justify-between px-3 py-2.5 rounded-xl',
-                            idx === 0 ? 'bg-titos-gold/[0.07] border border-titos-gold/20' :
-                            idx === 2 ? 'bg-status-live/[0.05] border border-status-live/15' :
-                            'bg-titos-elevated border border-titos-border/50'
-                          )}>
-                            <div className="flex items-center gap-2.5">
-                              <span className={cn('w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black',
-                                idx === 0 ? 'bg-titos-gold/20 text-titos-gold' : idx === 2 ? 'bg-status-live/15 text-status-live' : 'bg-titos-charcoal text-titos-gray-400'
-                              )}>{t.finishPosition || idx + 1}</span>
-                              <span className="text-titos-white font-bold text-sm">{t.name}</span>
-                            </div>
-                            {t.movement && (
-                              <span className={cn('text-[10px] font-black px-2 py-0.5 rounded',
-                                t.movement === 'up' ? 'text-status-success bg-status-success/10' :
-                                t.movement === 'down' ? 'text-status-live bg-status-live/10' : 'text-titos-gray-600')}>
-                                {t.movement === 'up' ? '↑ UP' : t.movement === 'down' ? '↓ DN' : '—'}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* RIGHT: Scores */}
-                    <div className="p-4">
-                      <span className="text-titos-gray-500 text-[9px] font-bold uppercase tracking-wider block mb-3">Scores</span>
-                      {matches.length > 0 ? (
-                        <div className="space-y-1">
-                          {Object.entries(rounds).map(([roundNum, roundMatches]) => (
-                            <Fragment key={roundNum}>
-                              {parseInt(roundNum) > 1 && <div className="border-t border-dashed border-titos-border/20 my-2" />}
-                              <span className="text-titos-gray-600 text-[8px] uppercase tracking-wider font-bold">Rd {roundNum}</span>
-                              {roundMatches.map(m => {
-                                const score = m.scores?.[0]
-                                const homeWon = score && score.homeScore > score.awayScore
-                                const awayWon = score && score.awayScore > score.homeScore
-                                return (
-                                  <div key={m.id} className="flex items-center justify-between py-1 text-sm">
-                                    <div className="flex-1 flex items-center gap-2">
-                                      <span className={cn('font-medium', homeWon ? 'text-titos-gold' : 'text-titos-white')}>{m.homeTeam?.name}</span>
-                                      <span className="text-titos-gray-600 text-xs">vs</span>
-                                      <span className={cn('font-medium', awayWon ? 'text-titos-gold' : 'text-titos-white')}>{m.awayTeam?.name}</span>
-                                    </div>
-                                    {score ? (
-                                      <span className="font-mono text-xs ml-3 flex-shrink-0">
-                                        <span className={homeWon ? 'text-titos-gold font-bold' : 'text-titos-gray-400'}>{score.homeScore}</span>
-                                        <span className="text-titos-gray-600"> - </span>
-                                        <span className={awayWon ? 'text-titos-gold font-bold' : 'text-titos-gray-400'}>{score.awayScore}</span>
-                                      </span>
-                                    ) : <span className="text-titos-gray-600 text-xs">—</span>}
-                                  </div>
-                                )
-                              })}
-                            </Fragment>
-                          ))}
-                        </div>
-                      ) : <p className="text-titos-gray-600 text-xs">No scores recorded.</p>}
-                    </div>
+                  {/* Standings table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="text-[9px] font-bold uppercase tracking-wider text-titos-gray-500">
+                          <th className="px-4 pt-3 pb-2 text-left">#</th>
+                          <th className="pt-3 pb-2 text-left">Team</th>
+                          <th className="pt-3 pb-2 text-center w-12">W</th>
+                          <th className="pt-3 pb-2 text-center w-12">L</th>
+                          <th className="pt-3 pb-2 text-center w-14">+/-</th>
+                          <th className="px-4 pt-3 pb-2 text-right w-16"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sortedTeams.map((t, idx) => {
+                          const stats = teamWeekStats[t.id] || { wins: 0, losses: 0, pointDiff: 0 }
+                          return (
+                            <tr key={t.id} className={cn('border-t border-titos-border/10',
+                              idx === 0 ? 'bg-titos-gold/[0.05]' : idx === 2 ? 'bg-status-live/[0.03]' : ''
+                            )}>
+                              <td className="px-4 py-2.5">
+                                <span className={cn('w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black',
+                                  idx === 0 ? 'bg-titos-gold/20 text-titos-gold' : idx === 2 ? 'bg-status-live/15 text-status-live' : 'bg-titos-charcoal text-titos-gray-400'
+                                )}>{t.finishPosition || idx + 1}</span>
+                              </td>
+                              <td className="py-2.5 text-sm">
+                                <span className="text-titos-white font-bold">{t.name}</span>
+                                {rankLookup[t.id] && (
+                                  <span className={cn('ml-2 text-[10px] font-black',
+                                    rankLookup[t.id] <= 5 ? 'text-titos-gold' : 'text-titos-gray-500'
+                                  )}>#{rankLookup[t.id]}</span>
+                                )}
+                              </td>
+                              <td className="py-2.5 text-center text-status-success font-bold text-sm">{stats.wins}</td>
+                              <td className="py-2.5 text-center text-status-live font-bold text-sm">{stats.losses}</td>
+                              <td className={cn('py-2.5 text-center font-black text-sm',
+                                stats.pointDiff > 0 ? 'text-status-success' : stats.pointDiff < 0 ? 'text-status-live' : 'text-titos-gray-500'
+                              )}>{stats.pointDiff > 0 ? '+' : ''}{stats.pointDiff}</td>
+                              <td className="px-4 py-2.5 text-right">
+                                {t.movement && (
+                                  <span className={cn('text-[10px] font-black',
+                                    t.movement === 'up' ? 'text-status-success' : t.movement === 'down' ? 'text-status-live' : 'text-titos-gray-600')}>
+                                    {t.movement === 'up' ? '▲' : t.movement === 'down' ? '▼' : '—'}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
                   </div>
+
+                  {/* Scores */}
+                  {matches.length > 0 && (
+                    <div className="border-t border-titos-border/15 px-4 py-2.5">
+                      {matches.map((m, i) => {
+                        const score = m.scores?.[0]
+                        const homeWon = score && score.homeScore > score.awayScore
+                        const awayWon = score && score.awayScore > score.homeScore
+                        return (
+                          <div key={m.id} className="grid grid-cols-[1fr_auto_1fr] items-center py-1 text-sm">
+                            <span className={cn('text-right font-medium truncate pr-2', homeWon ? 'text-titos-gold' : 'text-titos-gray-300')}>{m.homeTeam?.name}</span>
+                            {score ? (
+                              <span className="font-mono text-center whitespace-nowrap px-1">
+                                <span className={cn('font-bold', homeWon ? 'text-titos-gold' : 'text-titos-gray-500')}>{score.homeScore}</span>
+                                <span className="text-titos-gray-600 mx-0.5">-</span>
+                                <span className={cn('font-bold', awayWon ? 'text-titos-gold' : 'text-titos-gray-500')}>{score.awayScore}</span>
+                              </span>
+                            ) : <span className="text-center text-titos-gray-600">—</span>}
+                            <span className={cn('text-left font-medium truncate pl-2', awayWon ? 'text-titos-gold' : 'text-titos-gray-300')}>{m.awayTeam?.name}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
               )
             })}

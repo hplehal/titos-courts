@@ -41,15 +41,22 @@
   --color-div-bronze: #CD7F32;
   --color-div-copper: #B87333;
 
-  /* Tier Accent Colors */
-  --color-tier-1: #F2A527;
-  --color-tier-2: #0A84FF;
-  --color-tier-3: #30D158;
-  --color-tier-4: #BF5AF2;
-  --color-tier-5: #FF375F;
-  --color-tier-6: #64D2FF;
-  --color-tier-7: #FF9F0A;
-  --color-tier-8: #8E8E93;
+  /* Time Slot Colors */
+  --color-slot-early: #0A84FF;
+  --color-slot-late: #BF5AF2;
+  --color-slot-single: #30D158;
+
+  /* Tier Accent Colors — grouped by time slot */
+  /* Early slot (8-10 PM): blue tones */
+  --color-tier-1: #0A84FF;
+  --color-tier-2: #3B9EFF;
+  --color-tier-3: #5BB3FF;
+  --color-tier-4: #7CC8FF;
+  /* Late slot (10-12 AM): purple/pink tones */
+  --color-tier-5: #BF5AF2;
+  --color-tier-6: #D07EF7;
+  --color-tier-7: #DFA0FB;
+  --color-tier-8: #ECC4FD;
 
   --font-display: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;

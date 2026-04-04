@@ -4,7 +4,7 @@ import { useState, Fragment } from 'react'
 import Link from 'next/link'
 import { Calendar, Users, Trophy, ArrowUp, ArrowDown, ArrowRight, Minus, MapPin } from 'lucide-react'
 import StatusBadge from '@/components/ui/StatusBadge'
-import { cn, formatDate, getTierColor, getDivisionInfo, getMovementIcon, getTeamAbbreviation, getLeagueTimeDisplay } from '@/lib/utils'
+import { cn, formatDate, getTierColor, getSlotInfo, getDivisionInfo, getMovementIcon, getTeamAbbreviation, getLeagueTimeDisplay } from '@/lib/utils'
 
 export default function LeagueDetailClient({ data }) {
   const { league, season, standings, weeks } = data
@@ -101,15 +101,16 @@ export default function LeagueDetailClient({ data }) {
         {/* Standings Tab */}
         {tab === 'standings' && (
           <div className="card rounded-xl overflow-hidden">
-            <div className="px-5 py-3 border-b border-titos-border bg-titos-gold/5">
+            <div className="px-5 py-3 border-b border-titos-border bg-titos-gold/5 flex items-center justify-between">
               <h3 className="font-display font-bold text-titos-gold">Overall Season Standings</h3>
+              <span className="text-titos-gray-500 text-[10px] uppercase tracking-wider">PTS = Tier Factor + Sets Won</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-titos-border/50">
-                    {['#', 'Team', 'SW', 'SL', '+/-', 'PTS', 'Division'].map(h => (
-                      <th key={h} className={`px-3 py-3 text-xs font-semibold uppercase tracking-wider text-titos-gray-400 ${h === 'Team' ? 'text-left' : 'text-center'}`}>
+                    {['#', 'Team', 'SW', 'SL', '+/-', 'Tier', 'Sets', 'PTS', 'Div'].map(h => (
+                      <th key={h} className={`px-2.5 py-3 text-[10px] font-semibold uppercase tracking-wider text-titos-gray-400 ${h === 'Team' ? 'text-left' : 'text-center'}`}>
                         {h}
                       </th>
                     ))}
@@ -120,21 +121,23 @@ export default function LeagueDetailClient({ data }) {
                     const div = getDivisionInfo(team.rank, standings.length, leagueType)
                     return (
                       <tr key={team.id} className={`border-b border-titos-border/30 hover:bg-titos-card/50 transition-colors ${div.bgClass}`}>
-                        <td className="px-3 py-3 text-center">
+                        <td className="px-2.5 py-3 text-center">
                           <span className={cn(
                             'inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold',
                             team.rank <= 3 ? 'bg-titos-gold/20 text-titos-gold' : 'text-titos-gray-400'
                           )}>{team.rank}</span>
                         </td>
-                        <td className="px-3 py-3 text-left font-semibold text-titos-white">{team.name}</td>
-                        <td className="px-3 py-3 text-center font-semibold text-status-success">{team.setsWon}</td>
-                        <td className="px-3 py-3 text-center font-semibold text-status-live">{team.setsLost}</td>
-                        <td className={`px-3 py-3 text-center font-bold ${team.pointDiff >= 0 ? 'text-status-success' : 'text-status-live'}`}>
+                        <td className="px-2.5 py-3 text-left font-semibold text-titos-white text-sm">{team.name}</td>
+                        <td className="px-2.5 py-3 text-center font-semibold text-status-success text-sm">{team.setsWon}</td>
+                        <td className="px-2.5 py-3 text-center font-semibold text-status-live text-sm">{team.setsLost}</td>
+                        <td className={`px-2.5 py-3 text-center font-bold text-sm ${team.pointDiff >= 0 ? 'text-status-success' : 'text-status-live'}`}>
                           {team.pointDiff > 0 ? '+' : ''}{team.pointDiff}
                         </td>
-                        <td className="px-3 py-3 text-center font-bold text-titos-white">{team.totalPoints}</td>
-                        <td className="px-3 py-3 text-center">
-                          <span className={`px-2 py-0.5 rounded text-xs font-semibold text-${div.color}`}>{div.name}</span>
+                        <td className="px-2.5 py-3 text-center text-titos-gray-400 text-sm">{team.basePoints || 0}</td>
+                        <td className="px-2.5 py-3 text-center text-titos-gray-400 text-sm">{team.setsWon}</td>
+                        <td className="px-2.5 py-3 text-center font-black text-titos-gold text-sm">{team.totalPoints}</td>
+                        <td className="px-2.5 py-3 text-center">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold text-${div.color}`}>{div.name}</span>
                         </td>
                       </tr>
                     )
@@ -410,12 +413,9 @@ export default function LeagueDetailClient({ data }) {
 function ResultsTab({ weeks, league, completedWeeks, lastCompletedWeek, currentWeek }) {
   const [selectedWeekNum, setSelectedWeekNum] = useState(lastCompletedWeek?.weekNumber || null)
 
-  const isMens = league.slug?.includes('sunday') || league.slug?.includes('mens')
   const selectedWeek = weeks.find(w => w.weekNumber === selectedWeekNum) || lastCompletedWeek
   const nextUpcoming = weeks.find(w => w.status === 'upcoming')
   const activeWeek = weeks.find(w => w.status === 'active')
-
-  // Available weeks to select (completed only, skip week 1 placement)
   const selectableWeeks = completedWeeks.filter(w => w.weekNumber > 1)
 
   if (!selectedWeek && !activeWeek && !nextUpcoming) {
@@ -439,85 +439,110 @@ function ResultsTab({ weeks, league, completedWeeks, lastCompletedWeek, currentW
 
   return (
     <div>
-      {/* Active games banner */}
-      {activeWeek && (
-        <Link href="/live" className="mb-6 flex items-center gap-3 p-4 rounded-xl bg-status-live/10 border border-status-live/30 hover:bg-status-live/15 transition-colors">
-          <span className="live-dot" />
-          <span className="text-status-live font-bold text-sm">Games in progress — View Live Scores</span>
-          <ArrowRight className="w-4 h-4 text-status-live ml-auto" />
-        </Link>
-      )}
-
       {/* Week selector */}
       {selectableWeeks.length > 0 && (
         <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-2">
           <span className="text-titos-gray-400 text-xs font-bold uppercase tracking-wider flex-shrink-0">Week:</span>
           {selectableWeeks.map(w => (
-            <button
-              key={w.weekNumber}
-              onClick={() => setSelectedWeekNum(w.weekNumber)}
-              className={cn(
-                'px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex-shrink-0',
-                selectedWeekNum === w.weekNumber
-                  ? 'bg-titos-gold/15 text-titos-gold border border-titos-gold/30'
-                  : 'bg-titos-card text-titos-gray-400 border border-titos-border hover:text-titos-white'
-              )}
-            >
+            <button key={w.weekNumber} onClick={() => setSelectedWeekNum(w.weekNumber)}
+              className={cn('px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex-shrink-0',
+                selectedWeekNum === w.weekNumber ? 'bg-titos-gold/15 text-titos-gold border border-titos-gold/30' : 'bg-titos-card text-titos-gray-400 border border-titos-border hover:text-titos-white')}>
               {w.weekNumber}
             </button>
           ))}
         </div>
       )}
 
-      {/* Selected week results */}
+      {/* Selected week results — SCORES + STANDINGS TOGETHER */}
       {selectedWeek && tiers.length > 0 && (
         <div>
-          <div className="flex items-center gap-3 mb-4">
-            <h3 className="font-display text-lg font-black text-titos-white">
-              Week {selectedWeek.weekNumber} Results
-            </h3>
+          <div className="flex items-center gap-3 mb-5">
+            <h3 className="font-display text-lg font-black text-titos-white">Week {selectedWeek.weekNumber} Results</h3>
             <span className="text-titos-gray-400 text-sm">{formatDate(selectedWeek.date)}</span>
-            <StatusBadge status={selectedWeek.status} />
           </div>
 
-          {/* Tier blocks — same layout as before */}
-          <div className="space-y-3">
+          <div className="space-y-4">
             {tiers.map(({ tier, teams, matches }) => {
-              const tc = getTierColor(tier.tierNumber)
+              const slot = getSlotInfo(tier.tierNumber, tier.timeSlot)
+              const slotVar = tier.tierNumber <= 4 ? 'slot-early' : 'slot-late'
               const sortedTeams = [...teams].sort((a, b) => (a.finishPosition || 99) - (b.finishPosition || 99))
+
+              // Group matches by round
+              const rounds = {}
+              matches.forEach(m => { if (!rounds[m.roundNumber]) rounds[m.roundNumber] = []; rounds[m.roundNumber].push(m) })
+
               return (
                 <div key={tier.tierNumber} className="card-flat rounded-2xl overflow-hidden">
-                  <div className={`px-5 py-3 flex items-center justify-between ${tc.bg}`} style={{ borderLeft: `3px solid var(--color-${tc.accent})` }}>
-                    <span className={`font-display text-lg font-black ${tc.text}`}>T{tier.tierNumber}</span>
-                    <span className="text-titos-gray-400 text-xs">Court {tier.courtNumber}</span>
+                  <div className={cn('px-5 py-3 flex items-center justify-between', slot.bg)} style={{ borderLeft: `3px solid var(--color-${slotVar})` }}>
+                    <span className={cn('font-display text-base font-black', slot.color)}>Tier {tier.tierNumber}</span>
+                    <span className="text-titos-gray-400 text-xs font-medium">Court {tier.courtNumber}</span>
                   </div>
-                  <div className="p-4 space-y-2">
-                    {sortedTeams.map((t, idx) => (
-                      <div key={t.id} className={cn(
-                        'flex items-center justify-between px-4 py-3 rounded-xl transition-colors',
-                        idx === 0 ? 'bg-titos-gold/[0.07] border border-titos-gold/20' :
-                        idx === 2 ? 'bg-status-live/[0.05] border border-status-live/15' :
-                        'bg-titos-elevated border border-titos-border/50'
-                      )}>
-                        <div className="flex items-center gap-3">
-                          <span className={cn('w-7 h-7 rounded-full flex items-center justify-center text-xs font-black',
-                            idx === 0 ? 'bg-titos-gold/20 text-titos-gold' :
-                            idx === 2 ? 'bg-status-live/15 text-status-live' :
-                            'bg-titos-charcoal text-titos-gray-400'
-                          )}>{t.finishPosition || idx + 1}</span>
-                          <span className="text-titos-white font-bold text-base">{t.name}</span>
-                        </div>
-                        {t.movement && (
-                          <span className={cn('text-sm font-black px-2 py-0.5 rounded',
-                            t.movement === 'up' ? 'text-status-success bg-status-success/10' :
-                            t.movement === 'down' ? 'text-status-live bg-status-live/10' :
-                            'text-titos-gray-500'
+
+                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] divide-y lg:divide-y-0 lg:divide-x divide-titos-border/20">
+                    {/* LEFT: Standings */}
+                    <div className="p-4">
+                      <span className="text-titos-gray-500 text-[9px] font-bold uppercase tracking-wider block mb-3">Standings</span>
+                      <div className="space-y-2">
+                        {sortedTeams.map((t, idx) => (
+                          <div key={t.id} className={cn(
+                            'flex items-center justify-between px-3 py-2.5 rounded-xl',
+                            idx === 0 ? 'bg-titos-gold/[0.07] border border-titos-gold/20' :
+                            idx === 2 ? 'bg-status-live/[0.05] border border-status-live/15' :
+                            'bg-titos-elevated border border-titos-border/50'
                           )}>
-                            {t.movement === 'up' ? '↑ UP' : t.movement === 'down' ? '↓ DOWN' : '— STAY'}
-                          </span>
-                        )}
+                            <div className="flex items-center gap-2.5">
+                              <span className={cn('w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black',
+                                idx === 0 ? 'bg-titos-gold/20 text-titos-gold' : idx === 2 ? 'bg-status-live/15 text-status-live' : 'bg-titos-charcoal text-titos-gray-400'
+                              )}>{t.finishPosition || idx + 1}</span>
+                              <span className="text-titos-white font-bold text-sm">{t.name}</span>
+                            </div>
+                            {t.movement && (
+                              <span className={cn('text-[10px] font-black px-2 py-0.5 rounded',
+                                t.movement === 'up' ? 'text-status-success bg-status-success/10' :
+                                t.movement === 'down' ? 'text-status-live bg-status-live/10' : 'text-titos-gray-600')}>
+                                {t.movement === 'up' ? '↑ UP' : t.movement === 'down' ? '↓ DN' : '—'}
+                              </span>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+
+                    {/* RIGHT: Scores */}
+                    <div className="p-4">
+                      <span className="text-titos-gray-500 text-[9px] font-bold uppercase tracking-wider block mb-3">Scores</span>
+                      {matches.length > 0 ? (
+                        <div className="space-y-1">
+                          {Object.entries(rounds).map(([roundNum, roundMatches]) => (
+                            <Fragment key={roundNum}>
+                              {parseInt(roundNum) > 1 && <div className="border-t border-dashed border-titos-border/20 my-2" />}
+                              <span className="text-titos-gray-600 text-[8px] uppercase tracking-wider font-bold">Rd {roundNum}</span>
+                              {roundMatches.map(m => {
+                                const score = m.scores?.[0]
+                                const homeWon = score && score.homeScore > score.awayScore
+                                const awayWon = score && score.awayScore > score.homeScore
+                                return (
+                                  <div key={m.id} className="flex items-center justify-between py-1 text-sm">
+                                    <div className="flex-1 flex items-center gap-2">
+                                      <span className={cn('font-medium', homeWon ? 'text-titos-gold' : 'text-titos-white')}>{m.homeTeam?.name}</span>
+                                      <span className="text-titos-gray-600 text-xs">vs</span>
+                                      <span className={cn('font-medium', awayWon ? 'text-titos-gold' : 'text-titos-white')}>{m.awayTeam?.name}</span>
+                                    </div>
+                                    {score ? (
+                                      <span className="font-mono text-xs ml-3 flex-shrink-0">
+                                        <span className={homeWon ? 'text-titos-gold font-bold' : 'text-titos-gray-400'}>{score.homeScore}</span>
+                                        <span className="text-titos-gray-600"> - </span>
+                                        <span className={awayWon ? 'text-titos-gold font-bold' : 'text-titos-gray-400'}>{score.awayScore}</span>
+                                      </span>
+                                    ) : <span className="text-titos-gray-600 text-xs">—</span>}
+                                  </div>
+                                )
+                              })}
+                            </Fragment>
+                          ))}
+                        </div>
+                      ) : <p className="text-titos-gray-600 text-xs">No scores recorded.</p>}
+                    </div>
                   </div>
                 </div>
               )
@@ -526,46 +551,9 @@ function ResultsTab({ weeks, league, completedWeeks, lastCompletedWeek, currentW
         </div>
       )}
 
-      {/* No results yet */}
       {(!selectedWeek || tiers.length === 0) && !activeWeek && (
         <div className="card rounded-xl p-8 text-center">
           <p className="text-titos-gray-400">No completed results yet. Check back after Week 2.</p>
-        </div>
-      )}
-
-      {/* Coming up preview */}
-      {nextUpcoming && (
-        <div className="mt-8">
-          <div className="section-line mb-6" />
-          <h4 className="text-titos-gray-400 text-xs font-bold uppercase tracking-[0.15em] mb-4">Coming Up — Week {nextUpcoming.weekNumber}</h4>
-          <div className="opacity-60">
-            {(() => {
-              const upcomingTiers = {}
-              for (const p of (nextUpcoming.tierPlacements || [])) {
-                const tn = p.tier?.tierNumber
-                if (!tn) continue
-                if (!upcomingTiers[tn]) upcomingTiers[tn] = { tier: p.tier, teams: [] }
-                upcomingTiers[tn].teams.push(p.team)
-              }
-              const upcoming = Object.values(upcomingTiers).sort((a, b) => a.tier.tierNumber - b.tier.tierNumber)
-              if (!upcoming.length) return <p className="text-titos-gray-500 text-sm">Tier assignments not yet available.</p>
-              return (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                  {upcoming.map(({ tier, teams }) => {
-                    const tc = getTierColor(tier.tierNumber)
-                    return (
-                      <div key={tier.tierNumber} className="bg-titos-surface rounded-lg p-2.5" style={{ borderLeft: `2px solid var(--color-${tc.accent})` }}>
-                        <span className={`text-[10px] font-bold ${tc.text}`}>T{tier.tierNumber}</span>
-                        <div className="mt-1 space-y-0.5">
-                          {teams.map(t => <span key={t.id} className="block text-titos-gray-300 text-xs">{t.name}</span>)}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })()}
-          </div>
         </div>
       )}
     </div>
@@ -671,11 +659,12 @@ function ScheduleTab({ weeks, league }) {
                   {filteredTiers.length > 0 ? (
                     <div className="space-y-4">
                       {filteredTiers.map(({ tier, teams, matches }) => {
-                        const tc = getTierColor(tier.tierNumber)
+                        const slotC = getSlotInfo(tier.tierNumber, tier.timeSlot)
+                        const slotVar = tier.tierNumber <= 4 ? 'slot-early' : 'slot-late'
                         return (
                           <div key={tier.tierNumber} className="bg-titos-surface rounded-xl overflow-hidden border border-titos-border/30">
-                            <div className={`px-4 py-2.5 flex items-center justify-between ${tc.bg}`}>
-                              <span className={`font-display font-bold text-sm ${tc.text}`}>Tier {tier.tierNumber} (Court {tier.courtNumber})</span>
+                            <div className={cn('px-4 py-2.5 flex items-center justify-between', slotC.bg)} style={{ borderLeft: `3px solid var(--color-${slotVar})` }}>
+                              <span className={cn('font-display font-bold text-sm', slotC.color)}>Tier {tier.tierNumber} (Court {tier.courtNumber})</span>
                             </div>
 
                             {matches.length > 0 ? (

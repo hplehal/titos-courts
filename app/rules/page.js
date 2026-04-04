@@ -21,7 +21,7 @@ const sections = [
     items: [
       'Sets played to 25 points (rally scoring), cap at 27',
       '2 sets per match',
-      'Points per week: Base 10 (Tier 1-4) or Base 9 (Tier 5-8) + number of sets won',
+      'Points per week: Tier Factor (Tier 1 = 8 pts, Tier 2 = 7, down to Tier 8 = 1) + Sets Won',
       'Example: Tier 1 team wins 3 sets = 10 + 3 = 13 weekly points',
       'Ranking within a tier: (1) Sets Won, (2) Point Differential, (3) Head-to-Head',
       'Season standings: Cumulative weekly points across all weeks',

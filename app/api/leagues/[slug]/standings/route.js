@@ -43,7 +43,7 @@ export async function GET(request, { params }) {
   const season = league.seasons[0]
   const teamStats = {}
   for (const team of season.teams) {
-    teamStats[team.id] = { id: team.id, name: team.name, setsWon: 0, setsLost: 0, pointDiff: 0, totalPoints: 0 }
+    teamStats[team.id] = { id: team.id, name: team.name, setsWon: 0, setsLost: 0, pointDiff: 0, basePoints: 0, totalPoints: 0 }
   }
 
   for (const week of season.weeks) {
@@ -69,8 +69,10 @@ export async function GET(request, { params }) {
     }
     for (const [teamId, data] of Object.entries(weekTeamSets)) {
       if (teamStats[teamId]) {
-        const base = data.tierNumber <= 4 ? 10 : 9
-        teamStats[teamId].totalPoints += base + data.sets
+        // Tier 1 = 8 base points, Tier 2 = 7, ... Tier 8 = 1
+        const tierFactor = Math.max(1, 9 - data.tierNumber)
+        teamStats[teamId].basePoints += tierFactor
+        teamStats[teamId].totalPoints += tierFactor + data.sets
       }
     }
   }

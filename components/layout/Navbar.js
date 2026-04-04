@@ -16,10 +16,9 @@ const leagueDropdown = [
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/leagues', label: 'Leagues', children: leagueDropdown },
-  { href: '/tournaments', label: 'Tournaments' },
   { href: '/standings', label: 'Standings' },
   { href: '/schedule', label: 'Schedule' },
-  { href: '/live', label: 'Live', isLive: true },
+  { href: '/leagues/tuesday-coed', label: 'Results' },
   { href: '/rules', label: 'Rules & Info' },
   { href: '/about', label: 'About' },
 ]

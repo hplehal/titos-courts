@@ -5,12 +5,17 @@ export const metadata = { title: 'Schedule' }
 export const dynamic = 'force-dynamic'
 
 async function getData() {
-  const leagues = await prisma.league.findMany({
-    where: { isActive: true },
-    select: { slug: true, name: true, dayOfWeek: true },
-    orderBy: { createdAt: 'asc' },
-  })
-  return { leagues }
+  try {
+    const leagues = await prisma.league.findMany({
+      where: { isActive: true },
+      select: { slug: true, name: true, dayOfWeek: true },
+      orderBy: { createdAt: 'asc' },
+    })
+    return { leagues }
+  } catch (error) {
+    console.error('Schedule page data error:', error.message)
+    return { leagues: [] }
+  }
 }
 
 export default async function SchedulePage() {

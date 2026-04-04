@@ -6,7 +6,7 @@ import SectionHeading from '@/components/ui/SectionHeading'
 import LeagueSelector from '@/components/ui/LeagueSelector'
 import TeamFilter from '@/components/ui/TeamFilter'
 import { useMyTeam } from '@/lib/hooks/useMyTeam'
-import { cn, getDivisionInfo, getTierColor, getMovementIcon, getLeagueTimeDisplay } from '@/lib/utils'
+import { cn, getDivisionInfo, getTierColor, getSlotInfo, getMovementIcon, getLeagueTimeDisplay } from '@/lib/utils'
 
 export default function StandingsClient({ leagues }) {
   const [selected, setSelected] = useState(leagues[0]?.slug || '')
@@ -64,17 +64,18 @@ export default function StandingsClient({ leagues }) {
           </div>
         ) : view === 'overall' && standings ? (
           <div className="card rounded-xl overflow-hidden">
-            <div className="px-5 py-3 border-b border-titos-border bg-titos-gold/5">
+            <div className="px-5 py-3 border-b border-titos-border bg-titos-gold/5 flex items-center justify-between">
               <h3 className="font-display font-bold text-titos-gold flex items-center gap-2">
                 <Trophy className="w-4 h-4" /> Overall Standings
               </h3>
+              <span className="text-titos-gray-500 text-[10px] uppercase tracking-wider hidden sm:block">PTS = Tier Factor + Sets Won</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-titos-border/50">
-                    {['#', 'Team', 'SW', 'SL', '+/-', 'PTS', 'Division'].map(h => (
-                      <th key={h} className={`px-3 py-3 text-xs font-semibold uppercase tracking-wider text-titos-gray-400 ${h === 'Team' ? 'text-left' : 'text-center'}`}>{h}</th>
+                    {['#', 'Team', 'SW', 'SL', '+/-', 'Tier', 'Sets', 'PTS', 'Div'].map(h => (
+                      <th key={h} className={`px-2.5 py-3 text-[10px] font-semibold uppercase tracking-wider text-titos-gray-400 ${h === 'Team' ? 'text-left' : 'text-center'}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -84,15 +85,17 @@ export default function StandingsClient({ leagues }) {
                     const div = getDivisionInfo(team.rank, standings.length, leagueType)
                     return (
                       <tr key={team.id} className={cn('border-b border-titos-border/30 hover:bg-titos-card/50', div.bgClass, myTeam === team.name && 'bg-titos-gold/[0.08] border-l-2 border-l-titos-gold')}>
-                        <td className="px-3 py-3 text-center">
+                        <td className="px-2.5 py-3 text-center">
                           <span className={cn('inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold', team.rank <= 3 ? 'bg-titos-gold/20 text-titos-gold' : 'text-titos-gray-400')}>{team.rank}</span>
                         </td>
-                        <td className="px-3 py-3 text-left font-semibold text-titos-white">{team.name}</td>
-                        <td className="px-3 py-3 text-center font-semibold text-status-success">{team.setsWon}</td>
-                        <td className="px-3 py-3 text-center font-semibold text-status-live">{team.setsLost}</td>
-                        <td className={`px-3 py-3 text-center font-bold ${team.pointDiff >= 0 ? 'text-status-success' : 'text-status-live'}`}>{team.pointDiff > 0 ? '+' : ''}{team.pointDiff}</td>
-                        <td className="px-3 py-3 text-center font-bold text-titos-white">{team.totalPoints}</td>
-                        <td className="px-3 py-3 text-center"><span className="text-xs font-semibold">{div.name}</span></td>
+                        <td className="px-2.5 py-3 text-left font-semibold text-titos-white text-sm">{team.name}</td>
+                        <td className="px-2.5 py-3 text-center font-semibold text-status-success text-sm">{team.setsWon}</td>
+                        <td className="px-2.5 py-3 text-center font-semibold text-status-live text-sm">{team.setsLost}</td>
+                        <td className={`px-2.5 py-3 text-center font-bold text-sm ${team.pointDiff >= 0 ? 'text-status-success' : 'text-status-live'}`}>{team.pointDiff > 0 ? '+' : ''}{team.pointDiff}</td>
+                        <td className="px-2.5 py-3 text-center text-titos-gray-400 text-sm">{team.basePoints || 0}</td>
+                        <td className="px-2.5 py-3 text-center text-titos-gray-400 text-sm">{team.setsWon}</td>
+                        <td className="px-2.5 py-3 text-center font-black text-titos-gold text-sm">{team.totalPoints}</td>
+                        <td className="px-2.5 py-3 text-center"><span className="text-[10px] font-semibold">{div.name}</span></td>
                       </tr>
                     )
                   })}
@@ -103,11 +106,12 @@ export default function StandingsClient({ leagues }) {
         ) : view === 'tiers' && tierView ? (
           <div className="space-y-4">
             {tierView.map(tier => {
-              const tc = getTierColor(tier.tierNumber)
+              const slotC = getSlotInfo(tier.tierNumber, tier.timeSlot)
+              const slotVar = tier.tierNumber <= 4 ? 'slot-early' : tier.tierNumber <= 8 ? 'slot-late' : 'slot-single'
               return (
                 <div key={tier.tierNumber} className="card rounded-xl overflow-hidden">
-                  <div className={`px-4 py-2.5 border-b border-titos-border flex items-center justify-between ${tc.bg}`}>
-                    <h4 className={`font-display font-bold text-sm ${tc.text}`}>Tier {tier.tierNumber}</h4>
+                  <div className={cn('px-4 py-2.5 border-b border-titos-border flex items-center justify-between', slotC.bg)} style={{ borderLeft: `3px solid var(--color-${slotVar})` }}>
+                    <h4 className={cn('font-display font-bold text-sm', slotC.color)}>Tier {tier.tierNumber}</h4>
                     <span className="text-titos-gray-400 text-xs">Court {tier.courtNumber} &middot; {
                       tier.timeSlot === 'single'
                         ? '9 PM – 12 AM'

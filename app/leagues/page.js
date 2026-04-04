@@ -87,8 +87,8 @@ export default async function LeaguesPage() {
                 <h3 className="font-display font-bold text-titos-white">The Tier System</h3>
               </div>
               <p className="text-titos-gray-300 text-sm leading-relaxed">
-                Teams are grouped into tiers of 3. Each week you play round-robin within your tier — 6 games total (3 matchups × 2 rounds).
-                <strong className="text-titos-gold"> 1st place moves up, 2nd stays, 3rd drops down.</strong> This means every week is a fresh challenge with different opponents.
+                Each week, teams are grouped into tiers of 3 and play a round-robin within their tier.
+                After results are tallied, <strong className="text-titos-gold">1st place moves up a tier, 2nd stays, and 3rd drops down.</strong> Every week brings new opponents and a fresh challenge.
               </p>
             </div>
 
@@ -98,8 +98,8 @@ export default async function LeaguesPage() {
                 <h3 className="font-display font-bold text-titos-white">Scoring & Points</h3>
               </div>
               <p className="text-titos-gray-300 text-sm leading-relaxed">
-                Sets are played to 25 (cap 27). Each week you earn base points (10 for upper tiers, 9 for lower) plus 1 point per set won.
-                Tiebreakers: Sets Won → Point Differential → Head-to-Head.
+                Sets are played to 25 points (cap at 27). Your weekly points are calculated as
+                <strong className="text-titos-gold"> Tier Factor + Sets Won</strong>. Higher tiers earn more base points — Tier 1 gets 8, Tier 2 gets 7, all the way down to Tier 8 which gets 1. Winning sets and climbing tiers is the path to the top.
               </p>
             </div>
 
@@ -109,9 +109,9 @@ export default async function LeaguesPage() {
                 <h3 className="font-display font-bold text-titos-white">Season Structure</h3>
               </div>
               <p className="text-titos-gray-300 text-sm leading-relaxed">
-                11 weeks total. <strong className="text-titos-gold">Week 1:</strong> Placement matches to seed tiers.
-                <strong className="text-titos-gold"> Weeks 2-10:</strong> Regular season with tier movement.
-                <strong className="text-titos-gold"> Week 11:</strong> Playoff championships.
+                Each season runs 11 weeks. <strong className="text-titos-gold">Week 1</strong> is placement — your team is seeded into an initial tier.
+                <strong className="text-titos-gold"> Weeks 2 through 10</strong> are the regular season with weekly tier movement based on results.
+                <strong className="text-titos-gold"> Week 11</strong> is playoffs — championship brackets by division.
               </p>
             </div>
 
@@ -121,7 +121,7 @@ export default async function LeaguesPage() {
                 <h3 className="font-display font-bold text-titos-white">Playoff Divisions</h3>
               </div>
               <p className="text-titos-gray-300 text-sm leading-relaxed">
-                Final standings determine your playoff division. 5 divisions — Diamond, Platinum, Gold, Silver, and Bronze — competing in elimination brackets.
+                Your cumulative season points determine your playoff division. Five divisions — <strong className="text-titos-gold">Diamond, Platinum, Gold, Silver, and Bronze</strong> — each play a single-elimination bracket on playoff night. Every team competes.
               </p>
             </div>
           </div>

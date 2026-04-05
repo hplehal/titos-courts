@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://titoscourts.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://titoscourts.com/leagues</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://titoscourts.com/leagues/tuesday-coed</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://titoscourts.com/leagues/sunday-mens</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://titoscourts.com/leagues/thursday-rec-coed</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://titoscourts.com/standings</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://titoscourts.com/schedule</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://titoscourts.com/champions</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://titoscourts.com/tournaments</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://titoscourts.com/register</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://titoscourts.com/waiver</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://titoscourts.com/rules</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://titoscourts.com/about</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://titoscourts.com/contact</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
+</urlset>

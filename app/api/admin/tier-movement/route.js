@@ -38,12 +38,11 @@ export async function POST(request) {
       tierData[tn].teams.push({ id: p.team.id, name: p.team.name, placementId: p.id })
     }
 
-    // Compute stats per team per tier
+    // Compute stats per team — find ALL matches the team played in (regardless of tier number)
     for (const [tierNum, data] of Object.entries(tierData)) {
       for (const team of data.teams) {
         let setsWon = 0, setsLost = 0, pointDiff = 0
         for (const match of week.matches) {
-          if (match.tierNumber !== parseInt(tierNum)) continue
           if (match.homeTeamId !== team.id && match.awayTeamId !== team.id) continue
 
           for (const score of match.scores) {

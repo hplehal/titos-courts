@@ -545,10 +545,10 @@ function WeekCard({ week, season, onGenerateMatches, generatingMatches, onStatus
           {/* Tier & Match actions */}
           <div className="flex flex-wrap gap-2">
             {/* Setup/Edit Tiers */}
-            {week.weekNumber <= 2 && placementCount === 0 && (
+            {placementCount === 0 && (
               <SetupTiersButton weekId={week.id} seasonId={season.id} teams={season.teams || []} tiers={season.tiers || []} onDone={onReload} />
             )}
-            {week.weekNumber <= 2 && placementCount > 0 && (
+            {placementCount > 0 && (
               <SetupTiersButton weekId={week.id} seasonId={season.id} teams={season.teams || []} tiers={season.tiers || []} onDone={onReload} editMode />
             )}
 

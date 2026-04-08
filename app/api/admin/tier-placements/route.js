@@ -21,6 +21,32 @@ export async function GET(request) {
   return NextResponse.json({ placements })
 }
 
+// PATCH: Swap two teams between tiers for any week
+export async function PATCH(request) {
+  try {
+    const { weekId, teamAId, teamBId } = await request.json()
+    if (!weekId || !teamAId || !teamBId) {
+      return NextResponse.json({ error: 'weekId, teamAId, and teamBId required' }, { status: 400 })
+    }
+
+    const placementA = await prisma.tierPlacement.findUnique({ where: { teamId_weekId: { teamId: teamAId, weekId } } })
+    const placementB = await prisma.tierPlacement.findUnique({ where: { teamId_weekId: { teamId: teamBId, weekId } } })
+
+    if (!placementA || !placementB) {
+      return NextResponse.json({ error: 'One or both teams not found in this week' }, { status: 404 })
+    }
+
+    // Swap their tier assignments
+    await prisma.tierPlacement.update({ where: { id: placementA.id }, data: { tierId: placementB.tierId } })
+    await prisma.tierPlacement.update({ where: { id: placementB.id }, data: { tierId: placementA.tierId } })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Tier swap error:', error)
+    return NextResponse.json({ error: 'Failed to swap teams' }, { status: 500 })
+  }
+}
+
 // POST: Save tier assignments OR ensure tiers exist for a season
 export async function POST(request) {
   try {

@@ -39,6 +39,7 @@ Create a `.env` file:
 
 ```
 DATABASE_URL="your-postgres-connection-string"
+ADMIN_PASSWORD="your-admin-password"
 ```
 
 ## Project Structure

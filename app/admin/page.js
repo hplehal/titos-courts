@@ -5,17 +5,26 @@ import Link from 'next/link'
 import { Shield, Loader2, Save, Check, CheckCircle2, Plus, RefreshCw, AlertTriangle, Calendar, Users, Trophy, FileText, X } from 'lucide-react'
 import { cn, getSlotInfo } from '@/lib/utils'
 
-const ADMIN_PASSWORD = 'titos2026'
 const TABS = ['Scores', 'Results', 'Tiers', 'Next Week']
 
 // ─── Auth Gate ───
 function AuthGate({ onAuth }) {
   const [pw, setPw] = useState('')
   const [err, setErr] = useState('')
-  const submit = (e) => {
+  const [checking, setChecking] = useState(false)
+  const submit = async (e) => {
     e.preventDefault()
-    if (pw === ADMIN_PASSWORD) { sessionStorage.setItem('admin_auth', 'true'); onAuth() }
-    else setErr('Invalid password')
+    setChecking(true)
+    setErr('')
+    try {
+      const res = await fetch('/api/admin/auth', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw }),
+      })
+      if (res.ok) { sessionStorage.setItem('admin_auth', 'true'); onAuth() }
+      else setErr('Invalid password')
+    } catch { setErr('Connection error') }
+    setChecking(false)
   }
   return (
     <div className="min-h-screen flex items-center justify-center px-4">

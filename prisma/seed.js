@@ -145,9 +145,9 @@ function generateMatchesForTier(tierTeams, tierNumber, courtNumber, rounds = 2) 
   for (let r = 1; r <= rounds; r++) {
     const baseOrder = (r - 1) * 3
     matches.push(
-      { home: A, away: B, ref: C, round: r, order: baseOrder + 1 },
-      { home: C, away: A, ref: B, round: r, order: baseOrder + 2 },
-      { home: B, away: C, ref: A, round: r, order: baseOrder + 3 },
+      { home: A, away: C, ref: B, round: r, order: baseOrder + 1 },
+      { home: B, away: A, ref: C, round: r, order: baseOrder + 2 },
+      { home: C, away: B, ref: A, round: r, order: baseOrder + 3 },
     )
   }
   return matches
@@ -550,9 +550,9 @@ async function createMatchesForWeek(week, tiers, tierComps, totalTiers, withScor
     for (let r = 1; r <= rounds; r++) {
       const baseOrder = (r - 1) * 3
       matchDefs.push(
-        { home: A, away: B, ref: C, round: r, order: baseOrder + 1 },
-        { home: C, away: A, ref: B, round: r, order: baseOrder + 2 },
-        { home: B, away: C, ref: A, round: r, order: baseOrder + 3 },
+        { home: A, away: C, ref: B, round: r, order: baseOrder + 1 },
+        { home: B, away: A, ref: C, round: r, order: baseOrder + 2 },
+        { home: C, away: B, ref: A, round: r, order: baseOrder + 3 },
       )
     }
 

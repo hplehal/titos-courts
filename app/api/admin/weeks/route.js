@@ -297,10 +297,12 @@ async function handleGenerateMatches({ weekId }) {
 
     for (let r = 1; r <= rounds; r++) {
       const baseOrder = (r - 1) * 3
+      // Schedule: A vs C, B vs A, C vs B (× 2 rounds)
+      // 2nd team (B) refs sets 1,4 — plays sets 2,3,5,6
       const matchDefs = [
-        { home: A, away: B, ref: C, round: r, order: baseOrder + 1 },
-        { home: C, away: A, ref: B, round: r, order: baseOrder + 2 },
-        { home: B, away: C, ref: A, round: r, order: baseOrder + 3 },
+        { home: A, away: C, ref: B, round: r, order: baseOrder + 1 },
+        { home: B, away: A, ref: C, round: r, order: baseOrder + 2 },
+        { home: C, away: B, ref: A, round: r, order: baseOrder + 3 },
       ]
 
       for (const md of matchDefs) {

@@ -5,23 +5,23 @@ import Link from 'next/link'
 import { Trophy, Crown } from 'lucide-react'
 
 const coedChampions = [
-  { season: 8, team: 'Net Losses', image: null, year: '2025' },
-  { season: 7, team: 'Net Losses', image: null, year: '2024' },
-  { season: 6, team: 'BounceTown', image: null, year: '2024' },
-  { season: 5, team: 'Sauce Walkas', image: null, year: '2024' },
-  { season: 4, team: 'Setsy & We Know It', image: null, year: '2023' },
-  { season: 3, team: 'Despicable Pookies', image: null, year: '2023' },
-  { season: 2, team: 'Tip Pics', image: '/images/tipPics.jpg', year: '2023' },
-  { season: 1, team: 'Safe Sets', image: null, year: '2023' },
+  { season: 8, team: 'Net Losses', image: '/images/champions/netLosses2.jpg', year: '2026' },
+  { season: 7, team: 'Net Losses', image: '/images/champions/netLosses.jpg', year: '2025' },
+  { season: 6, team: 'BounceTown', image: '/images/champions/bounceTown.jpg', year: '2025' },
+  { season: 5, team: 'Sauce Walkas', image: '/images/champions/sauceWalkas.jpg', year: '2025' },
+  { season: 4, team: 'Setsy & We Know It', image: '/images/champions/sawki.jpg', year: '2024' },
+  { season: 3, team: 'Despicable Pookies', image: '/images/champions/dPookies.jpg', year: '2024' },
+  { season: 2, team: 'Tip Pics', image: '/images/champions/tipPics.jpg', year: '2024' },
+  { season: 1, team: 'Safe Sets', image: '/images/champions/safeSets.jpg', year: '2023' },
 ]
 
 const mensChampions = [
-  { season: 6, team: 'Spartans', image: null, year: '2025' },
-  { season: 5, team: "Brandy's Angels", image: null, year: '2024' },
-  { season: 4, team: "David's Dictatorship", image: null, year: '2024' },
-  { season: 3, team: 'Sari Sari Squad', image: null, year: '2024' },
-  { season: 2, team: 'High & Holy', image: null, year: '2023' },
-  { season: 1, team: 'Sets With Jerhomies', image: null, year: '2023' },
+  { season: 6, team: 'Spartans', image: '/images/champions/spartans.jpg', year: '2026' },
+  { season: 5, team: "Brandy's Angels", image: '/images/champions/bAngels.jpg', year: '2025' },
+  { season: 4, team: "David's Dictatorship", image: '/images/champions/davidDictatorship.jpg', year: '2025' },
+  { season: 3, team: 'Sari Sari Squad', image: '/images/champions/sarisari.jpg', year: '2025' },
+  { season: 2, team: 'High & Holy', image: '/images/champions/High&Holy.jpg', year: '2024' },
+  { season: 1, team: 'Sets With Jerhomies', image: '/images/champions/jerhomies.jpg', year: '2024' },
 ]
 
 function ChampionCard({ champ, index, featured = false }) {

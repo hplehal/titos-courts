@@ -14,23 +14,23 @@ import {
 import LatestResults from '@/components/home/LatestResults'
 
 const coedChampions = [
-  { season: 1, team: 'Safe Sets', image: null },
-  { season: 2, team: 'Tip Pics', image: '/images/tipPics.jpg' },
-  { season: 3, team: 'Despicable Pookies', image: null },
-  { season: 4, team: 'Setsy & We Know It', image: null },
-  { season: 5, team: 'Sauce Walkas', image: null },
-  { season: 6, team: 'BounceTown', image: null },
-  { season: 7, team: 'Net Losses', image: null },
-  { season: 8, team: 'Net Losses', image: null },
+  { season: 1, team: 'Safe Sets', image: '/images/champions/safeSets.jpg' },
+  { season: 2, team: 'Tip Pics', image: '/images/champions/tipPics.jpg' },
+  { season: 3, team: 'Despicable Pookies', image: '/images/champions/dPookies.jpg' },
+  { season: 4, team: 'Setsy & We Know It', image: '/images/champions/sawki.jpg' },
+  { season: 5, team: 'Sauce Walkas', image: '/images/champions/sauceWalkas.jpg' },
+  { season: 6, team: 'BounceTown', image: '/images/champions/bounceTown.jpg' },
+  { season: 7, team: 'Net Losses', image: '/images/champions/netLosses.jpg' },
+  { season: 8, team: 'Net Losses', image: '/images/champions/netLosses2.jpg' },
 ]
 
 const mensChampions = [
-  { season: 1, team: 'Sets With Jerhomies', image: null },
-  { season: 2, team: 'High & Holy', image: null },
-  { season: 3, team: 'Sari Sari Squad', image: null },
-  { season: 4, team: "David's Dictatorship", image: null },
-  { season: 5, team: "Brandy's Angels", image: null },
-  { season: 6, team: 'Spartans', image: null },
+  { season: 1, team: 'Sets With Jerhomies', image: '/images/champions/jerhomies.jpg' },
+  { season: 2, team: 'High & Holy', image: '/images/champions/High&Holy.jpg' },
+  { season: 3, team: 'Sari Sari Squad', image: '/images/champions/sarisari.jpg' },
+  { season: 4, team: "David's Dictatorship", image: '/images/champions/davidDictatorship.jpg' },
+  { season: 5, team: "Brandy's Angels", image: '/images/champions/bAngels.jpg' },
+  { season: 6, team: 'Spartans', image: '/images/champions/spartans.jpg' },
 ]
 
 const leagues = [
@@ -304,41 +304,37 @@ export default function HomePage() {
           {/* Photo grid — placeholder images, replace with real photos */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="col-span-2 row-span-2 relative rounded-xl overflow-hidden aspect-[4/3]">
-              <Image src="/images/titosHero.jpg" alt="Game night at Pakmen Courts" fill className="object-cover" />
+              <Image src="/images/community/community3.JPG" alt="Game night at Pakmen Courts" fill className="object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
               <div className="absolute bottom-4 left-4">
-                <span className="text-titos-white font-display text-lg font-black">Game Night</span>
-                <span className="block text-titos-gray-200 text-xs">Pakmen Courts, Mississauga</span>
+                <span className="text-titos-white font-display text-lg font-black">Banquet Night</span>
+                <span className="block text-titos-gray-200 text-xs">Hilton, Mississauga</span>
               </div>
             </div>
             <div className="relative rounded-xl overflow-hidden aspect-square">
-              <Image src="/images/IMG_20231005_001649_419.jpg" alt="Tito's Courts players" fill className="object-cover" />
+              <Image src="/images/community/community5.JPG" alt="Game night at Pakmen Courts" fill className="object-cover" />
             </div>
             {/* Placeholder cards — replace these with real photos */}
             <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center border border-titos-border/30">
               <div className="text-center p-4">
-                <span className="text-titos-gold text-4xl font-black font-display block">🏐</span>
-                <span className="text-titos-gray-400 text-[9px] uppercase tracking-wider mt-2 block">Add Photo</span>
+               <Image src="/images/community/community2.JPG" alt="Game night at Pakmen Courts" fill className="object-cover" />
               </div>
             </div>
             <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center border border-titos-border/30">
               <div className="text-center p-4">
-                <span className="text-titos-gold text-4xl font-black font-display block">🏐</span>
-                <span className="text-titos-gray-400 text-[9px] uppercase tracking-wider mt-2 block">Add Photo</span>
+               <Image src="/images/community/community6.JPG" alt="Game night at Pakmen Courts" fill className="object-cover" />
               </div>
             </div>
             <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center border border-titos-border/30">
               <div className="text-center p-4">
-                <span className="text-titos-gold text-4xl font-black font-display block">🏐</span>
-                <span className="text-titos-gray-400 text-[9px] uppercase tracking-wider mt-2 block">Add Photo</span>
+               <Image src="/images/community/community1.JPG" alt="Game night at Pakmen Courts" fill className="object-cover" />
               </div>
             </div>
-            <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center border border-titos-border/30">
+            {/* <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center border border-titos-border/30">
               <div className="text-center p-4">
-                <span className="text-titos-gold text-4xl font-black font-display block">🏐</span>
-                <span className="text-titos-gray-400 text-[9px] uppercase tracking-wider mt-2 block">Add Photo</span>
+               <Image src="/images/community/community6.JPG" alt="Game night at Pakmen Courts" fill className="object-cover" />
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
@@ -406,15 +402,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══ HALL OF CHAMPIONS TEASER ═══ */}
+      {/* ═══ HALL OF CHAMPIONS ═══ */}
       <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
             <div>
               <span className="text-titos-gold text-xs font-bold uppercase tracking-[0.2em] mb-2 block">Hall of Champions</span>
               <h2 className="text-4xl sm:text-5xl font-black text-titos-white leading-none">
-                DIAMOND<br />
-                <span className="text-titos-gray-400">DIVISION WINNERS.</span>
+                DEFENDING<br />
+                <span className="text-titos-gray-400">CHAMPIONS.</span>
               </h2>
             </div>
             <Link href="/champions" className="text-titos-gold text-sm font-bold uppercase tracking-wider flex items-center gap-2 hover:gap-3 transition-all">
@@ -422,35 +418,58 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Latest champions teaser */}
           <div className="grid sm:grid-cols-2 gap-4">
-            {/* COED defending */}
-            <Link href="/champions" className="group card-flat rounded-2xl overflow-hidden">
-              <div className="p-6 flex items-center gap-5">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-titos-gold/20 to-titos-card flex items-center justify-center flex-shrink-0 border border-titos-gold/30">
-                  <Trophy className="w-7 h-7 text-titos-gold" />
-                </div>
-                <div>
-                  <span className="text-titos-gray-400 text-[9px] font-bold uppercase tracking-wider block">COED · Defending Champion</span>
-                  <h3 className="font-display text-xl font-black text-titos-white group-hover:text-titos-gold transition-colors">{coedChampions[0].team}</h3>
-                  <span className="text-titos-gray-500 text-xs">Season {coedChampions[0].season} · Back-to-back 🏆🏆</span>
-                </div>
-              </div>
-            </Link>
+            {/* COED Season 8 Champion */}
+            {(() => {
+              const champ = coedChampions[coedChampions.length - 1]
+              return (
+                <Link href="/champions" className="group card-flat rounded-2xl overflow-hidden">
+                  <div className="relative aspect-[16/9] sm:aspect-[2/1]">
+                    {champ.image ? (
+                      <Image src={champ.image} alt={champ.team} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-titos-card to-titos-elevated flex items-center justify-center">
+                        <Trophy className="w-12 h-12 text-titos-gold/30" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                    <div className="absolute top-3 left-3">
+                      <span className="px-2 py-0.5 bg-titos-gold text-black text-[9px] font-black uppercase tracking-wider rounded">COED Season {champ.season}</span>
+                    </div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h3 className="font-display text-2xl font-black text-titos-white group-hover:text-titos-gold transition-colors">{champ.team}</h3>
+                      <span className="text-titos-gray-300 text-xs">Diamond Division Champions · Back-to-back 🏆🏆</span>
+                    </div>
+                  </div>
+                </Link>
+              )
+            })()}
 
-            {/* MENS defending */}
-            <Link href="/champions" className="group card-flat rounded-2xl overflow-hidden">
-              <div className="p-6 flex items-center gap-5">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-titos-gold/20 to-titos-card flex items-center justify-center flex-shrink-0 border border-titos-gold/30">
-                  <Trophy className="w-7 h-7 text-titos-gold" />
-                </div>
-                <div>
-                  <span className="text-titos-gray-400 text-[9px] font-bold uppercase tracking-wider block">MENS · Defending Champion</span>
-                  <h3 className="font-display text-xl font-black text-titos-white group-hover:text-titos-gold transition-colors">{mensChampions[0].team}</h3>
-                  <span className="text-titos-gray-500 text-xs">Season {mensChampions[0].season}</span>
-                </div>
-              </div>
-            </Link>
+            {/* MENS Season 6 Champion */}
+            {(() => {
+              const champ = mensChampions[mensChampions.length - 1]
+              return (
+                <Link href="/champions" className="group card-flat rounded-2xl overflow-hidden">
+                  <div className="relative aspect-[16/9] sm:aspect-[2/1]">
+                    {champ.image ? (
+                      <Image src={champ.image} alt={champ.team} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-titos-card to-titos-elevated flex items-center justify-center">
+                        <Trophy className="w-12 h-12 text-titos-gold/30" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                    <div className="absolute top-3 left-3">
+                      <span className="px-2 py-0.5 bg-titos-gold text-black text-[9px] font-black uppercase tracking-wider rounded">MENS Season {champ.season}</span>
+                    </div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h3 className="font-display text-2xl font-black text-titos-white group-hover:text-titos-gold transition-colors">{champ.team}</h3>
+                      <span className="text-titos-gray-300 text-xs">Diamond Division Champions</span>
+                    </div>
+                  </div>
+                </Link>
+              )
+            })()}
           </div>
         </div>
       </section>

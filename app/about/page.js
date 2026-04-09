@@ -22,7 +22,7 @@ export default function AboutPage() {
             <div className="grid lg:grid-cols-5 gap-8 items-center">
               <div className="lg:col-span-3">
                 <p className="text-titos-gray-200 leading-relaxed mb-4">
-                  Tito&apos;s Courts started the way all great things do — with a group of friends who just wanted to play volleyball.
+                  Tito&apos;s Courts started the way all great things do with a group of friends who just wanted to play volleyball.
                   In 2023, Tej and Christian gathered a handful of people, booked a court at Pakmen, and set up what was supposed to be a one-time thing.
                 </p>
                 <p className="text-titos-gray-200 leading-relaxed mb-4">
@@ -31,13 +31,13 @@ export default function AboutPage() {
                   exactly this kind of community.
                 </p>
                 <p className="text-titos-gray-200 leading-relaxed">
-                  Today, Tito&apos;s Courts runs three weekly leagues with 50+ teams, multiple tournaments per month, and a growing
+                  Today, Tito&apos;s Courts runs three weekly leagues with 50+ teams, tournaments, and a growing
                   community of volleyball lovers who show up every week to compete, socialize, and have fun.
                 </p>
               </div>
               <div className="lg:col-span-2">
                 <div className="aspect-[3/4] rounded-xl bg-titos-charcoal border border-titos-border flex items-center justify-center overflow-hidden">
-                  <Image src="/images/titosHero.jpg" alt="Tito's Courts community" width={400} height={500} className="w-full h-full object-cover" />
+                  <Image src="/images/tejChristian.jpg" alt="Tito's Courts community" width={400} height={500} className="w-full h-full object-cover" />
                 </div>
               </div>
             </div>

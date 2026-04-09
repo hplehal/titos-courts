@@ -75,10 +75,17 @@ export default function HomePage() {
     <div>
       {/* ═══ HERO ═══ */}
       <section className="relative min-h-[100vh] flex items-end pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8">
-        {/* Background layers */}
-        <div className="absolute inset-0 bg-titos-surface" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-titos-surface/90" />
-        <div className="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-l from-titos-gold/[0.04] to-transparent" />
+        {/* Background video */}
+        <video
+          autoPlay muted loop playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          poster="/images/titosHero.jpg"
+        >
+          <source src="/images/hero-video.mp4" type="video/mp4" />
+        </video>
+        {/* Overlay gradients */}
+        <div className="absolute inset-0 bg-titos-surface/70" />
+        <div className="absolute inset-0 bg-gradient-to-t from-titos-surface via-titos-surface/50 to-transparent" />
         <div className="absolute bottom-0 left-0 w-full h-[40%] bg-gradient-to-t from-titos-surface to-transparent z-[1]" />
 
         <div className="relative z-10 max-w-7xl mx-auto w-full">

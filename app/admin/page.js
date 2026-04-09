@@ -529,20 +529,16 @@ export default function AdminPage() {
 
   useEffect(() => { loadMatches() }, [loadMatches])
 
-  // Auto-detect tab based on week state
+  // Auto-detect tab ONLY when week changes (not when scores are being typed)
   useEffect(() => {
     if (!selectedWeek) return
     const hasMatches = (selectedWeek._count?.matches || 0) > 0
-    const hasScores = matches.some(m => m.scores?.length > 0 && (m.scores[0].homeScore > 0 || m.scores[0].awayScore > 0))
     const isCompleted = selectedWeek.status === 'completed'
-    const hasPlacements = (selectedWeek._count?.tierPlacements || 0) > 0
 
-    if (isCompleted && hasPlacements) setActiveTab('Tiers')
-    else if (isCompleted && hasScores) setActiveTab('Results')
-    else if (hasMatches && hasScores) setActiveTab('Results')
+    if (isCompleted) setActiveTab('Tiers')
     else if (hasMatches) setActiveTab('Scores')
     else setActiveTab('Next Week')
-  }, [selectedWeek, matches])
+  }, [selectedWeek?.id])
 
   // Score handlers
   const updateMatchScore = useCallback((matchId, field, value) => {

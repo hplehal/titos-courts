@@ -311,7 +311,7 @@ export default function HomePage() {
           {/* Photo grid — placeholder images, replace with real photos */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="col-span-2 row-span-2 relative rounded-xl overflow-hidden aspect-[4/3]">
-              <Image src="/images/community/community3.JPG" alt="Game night at Pakmen Courts" fill className="object-cover" />
+              <Image src="/images/community/community3.jpg" alt="Game night at Pakmen Courts" fill className="object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
               <div className="absolute bottom-4 left-4">
                 <span className="text-titos-white font-display text-lg font-black">Banquet Night</span>
@@ -319,27 +319,27 @@ export default function HomePage() {
               </div>
             </div>
             <div className="relative rounded-xl overflow-hidden aspect-square">
-              <Image src="/images/community/community5.JPG" alt="Game night at Pakmen Courts" fill className="object-cover" />
+              <Image src="/images/community/community5.jpg" alt="Game night at Pakmen Courts" fill className="object-cover" />
             </div>
             {/* Placeholder cards — replace these with real photos */}
             <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center border border-titos-border/30">
               <div className="text-center p-4">
-               <Image src="/images/community/community2.JPG" alt="Game night at Pakmen Courts" fill className="object-cover" />
+               <Image src="/images/community/community2.jpg" alt="Game night at Pakmen Courts" fill className="object-cover" />
               </div>
             </div>
             <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center border border-titos-border/30">
               <div className="text-center p-4">
-               <Image src="/images/community/community6.JPG" alt="Game night at Pakmen Courts" fill className="object-cover" />
+               <Image src="/images/community/community6.jpg" alt="Game night at Pakmen Courts" fill className="object-cover" />
               </div>
             </div>
             <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center border border-titos-border/30">
               <div className="text-center p-4">
-               <Image src="/images/community/community1.JPG" alt="Game night at Pakmen Courts" fill className="object-cover" />
+               <Image src="/images/community/community1.jpg" alt="Game night at Pakmen Courts" fill className="object-cover" />
               </div>
             </div>
             {/* <div className="relative rounded-xl overflow-hidden aspect-square bg-titos-card flex items-center justify-center border border-titos-border/30">
               <div className="text-center p-4">
-               <Image src="/images/community/community6.JPG" alt="Game night at Pakmen Courts" fill className="object-cover" />
+               <Image src="/images/community/community6.jpg" alt="Game night at Pakmen Courts" fill className="object-cover" />
               </div>
             </div> */}
           </div>

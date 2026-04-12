@@ -1,7 +1,10 @@
 import prisma from '@/lib/prisma'
 import ScheduleClient from './ScheduleClient'
 
-export const metadata = { title: 'Schedule' }
+export const metadata = {
+  title: 'Schedule',
+  description: 'Weekly game schedule for Tito\'s Courts volleyball leagues. Find your tier, court assignment, and opponents for this week.',
+}
 export const dynamic = 'force-dynamic'
 
 async function getData() {

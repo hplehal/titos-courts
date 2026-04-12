@@ -5,7 +5,10 @@ import SectionHeading from '@/components/ui/SectionHeading'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { getLeagueTimeDisplay } from '@/lib/utils'
 
-export const metadata = { title: 'Leagues' }
+export const metadata = {
+  title: 'Leagues',
+  description: 'Three weekly recreational volleyball leagues in Mississauga and Toronto. Tuesday COED, Sunday MENS, and Thursday REC COED at Pakmen Courts.',
+}
 export const dynamic = 'force-dynamic'
 
 async function getLeagues() {

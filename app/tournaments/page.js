@@ -5,7 +5,10 @@ import SectionHeading from '@/components/ui/SectionHeading'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { formatDate } from '@/lib/utils'
 
-export const metadata = { title: 'Tournaments' }
+export const metadata = {
+  title: 'Tournaments',
+  description: 'Upcoming and past volleyball tournaments at Tito\'s Courts. One-day events open to all teams in the GTA.',
+}
 export const dynamic = 'force-dynamic'
 
 async function getTournaments() {

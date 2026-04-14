@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  try {
   // For each active league, get the most recently completed week with tier placements
   const leagues = await prisma.league.findMany({
     where: { isActive: true },
@@ -70,4 +71,8 @@ export async function GET() {
   }
 
   return NextResponse.json({ results })
+  } catch (error) {
+    console.error('Results latest error:', error.message)
+    return NextResponse.json({ results: [] })
+  }
 }

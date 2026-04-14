@@ -116,14 +116,14 @@ const sundayMENSTeams = [
 
 // Tuesday COED: 8 tiers, early slot 8PM-10PM, late slot 10PM-12AM
 const tuesdayTierDefs = [
-  { tierNumber: 1, courtNumber: 7, timeSlot: 'early' },
-  { tierNumber: 2, courtNumber: 6, timeSlot: 'early' },
-  { tierNumber: 3, courtNumber: 8, timeSlot: 'early' },
-  { tierNumber: 4, courtNumber: 9, timeSlot: 'early' },
-  { tierNumber: 5, courtNumber: 7, timeSlot: 'late' },
-  { tierNumber: 6, courtNumber: 6, timeSlot: 'late' },
-  { tierNumber: 7, courtNumber: 8, timeSlot: 'late' },
-  { tierNumber: 8, courtNumber: 9, timeSlot: 'late' },
+  { tierNumber: 1, courtNumber: 6, timeSlot: 'early' },
+  { tierNumber: 2, courtNumber: 8, timeSlot: 'early' },
+  { tierNumber: 3, courtNumber: 9, timeSlot: 'early' },
+  { tierNumber: 4, courtNumber: 10, timeSlot: 'early' },
+  { tierNumber: 5, courtNumber: 6, timeSlot: 'late' },
+  { tierNumber: 6, courtNumber: 8, timeSlot: 'late' },
+  { tierNumber: 7, courtNumber: 9, timeSlot: 'late' },
+  { tierNumber: 8, courtNumber: 10, timeSlot: 'late' },
 ]
 
 // Sunday MENS: 5 tiers, 5 courts, single time slot 9PM-12AM

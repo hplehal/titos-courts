@@ -369,18 +369,59 @@ export default function ScheduleClient({ leagues, initialSlug }) {
         </div>
 
         {loading ? (
-          <div>
-            <div className="h-5 bg-titos-charcoal rounded w-48 mb-6 animate-pulse" />
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="rounded-xl bg-titos-card ring-1 ring-titos-border/20 p-4 animate-pulse">
-                  <div className="h-4 bg-titos-charcoal rounded w-16 mb-4" />
-                  <div className="space-y-2">
-                    <div className="h-8 bg-titos-charcoal/50 rounded-xl" />
-                    <div className="h-8 bg-titos-charcoal/50 rounded-xl" />
-                    <div className="h-8 bg-titos-charcoal/50 rounded-xl" />
+          <div className="min-h-[2600px]">
+            {/* Week header placeholder (44px) */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-7 bg-titos-charcoal rounded w-32 animate-pulse" />
+              <div className="h-5 bg-titos-charcoal rounded w-24 animate-pulse" />
+            </div>
+
+            {/* Slot 1 (EARLY) */}
+            <div className="mb-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-9 bg-titos-charcoal rounded-lg w-28 animate-pulse" />
+                <div className="flex-1 h-px bg-titos-border/20" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="rounded-xl bg-titos-card ring-1 ring-titos-border/20 p-4 animate-pulse min-h-[280px]">
+                    <div className="h-5 bg-titos-charcoal rounded w-20 mb-4" />
+                    <div className="space-y-2">
+                      <div className="h-12 bg-titos-charcoal/50 rounded-xl" />
+                      <div className="h-12 bg-titos-charcoal/50 rounded-xl" />
+                      <div className="h-12 bg-titos-charcoal/50 rounded-xl" />
+                    </div>
                   </div>
-                </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Slot 2 (LATE) */}
+            <div className="mb-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-9 bg-titos-charcoal rounded-lg w-28 animate-pulse" />
+                <div className="flex-1 h-px bg-titos-border/20" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="rounded-xl bg-titos-card ring-1 ring-titos-border/20 p-4 animate-pulse min-h-[280px]">
+                    <div className="h-5 bg-titos-charcoal rounded w-20 mb-4" />
+                    <div className="space-y-2">
+                      <div className="h-12 bg-titos-charcoal/50 rounded-xl" />
+                      <div className="h-12 bg-titos-charcoal/50 rounded-xl" />
+                      <div className="h-12 bg-titos-charcoal/50 rounded-xl" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Season timeline placeholder (88px) */}
+            <div className="section-line mb-5" />
+            <div className="h-3 bg-titos-charcoal rounded w-20 mb-3 animate-pulse" />
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(i => (
+                <div key={i} className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-titos-card ring-1 ring-titos-border/20 animate-pulse" />
               ))}
             </div>
           </div>

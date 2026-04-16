@@ -48,14 +48,17 @@ function groupTiersBySlot(tiers, selected) {
 /* ─── Loading Skeletons ─── */
 
 function OverallSkeleton() {
+  // Render 18 placeholder rows (splits the difference between MENS 15-team
+  // and COED 24-team leagues) so the skeleton height is within ~100px of
+  // the real table. Prevents large CLS when data arrives.
   return (
-    <div className="card rounded-xl overflow-hidden">
+    <div className="card rounded-xl overflow-hidden min-h-[1200px]">
       <div className="px-5 py-3 border-b border-titos-border bg-titos-card animate-pulse">
         <div className="h-5 bg-titos-elevated rounded w-40" />
       </div>
       <div className="p-4 space-y-3">
-        {[1, 2, 3, 4, 5, 6].map(i => (
-          <div key={i} className="flex items-center gap-3 animate-pulse">
+        {Array.from({ length: 18 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 animate-pulse py-1">
             <div className="w-7 h-7 rounded-full bg-titos-elevated" />
             <div className="h-4 bg-titos-elevated rounded flex-1 max-w-48" />
             <div className="h-4 bg-titos-elevated rounded w-10" />
@@ -279,12 +282,13 @@ export default function StandingsClient({ leagues, initialSlug }) {
           </div>
         </div>
 
-        {/* Team filter */}
-        {standings && standings.length > 0 && (
-          <div className="mb-6">
+        {/* Team filter — always reserve 72px to prevent CLS when data loads */}
+        <div className="mb-6 min-h-[56px]">
+          {standings && standings.length > 0 && (
             <TeamFilter teams={standings.map(t => t.name)} selected={myTeam} onSelect={setMyTeam} />
-          </div>
-        )}
+          )}
+        </div>
+
 
         {loading ? (
           view === 'overall' ? <OverallSkeleton /> : <TierSkeleton />

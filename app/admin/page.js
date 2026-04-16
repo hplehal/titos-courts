@@ -286,22 +286,30 @@ function TiersView({ weekId, weeks, onReloadMatches }) {
 
   return (
     <div>
+      {/* Swap prompt — fixed toast so it doesn't push content (no CLS) */}
       {swap && (
-        <div className="mb-4 p-3 rounded-xl bg-titos-gold/10 border border-titos-gold/30 flex items-center justify-between">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 max-w-md w-[calc(100%-2rem)] p-3 rounded-xl bg-titos-gold/15 border border-titos-gold/40 backdrop-blur-md shadow-lg flex items-center justify-between gap-3">
           <span className="text-titos-gold text-sm font-bold">Swap {swap.teamName} (T{swap.tierNumber}) → click a team in another tier to swap</span>
-          <button onClick={() => setSwap(null)} className="text-titos-gray-400 hover:text-titos-white"><X className="w-4 h-4" /></button>
+          <button onClick={() => setSwap(null)} className="text-titos-gray-400 hover:text-titos-white flex-shrink-0"><X className="w-4 h-4" /></button>
         </div>
       )}
 
-      {!applied && (
-        <div className="flex justify-end mb-4">
+      {/* Apply movements button — reserve 56px even when 'applied' toast is showing */}
+      <div className="flex justify-end mb-4 min-h-[40px]">
+        {!applied && (
           <button onClick={applyMovements} disabled={applying || !preview?.tiers} className="btn-primary text-xs py-2 disabled:opacity-50">
             {applying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
             Apply Movements
           </button>
+        )}
+      </div>
+
+      {/* Applied confirmation — fixed toast so it doesn't push content */}
+      {applied && (
+        <div className="fixed bottom-6 right-6 z-40 max-w-sm p-3 rounded-xl bg-status-success/15 border border-status-success/40 backdrop-blur-md shadow-lg text-status-success text-sm font-bold flex items-center gap-2">
+          <Check className="w-4 h-4 flex-shrink-0" />Movements applied. You can still swap teams below.
         </div>
       )}
-      {applied && <div className="mb-4 p-3 rounded-xl bg-status-success/10 border border-status-success/30 text-status-success text-sm font-bold flex items-center gap-2"><Check className="w-4 h-4" />Movements applied. You can still swap teams below.</div>}
 
       <div className="space-y-4">
         {preview?.tiers?.map(tier => (
@@ -624,7 +632,28 @@ export default function AdminPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-20"><Loader2 className="w-8 h-8 text-titos-gold mx-auto animate-spin" /></div>
+          <div className="min-h-[2000px]">
+            {/* Week pills placeholder (44px) */}
+            <div className="flex items-center gap-1.5 mb-5">
+              {Array.from({ length: 11 }).map((_, i) => (
+                <div key={i} className="w-9 h-9 rounded-full bg-titos-charcoal animate-pulse" />
+              ))}
+            </div>
+            {/* Meta line (20px) */}
+            <div className="h-4 bg-titos-charcoal rounded w-48 mb-4 animate-pulse" />
+            {/* Tabs bar (44px) */}
+            <div className="flex gap-4 mb-5 border-b border-titos-border/30">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-10 bg-titos-charcoal rounded w-20 animate-pulse" />
+              ))}
+            </div>
+            {/* Tier blocks (8 × 280px) */}
+            <div className="space-y-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="card-flat rounded-xl min-h-[200px] animate-pulse" />
+              ))}
+            </div>
+          </div>
         ) : !season ? (
           <div className="card rounded-xl p-8 text-center"><p className="text-titos-gray-400">No season found for this league.</p></div>
         ) : (
@@ -670,7 +699,11 @@ export default function AdminPage() {
 
             {/* ─── Tab Content ─── */}
             {loadingMatches ? (
-              <div className="text-center py-12"><Loader2 className="w-6 h-6 text-titos-gold mx-auto animate-spin" /></div>
+              <div className="min-h-[1600px] space-y-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="card-flat rounded-xl min-h-[180px] animate-pulse" />
+                ))}
+              </div>
             ) : (
               <>
                 {/* SCORES TAB */}
@@ -688,9 +721,10 @@ export default function AdminPage() {
                         </button>
                       </div>
                     )}
+                    {/* Save confirmation — fixed toast so it doesn't push tier blocks */}
                     {saveMsg && (
-                      <div className="mb-4 p-3 rounded-xl bg-status-success/5 border border-status-success/20 text-status-success font-semibold text-sm flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4" />{saveMsg}
+                      <div className="fixed bottom-6 right-6 z-40 max-w-sm p-3 rounded-xl bg-status-success/15 border border-status-success/40 backdrop-blur-md shadow-lg text-status-success font-semibold text-sm flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 flex-shrink-0" />{saveMsg}
                       </div>
                     )}
                     <div className="space-y-4">

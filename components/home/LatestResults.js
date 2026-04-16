@@ -218,11 +218,9 @@ export default function LatestResults() {
       .catch(() => setLoading(false))
   }, [])
 
-  // Nothing to show
-  if (!loading && results.length === 0) return null
-
   const activeLeague = results[activeLeagueIdx] ?? results[0]
   const showTabs = results.length > 1
+  const hasNoResults = !loading && results.length === 0
 
   return (
     <section className="relative py-20 sm:py-24 px-4 sm:px-6 lg:px-8 bg-titos-elevated/50 noise overflow-hidden">
@@ -242,38 +240,49 @@ export default function LatestResults() {
             </h2>
           </div>
 
-          {/* League tabs (only when multiple leagues) */}
-          {!loading && showTabs && (
-            <div className="flex flex-wrap gap-2">
-              {results.map((league, idx) => (
-                <LeagueTab
-                  key={league.slug}
-                  league={league}
-                  isActive={idx === activeLeagueIdx}
-                  onClick={() => setActiveLeagueIdx(idx)}
-                />
-              ))}
-            </div>
-          )}
+          {/* League tabs placeholder — reserve 44px even before data loads to prevent CLS */}
+          <div className="min-h-[44px] flex items-start sm:items-end">
+            {!loading && showTabs && (
+              <div className="flex flex-wrap gap-2">
+                {results.map((league, idx) => (
+                  <LeagueTab
+                    key={league.slug}
+                    league={league}
+                    isActive={idx === activeLeagueIdx}
+                    onClick={() => setActiveLeagueIdx(idx)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* ---- Content ---- */}
-        {loading ? (
-          <div className="bg-titos-surface rounded-xl overflow-hidden">
-            <div className="px-5 py-4 flex items-center gap-3 border-b border-titos-border/40">
-              <div className="w-8 h-8 rounded-lg bg-titos-charcoal animate-pulse" />
-              <div className="space-y-1.5">
-                <div className="h-4 w-36 rounded bg-titos-charcoal animate-pulse" />
-                <div className="h-3 w-48 rounded bg-titos-charcoal animate-pulse" />
+        {/* ---- Content — always render a consistent-height container to prevent CLS ---- */}
+        <div className="min-h-[600px]">
+          {loading ? (
+            <div className="bg-titos-surface rounded-xl overflow-hidden">
+              <div className="px-5 py-4 flex items-center gap-3 border-b border-titos-border/40">
+                <div className="w-8 h-8 rounded-lg bg-titos-charcoal animate-pulse" />
+                <div className="space-y-1.5">
+                  <div className="h-4 w-36 rounded bg-titos-charcoal animate-pulse" />
+                  <div className="h-3 w-48 rounded bg-titos-charcoal animate-pulse" />
+                </div>
+              </div>
+              <div className="p-4 sm:p-5">
+                <SkeletonGrid />
               </div>
             </div>
-            <div className="p-4 sm:p-5">
-              <SkeletonGrid />
+          ) : hasNoResults ? (
+            <div className="bg-titos-surface rounded-xl ring-1 ring-titos-border/20 p-10 sm:p-16 text-center flex flex-col items-center justify-center min-h-[600px]">
+              <h3 className="font-display text-lg font-bold text-titos-white mb-2">No Results Yet</h3>
+              <p className="text-titos-gray-400 text-sm max-w-md">
+                Results will appear here after Week 1 matches are completed.
+              </p>
             </div>
-          </div>
-        ) : (
-          activeLeague && <LeaguePanel league={activeLeague} />
-        )}
+          ) : (
+            activeLeague && <LeaguePanel league={activeLeague} />
+          )}
+        </div>
       </div>
     </section>
   )

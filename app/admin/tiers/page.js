@@ -126,7 +126,7 @@ export default function TierMovementPage() {
               {preview.tiers.map(tier => {
                 const tc = getTierColor(tier.tierNumber)
                 return (
-                  <div key={tier.tierNumber} className="card-flat rounded-2xl overflow-hidden">
+                  <div key={tier.tierNumber} className="card-flat rounded-xl overflow-hidden">
                     <div className={`px-5 py-3 ${tc.bg}`} style={{ borderLeft: `3px solid var(--color-${tc.accent})` }}>
                       <span className={`font-display text-lg font-black ${tc.text}`}>Tier {tier.tierNumber}</span>
                     </div>

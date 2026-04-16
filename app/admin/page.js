@@ -28,7 +28,7 @@ function AuthGate({ onAuth }) {
   }
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="card rounded-2xl p-8 w-full max-w-sm">
+      <div className="card rounded-xl p-8 w-full max-w-sm">
         <div className="text-center mb-6">
           <Shield className="w-10 h-10 text-titos-gold mx-auto mb-3" />
           <h1 className="font-display text-2xl font-black text-titos-white">Admin Access</h1>
@@ -63,18 +63,18 @@ function TierScoreBlock({ tierNum, tierMatches, inputRefs, onScoreChange, allInp
   }
 
   return (
-    <div className="card-flat rounded-2xl overflow-hidden">
+    <div className="card-flat rounded-xl overflow-hidden">
       <div className={cn('px-4 py-2.5 flex items-center justify-between', slot.bg)} style={{ borderLeft: `3px solid var(--color-${slotVar})` }}>
         <div className="flex items-center gap-2">
           <span className={cn('font-display text-base font-black', slot.color)}>T{tierNum}</span>
           <span className="text-titos-gray-400 text-xs">Court {tierMatches[0]?.courtNumber}</span>
         </div>
-        <span className={cn('text-[10px] font-bold uppercase', slot.color)}>{slot.label}</span>
+        <span className={cn('text-[11px] font-bold uppercase', slot.color)}>{slot.label}</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="text-[9px] font-bold uppercase tracking-wider text-titos-gray-500">
+            <tr className="text-[11px] font-bold uppercase tracking-wider text-titos-gray-500">
               <th className="px-3 py-2 text-left w-8">#</th>
               <th className="px-3 py-2 text-left">Home</th>
               <th className="py-2 text-center w-16">H</th>
@@ -91,7 +91,7 @@ function TierScoreBlock({ tierNum, tierMatches, inputRefs, onScoreChange, allInp
               const awayKey = `${match.id}-away`
               return (
                 <tr key={match.id} className={cn('border-t border-titos-border/15 hover:bg-titos-white/[0.02]', idx > 0 && idx % 3 === 0 && 'border-t-2 border-t-titos-border/40')}>
-                  <td className="px-3 py-1.5 text-titos-gray-600 text-xs font-bold">{match.gameOrder}</td>
+                  <td className="px-3 py-1.5 text-titos-gray-500 text-xs font-bold">{match.gameOrder}</td>
                   <td className="px-3 py-1.5 text-titos-white font-semibold text-sm">{match.homeTeam?.name}</td>
                   <td className="py-1.5 text-center">
                     <input ref={el => { inputRefs.current[homeKey] = el }} type="number" min="0" max="27" value={s.homeScore}
@@ -100,7 +100,7 @@ function TierScoreBlock({ tierNum, tierMatches, inputRefs, onScoreChange, allInp
                       onFocus={e => e.target.select()}
                       className="w-14 px-1 py-1.5 bg-titos-surface border border-titos-border rounded text-center text-titos-white font-bold text-base focus:outline-none focus:border-titos-gold focus:ring-1 focus:ring-titos-gold/30" placeholder="--" />
                   </td>
-                  <td className="py-1.5 text-center text-titos-gray-600 text-xs">vs</td>
+                  <td className="py-1.5 text-center text-titos-gray-500 text-xs">vs</td>
                   <td className="py-1.5 text-center">
                     <input ref={el => { inputRefs.current[awayKey] = el }} type="number" min="0" max="27" value={s.awayScore}
                       onChange={e => onScoreChange(match.id, 'awayScore', e.target.value)}
@@ -109,7 +109,7 @@ function TierScoreBlock({ tierNum, tierMatches, inputRefs, onScoreChange, allInp
                       className="w-14 px-1 py-1.5 bg-titos-surface border border-titos-border rounded text-center text-titos-white font-bold text-base focus:outline-none focus:border-titos-gold focus:ring-1 focus:ring-titos-gold/30" placeholder="--" />
                   </td>
                   <td className="px-3 py-1.5 text-titos-gray-300 text-sm">{match.awayTeam?.name}</td>
-                  <td className="px-3 py-1.5 text-right text-titos-gray-600 text-xs">{match.refTeam?.name || '--'}</td>
+                  <td className="px-3 py-1.5 text-right text-titos-gray-500 text-xs">{match.refTeam?.name || '--'}</td>
                 </tr>
               )
             })}
@@ -154,14 +154,14 @@ function ResultsView({ matches }) {
         const ranked = Object.values(stats).sort((a, b) => b.w - a.w || b.diff - a.diff)
 
         return (
-          <div key={tierNum} className="card-flat rounded-2xl overflow-hidden">
+          <div key={tierNum} className="card-flat rounded-xl overflow-hidden">
             <div className={cn('px-4 py-2.5 flex items-center justify-between', slot.bg)} style={{ borderLeft: `3px solid var(--color-${slotVar})` }}>
               <span className={cn('font-display text-base font-black', slot.color)}>T{tierNum}</span>
-              <span className={cn('text-[10px] font-bold uppercase', slot.color)}>{slot.label}</span>
+              <span className={cn('text-[11px] font-bold uppercase', slot.color)}>{slot.label}</span>
             </div>
             <table className="w-full">
               <thead>
-                <tr className="text-[9px] font-bold uppercase tracking-wider text-titos-gray-500">
+                <tr className="text-[11px] font-bold uppercase tracking-wider text-titos-gray-500">
                   <th className="px-4 py-2 text-left w-8">#</th>
                   <th className="px-4 py-2 text-left">Team</th>
                   <th className="px-3 py-2 text-center w-10">W</th>
@@ -305,7 +305,7 @@ function TiersView({ weekId, weeks, onReloadMatches }) {
 
       <div className="space-y-4">
         {preview?.tiers?.map(tier => (
-          <div key={tier.tierNumber} className="card-flat rounded-2xl overflow-hidden">
+          <div key={tier.tierNumber} className="card-flat rounded-xl overflow-hidden">
             <div className="px-5 py-3 bg-titos-elevated border-b border-titos-border/30">
               <span className="font-display text-base font-black text-titos-white">Tier {tier.tierNumber}</span>
             </div>
@@ -382,7 +382,7 @@ function NextWeekView({ season, weeks, currentWeek, onReload }) {
 
   return (
     <div className="space-y-4">
-      <div className="card-flat rounded-2xl p-6 text-center space-y-4">
+      <div className="card-flat rounded-xl p-6 text-center space-y-4">
         <h3 className="font-display text-lg font-black text-titos-white">Week {nextWeekNum}</h3>
 
         {!nextWeek && (

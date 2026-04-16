@@ -207,20 +207,20 @@ export default function ScoreEntryPage() {
               const slotVar = parseInt(tierNum) <= 4 ? 'slot-early' : parseInt(tierNum) <= 8 ? 'slot-late' : 'slot-single'
 
               return (
-                <div key={tierNum} className="card-flat rounded-2xl overflow-hidden">
+                <div key={tierNum} className="card-flat rounded-xl overflow-hidden">
                   <div className={cn('px-4 py-2.5 flex items-center justify-between', slot.bg)} style={{ borderLeft: `3px solid var(--color-${slotVar})` }}>
                     <div className="flex items-center gap-2">
                       <span className={cn('font-display text-base font-black', slot.color)}>T{tierNum}</span>
                       <span className="text-titos-gray-400 text-xs">Court {tierMatches[0]?.courtNumber}</span>
                     </div>
-                    <span className={cn('text-[10px] font-bold uppercase', slot.color)}>{slot.label}</span>
+                    <span className={cn('text-[11px] font-bold uppercase', slot.color)}>{slot.label}</span>
                   </div>
 
                   {/* Score grid — spreadsheet style */}
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="text-[9px] font-bold uppercase tracking-wider text-titos-gray-500">
+                        <tr className="text-[11px] font-bold uppercase tracking-wider text-titos-gray-500">
                           <th className="px-3 py-2 text-left w-8">#</th>
                           <th className="px-3 py-2 text-left">Home</th>
                           <th className="py-2 text-center w-16">H</th>
@@ -242,7 +242,7 @@ export default function ScoreEntryPage() {
                               'border-t border-titos-border/15 hover:bg-titos-white/[0.02] transition-colors',
                               isNewRound && 'border-t-2 border-t-titos-border/40'
                             )}>
-                              <td className="px-3 py-1.5 text-titos-gray-600 text-xs font-bold">{match.gameOrder}</td>
+                              <td className="px-3 py-1.5 text-titos-gray-500 text-xs font-bold">{match.gameOrder}</td>
                               <td className="px-3 py-1.5 text-titos-white font-semibold text-sm">{match.homeTeam?.name}</td>
                               <td className="py-1.5 text-center">
                                 <input
@@ -258,7 +258,7 @@ export default function ScoreEntryPage() {
                                   placeholder="—"
                                 />
                               </td>
-                              <td className="py-1.5 text-center text-titos-gray-600 text-xs">vs</td>
+                              <td className="py-1.5 text-center text-titos-gray-500 text-xs">vs</td>
                               <td className="py-1.5 text-center">
                                 <input
                                   ref={el => inputRefs.current[awayKey] = el}
@@ -274,7 +274,7 @@ export default function ScoreEntryPage() {
                                 />
                               </td>
                               <td className="px-3 py-1.5 text-titos-gray-300 text-sm">{match.awayTeam?.name}</td>
-                              <td className="px-3 py-1.5 text-right text-titos-gray-600 text-xs">{match.refTeam?.name || '—'}</td>
+                              <td className="px-3 py-1.5 text-right text-titos-gray-500 text-xs">{match.refTeam?.name || '—'}</td>
                             </tr>
                           )
                         })}

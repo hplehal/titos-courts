@@ -55,7 +55,7 @@ export async function GET(request, { params }) {
         teams: [],
         matches: [],
       }
-      tierGroups[tn].teams.push({ id: p.team.id, name: p.team.name })
+      tierGroups[tn].teams.push({ id: p.team.id, name: p.team.name, finishPosition: p.finishPosition, movement: p.movement })
     }
 
     for (const m of week.matches) {

@@ -58,7 +58,7 @@ export default function RegistrationsPage() {
               <div key={reg.id} className="card-flat rounded-xl p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                   <div className="flex items-center gap-3">
-                    <span className={cn('px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider',
+                    <span className={cn('px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider',
                       reg.type === 'league' ? 'bg-titos-gold/15 text-titos-gold' :
                       reg.type === 'tournament' ? 'bg-status-info/15 text-status-info' :
                       'bg-status-success/15 text-status-success'

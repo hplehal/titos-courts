@@ -49,7 +49,7 @@ export default function RegisterPage() {
   if (success) {
     return (
       <div className="py-20 px-4 min-h-screen flex items-center justify-center">
-        <div className="card rounded-2xl p-10 text-center max-w-md mx-auto">
+        <div className="card rounded-xl p-10 text-center max-w-md mx-auto">
           <div className="w-16 h-16 rounded-full bg-status-success/15 flex items-center justify-center mx-auto mb-6">
             <Check className="w-8 h-8 text-status-success" />
           </div>

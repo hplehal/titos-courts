@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -18,7 +18,7 @@ const navLinks = [
   { href: '/leagues', label: 'Leagues', children: leagueDropdown },
   { href: '/standings', label: 'Standings' },
   { href: '/schedule', label: 'Schedule' },
-  { href: '/leagues/tuesday-coed', label: 'Results' },
+  { href: '/results', label: 'Results' },
   { href: '/rules', label: 'Rules & Info' },
   { href: '/about', label: 'About' },
 ]
@@ -26,213 +26,333 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [mobileLeaguesOpen, setMobileLeaguesOpen] = useState(false)
+  const [mobileSubmenuOpen, setMobileSubmenuOpen] = useState(null) // tracks which mobile submenu is open by label
+  const [dropdownOpen, setDropdownOpen] = useState(null) // tracks which dropdown label is open
+  const dropdownTimeout = useRef(null)
   const pathname = usePathname()
 
+  // Scroll detection
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Close everything on route change
   useEffect(() => {
     setMobileOpen(false)
-    setDropdownOpen(false)
-    setMobileLeaguesOpen(false)
+    setDropdownOpen(null)
+    setMobileSubmenuOpen(null)
   }, [pathname])
 
-  const isActive = (href) => {
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [mobileOpen])
+
+  const isActive = useCallback((href) => {
     if (href === '/') return pathname === '/'
     return pathname.startsWith(href)
+  }, [pathname])
+
+  // Dropdown hover handlers — track by label so multiple dropdowns work independently
+  const openDropdown = (label) => {
+    if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current)
+    setDropdownOpen(label)
+  }
+
+  const closeDropdown = () => {
+    dropdownTimeout.current = setTimeout(() => setDropdownOpen(null), 150)
   }
 
   return (
-    <nav
-      className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        scrolled
-          ? 'bg-titos-surface/95 backdrop-blur-lg border-b border-titos-border/30 shadow-lg shadow-black/20'
-          : 'bg-transparent'
-      )}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 lg:h-20">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
-            <Image
-              src="/images/titosvl.png"
-              alt="Tito's Courts"
-              width={44}
-              height={44}
-              className="h-11 w-auto"
-              priority
-            />
-          </Link>
+    <>
+      {/* Navbar */}
+      <nav
+        className={cn(
+          'fixed z-50 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
+          scrolled
+            ? 'top-3 left-4 right-4 bg-titos-surface/80 backdrop-blur-xl border border-white/[0.06] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]'
+            : 'top-0 left-0 right-0 bg-transparent'
+        )}
+      >
+        <div className={cn(
+          'mx-auto transition-all duration-500',
+          scrolled ? 'max-w-[calc(100%-0px)] px-5' : 'max-w-7xl px-4 sm:px-6 lg:px-8'
+        )}>
+          <div className="flex items-center justify-between h-16 lg:h-[72px]">
 
-          {/* Desktop nav */}
-          <div className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <div
-                key={link.href}
-                className="relative"
-                onMouseEnter={() => link.children && setDropdownOpen(true)}
-                onMouseLeave={() => link.children && setDropdownOpen(false)}
-              >
-                <Link
-                  href={link.href}
-                  className={cn(
-                    'relative px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1',
-                    isActive(link.href)
-                      ? 'text-titos-gold'
-                      : 'text-titos-gray-200 hover:text-titos-white hover:bg-titos-white/5'
-                  )}
-                >
-                  {link.isLive && <span className="live-dot" />}
-                  {link.label}
-                  {link.children && (
-                    <ChevronDown className={cn(
-                      'w-3.5 h-3.5 transition-transform duration-200',
-                      dropdownOpen ? 'rotate-180' : ''
-                    )} />
-                  )}
-                  {isActive(link.href) && (
-                    <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-titos-gold rounded-full" />
-                  )}
-                </Link>
+            {/* Logo */}
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 group flex-shrink-0"
+            >
+              <Image
+                src="/images/titosvl.png"
+                alt="Tito's Courts"
+                width={44}
+                height={44}
+                className="h-11 w-auto transition-transform duration-300 group-hover:scale-105"
+                priority
+              />
+            </Link>
 
-                {/* Dropdown menu */}
-                {link.children && (
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center gap-0.5">
+              {navLinks.map((link) => {
+                const hasChildren = !!link.children
+                const active = isActive(link.href)
+
+                return (
                   <div
-                    className={cn(
-                      'absolute top-full left-0 pt-2 w-52',
-                      dropdownOpen ? 'pointer-events-auto' : 'pointer-events-none'
-                    )}
+                    key={link.href + link.label}
+                    className="relative"
+                    onMouseEnter={hasChildren ? () => openDropdown(link.label) : undefined}
+                    onMouseLeave={hasChildren ? closeDropdown : undefined}
                   >
-                  <div
-                    className={cn(
-                      'py-2 bg-titos-elevated border border-titos-border rounded-xl shadow-xl shadow-black/30 transition-all duration-200',
-                      dropdownOpen
-                        ? 'opacity-100 translate-y-0'
-                        : 'opacity-0 -translate-y-2'
-                    )}
-                  >
-                    {link.children.map((child) => (
-                      <Link
-                        key={child.href}
-                        href={child.href}
+                    <Link
+                      href={link.href}
+                      className={cn(
+                        'relative flex items-center gap-1 px-3.5 py-2 rounded-lg text-[13px] font-semibold tracking-wide uppercase transition-all duration-200',
+                        active
+                          ? 'text-titos-gold'
+                          : 'text-titos-gray-300 hover:text-titos-white hover:bg-white/[0.04]'
+                      )}
+                    >
+                      <span className="relative z-10">{link.label}</span>
+                      {hasChildren && (
+                        <ChevronDown
+                          className={cn(
+                            'w-3 h-3 transition-transform duration-300',
+                            dropdownOpen === link.label ? 'rotate-180' : ''
+                          )}
+                        />
+                      )}
+                      {/* Active indicator line */}
+                      {active && (
+                        <span className="absolute bottom-0.5 left-3 right-3 h-[2px] bg-titos-gold rounded-full" />
+                      )}
+                    </Link>
+
+                    {/* League Dropdown */}
+                    {hasChildren && (
+                      <div
                         className={cn(
-                          'block px-4 py-2.5 text-sm transition-colors',
-                          isActive(child.href)
-                            ? 'text-titos-gold bg-titos-gold/10'
-                            : 'text-titos-gray-200 hover:text-titos-white hover:bg-titos-white/5'
+                          'absolute top-full left-1/2 -translate-x-1/2 pt-3 w-56 transition-all duration-300',
+                          dropdownOpen === link.label
+                            ? 'opacity-100 translate-y-0 pointer-events-auto'
+                            : 'opacity-0 -translate-y-2 pointer-events-none'
                         )}
                       >
-                        {child.label}
-                      </Link>
-                    ))}
+                        <div className="bg-titos-elevated/90 backdrop-blur-2xl border border-white/[0.07] rounded-xl shadow-[0_16px_48px_rgba(0,0,0,0.5)] overflow-hidden">
+                          {/* Subtle gold accent line at top */}
+                          <div className="h-[1px] bg-gradient-to-r from-transparent via-titos-gold/30 to-transparent" />
+                          <div className="py-1.5">
+                            {link.children.map((child) => (
+                              <Link
+                                key={child.href}
+                                href={child.href}
+                                className={cn(
+                                  'flex items-center gap-3 mx-1.5 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                                  isActive(child.href)
+                                    ? 'text-titos-gold bg-titos-gold/[0.08]'
+                                    : 'text-titos-gray-200 hover:text-titos-white hover:bg-white/[0.05]'
+                                )}
+                              >
+                                {/* Small dot indicator */}
+                                <span className={cn(
+                                  'w-1 h-1 rounded-full flex-shrink-0 transition-colors duration-200',
+                                  isActive(child.href) ? 'bg-titos-gold' : 'bg-titos-gray-500'
+                                )} />
+                                {child.label}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  </div>
+                )
+              })}
+
+              {/* Register CTA */}
+              <Link
+                href="/register"
+                className="btn-primary btn-sm ml-4"
+                style={{ padding: '8px 20px', fontSize: '0.7rem', borderRadius: '10px' }}
+              >
+                <span>Register</span>
+              </Link>
+            </div>
+
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className={cn(
+                'lg:hidden relative z-50 p-2 rounded-lg transition-all duration-200',
+                mobileOpen
+                  ? 'text-titos-white'
+                  : 'text-titos-gray-200 hover:text-titos-white hover:bg-white/[0.05]'
+              )}
+              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileOpen}
+            >
+              <div className="relative w-6 h-6">
+                <Menu
+                  className={cn(
+                    'w-6 h-6 absolute inset-0 transition-all duration-300',
+                    mobileOpen ? 'opacity-0 rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'
+                  )}
+                />
+                <X
+                  className={cn(
+                    'w-6 h-6 absolute inset-0 transition-all duration-300',
+                    mobileOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-75'
+                  )}
+                />
+              </div>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Menu — Full-Screen Overlay */}
+      <div
+        className={cn(
+          'fixed inset-0 z-40 lg:hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
+          mobileOpen
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
+        )}
+      >
+        {/* Backdrop */}
+        <div
+          className={cn(
+            'absolute inset-0 bg-titos-surface/95 backdrop-blur-2xl transition-opacity duration-500',
+            mobileOpen ? 'opacity-100' : 'opacity-0'
+          )}
+          onClick={() => setMobileOpen(false)}
+        />
+
+        {/* Mobile Menu Content */}
+        <div
+          className={cn(
+            'relative h-full flex flex-col pt-24 pb-8 px-6 overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
+            mobileOpen ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0'
+          )}
+        >
+          {/* Navigation Links */}
+          <div className="flex-1 space-y-1">
+            {navLinks.map((link, index) => (
+              <div
+                key={link.href + link.label}
+                className={cn(
+                  'transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
+                  mobileOpen
+                    ? 'translate-y-0 opacity-100'
+                    : 'translate-y-4 opacity-0'
+                )}
+                style={{
+                  transitionDelay: mobileOpen ? `${80 + index * 40}ms` : '0ms'
+                }}
+              >
+                {link.children ? (
+                  <>
+                    <button
+                      onClick={() => setMobileSubmenuOpen(mobileSubmenuOpen === link.label ? null : link.label)}
+                      className={cn(
+                        'w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-lg font-semibold transition-all duration-200 min-h-[48px]',
+                        isActive(link.href)
+                          ? 'text-titos-gold bg-titos-gold/[0.06]'
+                          : 'text-titos-gray-100 active:bg-white/[0.04]'
+                      )}
+                    >
+                      <span>{link.label}</span>
+                      <ChevronDown
+                        className={cn(
+                          'w-5 h-5 text-titos-gray-400 transition-transform duration-300',
+                          mobileSubmenuOpen === link.label ? 'rotate-180' : ''
+                        )}
+                      />
+                    </button>
+
+                    {/* Leagues Sub-menu */}
+                    <div
+                      className={cn(
+                        'overflow-hidden transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]',
+                        mobileSubmenuOpen === link.label
+                          ? 'max-h-60 opacity-100'
+                          : 'max-h-0 opacity-0'
+                      )}
+                    >
+                      <div className="ml-4 pl-4 border-l border-titos-border-light/60 py-2 space-y-0.5">
+                        {link.children.map((child) => (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className={cn(
+                              'flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium transition-all duration-200 min-h-[48px]',
+                              isActive(child.href)
+                                ? 'text-titos-gold bg-titos-gold/[0.06]'
+                                : 'text-titos-gray-300 active:text-titos-white active:bg-white/[0.04]'
+                            )}
+                          >
+                            <span className={cn(
+                              'w-1.5 h-1.5 rounded-full flex-shrink-0',
+                              isActive(child.href) ? 'bg-titos-gold' : 'bg-titos-gray-500'
+                            )} />
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <Link
+                    href={link.href}
+                    className={cn(
+                      'flex items-center px-4 py-3.5 rounded-xl text-lg font-semibold transition-all duration-200 min-h-[48px]',
+                      isActive(link.href)
+                        ? 'text-titos-gold bg-titos-gold/[0.06]'
+                        : 'text-titos-gray-100 active:bg-white/[0.04]'
+                    )}
+                  >
+                    {link.label}
+                  </Link>
                 )}
               </div>
             ))}
-
-            <Link
-              href="/register"
-              className="ml-3 px-5 py-2.5 bg-titos-gold hover:bg-titos-gold-light text-black font-bold text-sm rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-titos-gold/25"
-            >
-              Register
-            </Link>
           </div>
 
-          {/* Mobile toggle */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-2 text-titos-gray-200 hover:text-titos-white transition-colors"
-            aria-label="Toggle menu"
+          {/* Register CTA — pinned to bottom area */}
+          <div
+            className={cn(
+              'pt-6 mt-4 border-t border-titos-border/50 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
+              mobileOpen
+                ? 'translate-y-0 opacity-100'
+                : 'translate-y-4 opacity-0'
+            )}
+            style={{
+              transitionDelay: mobileOpen ? `${80 + navLinks.length * 40 + 60}ms` : '0ms'
+            }}
           >
-            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+            <Link
+              href="/register"
+              className="btn-primary w-full text-center"
+              style={{ padding: '16px 36px' }}
+              onClick={() => setMobileOpen(false)}
+            >
+              <span>Register Now</span>
+            </Link>
+          </div>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      <div
-        className={cn(
-          'lg:hidden overflow-hidden transition-all duration-300 ease-in-out',
-          mobileOpen
-            ? 'max-h-[600px] opacity-100 bg-titos-surface/98 backdrop-blur-xl border-b border-titos-border/30'
-            : 'max-h-0 opacity-0'
-        )}
-      >
-        <div className="px-4 py-4 space-y-1">
-          {navLinks.map((link) => (
-            <div key={link.href}>
-              {link.children ? (
-                <>
-                  <button
-                    onClick={() => setMobileLeaguesOpen(!mobileLeaguesOpen)}
-                    className={cn(
-                      'w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-colors',
-                      isActive(link.href)
-                        ? 'bg-titos-gold/10 text-titos-gold'
-                        : 'text-titos-gray-200 hover:bg-titos-white/5 hover:text-titos-white'
-                    )}
-                  >
-                    <span>{link.label}</span>
-                    <ChevronDown className={cn(
-                      'w-4 h-4 transition-transform duration-200',
-                      mobileLeaguesOpen ? 'rotate-180' : ''
-                    )} />
-                  </button>
-                  <div
-                    className={cn(
-                      'overflow-hidden transition-all duration-300',
-                      mobileLeaguesOpen ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
-                    )}
-                  >
-                    <div className="pl-6 py-1 space-y-1">
-                      {link.children.map((child) => (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          className={cn(
-                            'block px-4 py-2.5 rounded-lg text-sm transition-colors',
-                            isActive(child.href)
-                              ? 'text-titos-gold bg-titos-gold/10'
-                              : 'text-titos-gray-300 hover:text-titos-white'
-                          )}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <Link
-                  href={link.href}
-                  className={cn(
-                    'flex items-center gap-2 px-4 py-3 rounded-lg text-base font-medium transition-colors',
-                    isActive(link.href)
-                      ? 'bg-titos-gold/10 text-titos-gold'
-                      : 'text-titos-gray-200 hover:bg-titos-white/5 hover:text-titos-white'
-                  )}
-                >
-                  {link.isLive && <span className="live-dot" />}
-                  {link.label}
-                </Link>
-              )}
-            </div>
-          ))}
-          <Link
-            href="/register"
-            className="block mt-3 px-4 py-3 bg-titos-gold hover:bg-titos-gold-light text-black font-bold text-center rounded-lg transition-colors"
-          >
-            Register
-          </Link>
-        </div>
-      </div>
-    </nav>
+    </>
   )
 }

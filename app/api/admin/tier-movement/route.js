@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { revalidateLeagueByWeek } from '@/lib/server/leagues'
 
 export const dynamic = 'force-dynamic'
 
@@ -145,6 +146,8 @@ export async function POST(request) {
         }
       }
 
+      // Bust cached schedule/standings/results for the league
+      await revalidateLeagueByWeek(weekId)
       return NextResponse.json({ success: true, tiers })
     }
 

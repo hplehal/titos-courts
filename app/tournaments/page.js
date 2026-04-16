@@ -6,10 +6,24 @@ import StatusBadge from '@/components/ui/StatusBadge'
 import { formatDate } from '@/lib/utils'
 
 export const metadata = {
-  title: 'Tournaments',
-  description: 'Upcoming and past volleyball tournaments at Tito\'s Courts. One-day events open to all teams in the GTA.',
+  title: "Volleyball Tournaments Mississauga | Tito's Courts",
+  description: "One-day volleyball tournaments at Tito's Courts in Mississauga and Toronto. Bracket play, prizes, and competitive divisions open to teams across the GTA.",
+  alternates: { canonical: 'https://titoscourts.com/tournaments' },
+  openGraph: {
+    title: "Volleyball Tournaments Mississauga",
+    description: "One-day volleyball tournaments at Tito's Courts in Mississauga and Toronto.",
+    url: 'https://titoscourts.com/tournaments',
+    type: 'website',
+    images: ['/images/titosHero.jpg'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Volleyball Tournaments Mississauga",
+    description: "One-day volleyball tournaments at Tito's Courts.",
+    images: ['/images/titosHero.jpg'],
+  },
 }
-export const dynamic = 'force-dynamic'
+export const revalidate = 600
 
 async function getTournaments() {
   return prisma.tournament.findMany({

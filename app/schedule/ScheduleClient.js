@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect, useRef, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { Clock, ChevronDown, Shield } from 'lucide-react'
 import LeagueSelector from '@/components/ui/LeagueSelector'
@@ -306,11 +306,13 @@ function SlotGroup({ slot, tiers, myTeam, isMens }) {
 /* ═══════════════════════════════════════════════
    MAIN SCHEDULE CLIENT
    ═══════════════════════════════════════════════ */
-export default function ScheduleClient({ leagues, initialSlug }) {
+export default function ScheduleClient({ leagues, initialSlug, initialData }) {
   const router = useRouter()
   const [selected, setSelected] = useState(initialSlug || leagues[0]?.slug || '')
-  const [schedule, setSchedule] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [schedule, setSchedule] = useState(initialData || null)
+  const [loading, setLoading] = useState(!initialData)
+  // Skip first fetch if we have SSR-seeded data for the initial slug
+  const seedConsumedRef = useRef(!!initialData)
 
   // Sync URL with selected league for shareable deep links
   const handleSelect = (slug) => {
@@ -323,6 +325,10 @@ export default function ScheduleClient({ leagues, initialSlug }) {
 
   useEffect(() => {
     if (!selected) return
+    if (seedConsumedRef.current) {
+      seedConsumedRef.current = false
+      return
+    }
     setLoading(true)
     fetch(`/api/leagues/${selected}/schedule`)
       .then(r => r.json())

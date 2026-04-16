@@ -201,14 +201,17 @@ function LeaguePanel({ league }) {
 }
 
 // ---------------------------------------------------------------------------
-// Main component
+// Main component — receives results as a prop from the server so initial HTML
+// has real team names/scores for SEO. Loading state only applies if no prop.
 // ---------------------------------------------------------------------------
-export default function LatestResults() {
-  const [results, setResults] = useState([])
-  const [loading, setLoading] = useState(true)
+export default function LatestResults({ initialResults }) {
+  const hasInitial = Array.isArray(initialResults)
+  const [results, setResults] = useState(initialResults || [])
+  const [loading, setLoading] = useState(!hasInitial)
   const [activeLeagueIdx, setActiveLeagueIdx] = useState(0)
 
   useEffect(() => {
+    if (hasInitial) return // server already supplied the data
     fetch('/api/results/latest')
       .then(r => r.json())
       .then(data => {
@@ -216,7 +219,7 @@ export default function LatestResults() {
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [])
+  }, [hasInitial])
 
   const activeLeague = results[activeLeagueIdx] ?? results[0]
   const showTabs = results.length > 1

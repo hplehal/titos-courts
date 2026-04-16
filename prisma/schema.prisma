@@ -21,6 +21,8 @@ model League {
   isActive        Boolean  @default(true)
   seasons         Season[]
   createdAt       DateTime @default(now())
+
+  @@index([isActive])
 }
 
 model Season {
@@ -38,6 +40,8 @@ model Season {
   tiers        Tier[]
   weeks        Week[]
   createdAt    DateTime @default(now())
+
+  @@index([leagueId, status, seasonNumber])
 }
 
 model Team {
@@ -67,6 +71,8 @@ model Player {
   jerseyNumber Int?
   waiverSigned Boolean      @default(false)
   stats        PlayerStat[]
+
+  @@index([teamId])
 }
 
 model Tier {
@@ -93,6 +99,8 @@ model TierPlacement {
   movement       String?
 
   @@unique([teamId, weekId])
+  @@index([weekId])
+  @@index([tierId])
 }
 
 model Week {
@@ -107,6 +115,7 @@ model Week {
   tierPlacements TierPlacement[]
 
   @@unique([seasonId, weekNumber])
+  @@index([seasonId, status])
 }
 
 model Match {
@@ -127,6 +136,12 @@ model Match {
   scores      SetScore[]
   playerStats PlayerStat[]
   createdAt   DateTime     @default(now())
+
+  @@index([weekId, status])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+  @@index([refTeamId])
+  @@index([weekId, tierNumber, gameOrder])
 }
 
 model SetScore {
@@ -154,6 +169,7 @@ model PlayerStat {
   errors   Int    @default(0)
 
   @@unique([playerId, matchId])
+  @@index([matchId])
 }
 
 // ─── TOURNAMENT SYSTEM ───
@@ -188,6 +204,9 @@ model TournamentTeam {
   seed         Int?
   homeMatches  TournamentMatch[] @relation("TournHomeTeam")
   awayMatches  TournamentMatch[] @relation("TournAwayTeam")
+
+  @@index([tournamentId])
+  @@index([poolId])
 }
 
 model TournamentPool {
@@ -197,6 +216,8 @@ model TournamentPool {
   name         String
   teams        TournamentTeam[]
   matches      TournamentMatch[]
+
+  @@index([tournamentId])
 }
 
 model TournamentBracket {
@@ -205,6 +226,8 @@ model TournamentBracket {
   tournament   Tournament        @relation(fields: [tournamentId], references: [id])
   division     String
   matches      TournamentMatch[]
+
+  @@index([tournamentId])
 }
 
 model TournamentMatch {
@@ -223,6 +246,11 @@ model TournamentMatch {
   bracketRound    Int?
   bracketPosition Int?
   scores          TournamentSetScore[]
+
+  @@index([poolId])
+  @@index([bracketId])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
 }
 
 model TournamentSetScore {

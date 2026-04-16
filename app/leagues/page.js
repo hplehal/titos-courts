@@ -6,10 +6,24 @@ import StatusBadge from '@/components/ui/StatusBadge'
 import { getLeagueTimeDisplay } from '@/lib/utils'
 
 export const metadata = {
-  title: 'Leagues',
-  description: 'Three weekly recreational volleyball leagues in Mississauga and Toronto. Tuesday COED, Sunday MENS, and Thursday REC COED at Pakmen Courts.',
+  title: "Volleyball Leagues Mississauga | Tito's Courts",
+  description: 'Three weekly recreational volleyball leagues in Mississauga and Toronto. Tuesday Coed, Sunday Men\'s, and Thursday Rec Coed at Pakmen Courts and Michael Power High School. Tier-based competition, playoffs, and 150+ players.',
+  alternates: { canonical: 'https://titoscourts.com/leagues' },
+  openGraph: {
+    title: "Volleyball Leagues in Mississauga — Tito's Courts",
+    description: 'Three weekly recreational volleyball leagues with tier-based competition. Register your team today.',
+    url: 'https://titoscourts.com/leagues',
+    type: 'website',
+    images: ['/images/titosHero.jpg'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Volleyball Leagues in Mississauga",
+    description: 'Three weekly rec volleyball leagues at Tito\'s Courts.',
+    images: ['/images/titosHero.jpg'],
+  },
 }
-export const dynamic = 'force-dynamic'
+export const revalidate = 600
 
 async function getLeagues() {
   const leagues = await prisma.league.findMany({

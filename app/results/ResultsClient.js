@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect, useRef, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trophy, ChevronUp, ChevronDown, ChevronDown as ChevronIcon, Clock } from 'lucide-react'
 import LeagueSelector from '@/components/ui/LeagueSelector'
@@ -310,12 +310,22 @@ function SlotGroup({ slot, tiers }) {
 /* ═══════════════════════════════════════════════
    MAIN RESULTS CLIENT
    ═══════════════════════════════════════════════ */
-export default function ResultsClient({ leagues, initialSlug }) {
+/* Helper — given a schedule payload, pick the latest completed week that has actual match scores */
+function latestCompletedWeek(scheduleData) {
+  const completed = (scheduleData?.weeks || []).filter(
+    w => w.status === 'completed' && w.tiers?.some(t => t.matches?.some(m => m.scores))
+  )
+  return completed.length > 0 ? completed[completed.length - 1].weekNumber : null
+}
+
+export default function ResultsClient({ leagues, initialSlug, initialData }) {
   const router = useRouter()
   const [selected, setSelected] = useState(initialSlug || leagues[0]?.slug || '')
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [selectedWeek, setSelectedWeek] = useState(null)
+  const [data, setData] = useState(initialData || null)
+  const [loading, setLoading] = useState(!initialData)
+  const [selectedWeek, setSelectedWeek] = useState(() => latestCompletedWeek(initialData))
+  // Skip first fetch if we have SSR-seeded data for the initial slug
+  const seedConsumedRef = useRef(!!initialData)
 
   // Keep the URL in sync with the selected league for shareable deep links
   const handleSelect = (slug) => {
@@ -325,16 +335,17 @@ export default function ResultsClient({ leagues, initialSlug }) {
 
   useEffect(() => {
     if (!selected) return
+    if (seedConsumedRef.current) {
+      seedConsumedRef.current = false
+      return
+    }
     setLoading(true)
     setSelectedWeek(null)
     fetch(`/api/leagues/${selected}/schedule`)
       .then(r => r.json())
       .then(d => {
         setData(d)
-        const completed = (d.weeks || []).filter(w => w.status === 'completed' && w.tiers?.some(t => t.matches?.some(m => m.scores)))
-        if (completed.length > 0) {
-          setSelectedWeek(completed[completed.length - 1].weekNumber)
-        }
+        setSelectedWeek(latestCompletedWeek(d))
         setLoading(false)
       })
       .catch(() => setLoading(false))

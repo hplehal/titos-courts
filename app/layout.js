@@ -51,13 +51,23 @@ export const metadata = {
     locale: 'en_CA',
     siteName: "Tito's Courts",
     url: 'https://titoscourts.com',
+    images: [
+      {
+        url: 'https://titoscourts.com/images/titosHero.jpg',
+        width: 1920,
+        height: 1080,
+        alt: "Tito's Courts volleyball game night",
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: "Tito's Courts Volleyball Leagues",
     description:
       "Recreational volleyball leagues in Mississauga & Toronto. Three weekly leagues, tier-based competition, championship playoffs.",
+    images: ['https://titoscourts.com/images/titosHero.jpg'],
   },
+  metadataBase: new URL('https://titoscourts.com'),
   alternates: {
     canonical: 'https://titoscourts.com',
   },
@@ -71,10 +81,21 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'SportsOrganization',
   name: "Tito's Courts",
-  description: "Mississauga and Toronto's premier recreational volleyball leagues and tournaments.",
+  alternateName: 'Titos Courts Volleyball',
+  description: "Mississauga and Toronto's premier recreational volleyball leagues and tournaments. Three weekly leagues with tier-based competition at Pakmen Courts.",
   url: 'https://titoscourts.com',
+  logo: 'https://titoscourts.com/images/titos.png',
+  image: 'https://titoscourts.com/images/titosHero.jpg',
   sport: 'Volleyball',
   email: 'info@titoscourts.com',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '1775 Sismet Road',
+    addressLocality: 'Mississauga',
+    addressRegion: 'ON',
+    postalCode: 'L4W 1R3',
+    addressCountry: 'CA',
+  },
   location: [
     {
       '@type': 'Place',
@@ -84,7 +105,13 @@ const jsonLd = {
         streetAddress: '1775 Sismet Road',
         addressLocality: 'Mississauga',
         addressRegion: 'ON',
+        postalCode: 'L4W 1R3',
         addressCountry: 'CA',
+      },
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: 43.6532,
+        longitude: -79.6108,
       },
     },
     {
@@ -92,6 +119,7 @@ const jsonLd = {
       name: 'Michael Power — St. Joseph High School',
       address: {
         '@type': 'PostalAddress',
+        streetAddress: '105 Eringate Dr',
         addressLocality: 'Etobicoke',
         addressRegion: 'ON',
         addressCountry: 'CA',
@@ -101,6 +129,11 @@ const jsonLd = {
   sameAs: [
     'https://www.instagram.com/titoscourts',
     'https://www.youtube.com/@titoscourts',
+  ],
+  areaServed: [
+    { '@type': 'City', name: 'Mississauga' },
+    { '@type': 'City', name: 'Toronto' },
+    { '@type': 'City', name: 'Etobicoke' },
   ],
 }
 

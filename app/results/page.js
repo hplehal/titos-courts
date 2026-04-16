@@ -1,22 +1,36 @@
-import prisma from '@/lib/prisma'
 import ResultsClient from './ResultsClient'
+import { getActiveLeagues, getLeagueSchedule } from '@/lib/server/leagues'
 
 export const metadata = {
-  title: 'Results',
-  description: 'Weekly match results and scores for all Tito\'s Courts volleyball leagues. See tier standings, match scores, and team movement.',
+  title: "Volleyball Results & Scores — Mississauga | Tito's Courts",
+  description: "Weekly match results, tier scores, and standings for Tito's Courts volleyball leagues in Mississauga. Track wins, losses, and team movement between Diamond, Platinum, and Gold tiers.",
+  alternates: { canonical: 'https://titoscourts.com/results' },
+  openGraph: {
+    title: "Volleyball Results & Scores — Mississauga",
+    description: "Weekly match results and standings for Tito's Courts volleyball leagues in Mississauga.",
+    url: 'https://titoscourts.com/results',
+    type: 'website',
+    images: ['/images/titosHero.jpg'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Volleyball Results & Scores — Mississauga",
+    description: "Weekly match results for Tito's Courts volleyball leagues.",
+    images: ['/images/titosHero.jpg'],
+  },
 }
-export const dynamic = 'force-dynamic'
-
-async function getData() {
-  const leagues = await prisma.league.findMany({
-    where: { isActive: true },
-    select: { slug: true, name: true, dayOfWeek: true },
-    orderBy: { createdAt: 'asc' },
-  })
-  return { leagues }
-}
+export const revalidate = 300
 
 export default async function ResultsPage() {
-  const { leagues } = await getData()
-  return <ResultsClient leagues={leagues} />
+  const leagues = await getActiveLeagues()
+  const firstSlug = leagues[0]?.slug
+  const initialData = firstSlug ? await getLeagueSchedule(firstSlug) : null
+  return (
+    <>
+      <p className="sr-only">
+        Weekly match results and scores for Tito&apos;s Courts recreational volleyball leagues in Mississauga. Tracks winners, losers, set scores, tier standings, and team movement for Tuesday Coed, Sunday Men&apos;s, and Thursday Rec Coed leagues.
+      </p>
+      <ResultsClient leagues={leagues} initialSlug={firstSlug} initialData={initialData} />
+    </>
+  )
 }

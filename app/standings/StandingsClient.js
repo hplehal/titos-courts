@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trophy } from 'lucide-react'
 import SectionHeading from '@/components/ui/SectionHeading'
@@ -230,14 +230,17 @@ function SlotDivider({ label, color }) {
 
 /* ─── Main Component ─── */
 
-export default function StandingsClient({ leagues, initialSlug }) {
+export default function StandingsClient({ leagues, initialSlug, initialData }) {
   const router = useRouter()
+  const initialForSelected = initialData && initialSlug === (initialSlug || leagues[0]?.slug || '')
   const [selected, setSelected] = useState(initialSlug || leagues[0]?.slug || '')
-  const [standings, setStandings] = useState(null)
-  const [tierView, setTierView] = useState(null)
+  const [standings, setStandings] = useState(initialForSelected ? (initialData?.standings || null) : null)
+  const [tierView, setTierView] = useState(initialForSelected ? (initialData?.currentTiers || null) : null)
   const [view, setView] = useState('overall')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!initialForSelected)
   const [myTeam, setMyTeam] = useMyTeam(selected)
+  // Track whether we've consumed the SSR seed so tab-switches still refetch
+  const seedConsumedRef = useRef(initialForSelected)
 
   // Sync URL with selected league for shareable deep links
   const handleSelect = (slug) => {
@@ -247,6 +250,11 @@ export default function StandingsClient({ leagues, initialSlug }) {
 
   useEffect(() => {
     if (!selected) return
+    // Skip the very first fetch when we already have server-seeded data
+    if (seedConsumedRef.current) {
+      seedConsumedRef.current = false
+      return
+    }
     setLoading(true)
     fetch(`/api/leagues/${selected}/standings`)
       .then(r => r.json())

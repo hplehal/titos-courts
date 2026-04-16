@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { revalidateLeagueByWeek } from '@/lib/server/leagues'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,6 +48,9 @@ export async function PATCH(request) {
       })
     }
 
+    // Invalidate league caches so public pages see the new week status
+    await revalidateLeagueByWeek(weekId)
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Week update error:', error)
@@ -78,6 +82,15 @@ export async function POST(request) {
         })
       }
     }
+
+    // Bust cached schedule/standings for the league that owns this match
+    try {
+      const match = await prisma.match.findUnique({
+        where: { id: matchId },
+        select: { weekId: true },
+      })
+      if (match?.weekId) await revalidateLeagueByWeek(match.weekId)
+    } catch (_e) {/* non-fatal */}
 
     return NextResponse.json({ success: true })
   } catch (error) {

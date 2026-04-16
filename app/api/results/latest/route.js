@@ -15,7 +15,7 @@ export async function GET() {
         take: 1,
         include: {
           weeks: {
-            where: { status: { in: ['completed', 'active'] } },
+            where: { status: 'completed' },
             orderBy: { weekNumber: 'desc' },
             take: 1,
             include: {

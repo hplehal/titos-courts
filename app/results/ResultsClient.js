@@ -32,9 +32,16 @@ function computeTeamStats(teams, matches) {
    ═══════════════════════════════════════════════ */
 function TierCard({ tier, slotColorVar, isSelected, onClick }) {
   const teams = tier.teams || []
+  const matches = tier.matches || []
+  const stats = computeTeamStats(teams, matches)
+
+  // Sort by finishPosition if available, otherwise by wins desc, then diff desc
   const sorted = [...teams].sort((a, b) => {
     if (a.finishPosition && b.finishPosition) return a.finishPosition - b.finishPosition
-    return 0
+    const sa = stats[a.name] || { wins: 0, diff: 0 }
+    const sb = stats[b.name] || { wins: 0, diff: 0 }
+    if (sb.wins !== sa.wins) return sb.wins - sa.wins
+    return sb.diff - sa.diff
   })
 
   return (
@@ -73,30 +80,46 @@ function TierCard({ tier, slotColorVar, isSelected, onClick }) {
         </div>
       </div>
 
+      {/* Column labels */}
+      <div className="px-3 pb-1.5 flex items-center gap-3">
+        <div className="w-8 sm:w-6 flex-shrink-0" />
+        <span className="text-[10px] font-bold uppercase tracking-wider text-titos-gray-500 flex-1">Team</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-titos-gray-500 w-6 text-center">W</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-titos-gray-500 w-6 text-center">L</span>
+        <span className="w-4 flex-shrink-0" />
+      </div>
+
       {/* Teams */}
       <div className="px-3 pb-3 space-y-1.5 sm:space-y-1">
-        {sorted.map((t, idx) => (
-          <div key={t.name} className={cn(
-            'flex items-center gap-3 px-3 py-3 sm:py-2 rounded-xl',
-            idx === 0 ? 'bg-white/[0.03]' : ''
-          )}>
-            <div className={cn(
-              'w-8 h-8 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-xs sm:text-[11px] font-black flex-shrink-0',
-              idx === 0 ? 'bg-titos-gold/20 text-titos-gold' :
-              idx === 2 ? 'bg-status-live/12 text-status-live' :
-              'bg-white/[0.06] text-titos-gray-400'
-            )}>{idx + 1}</div>
-            <span className="text-sm sm:text-base font-semibold text-titos-white flex-1 min-w-0">{t.name}</span>
-            {/* Movement */}
-            {t.movement === 'up' ? (
-              <span className="text-status-success flex-shrink-0"><ChevronUp className="w-4 h-4" /></span>
-            ) : t.movement === 'down' ? (
-              <span className="text-status-live flex-shrink-0"><ChevronDown className="w-4 h-4" /></span>
-            ) : (
-              <span className="text-titos-gray-500 flex-shrink-0 text-xs font-bold">—</span>
-            )}
-          </div>
-        ))}
+        {sorted.map((t, idx) => {
+          const s = stats[t.name] || { wins: 0, losses: 0 }
+          return (
+            <div key={t.name} className={cn(
+              'flex items-center gap-3 px-3 py-3 sm:py-2 rounded-xl',
+              idx === 0 ? 'bg-white/[0.03]' : ''
+            )}>
+              <div className={cn(
+                'w-8 h-8 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-xs sm:text-[11px] font-black flex-shrink-0',
+                idx === 0 ? 'bg-titos-gold/20 text-titos-gold' :
+                idx === 2 ? 'bg-status-live/12 text-status-live' :
+                'bg-white/[0.06] text-titos-gray-400'
+              )}>{idx + 1}</div>
+              <span className="text-sm sm:text-base font-semibold text-titos-white flex-1 min-w-0 truncate">{t.name}</span>
+              {/* W */}
+              <span className="text-sm font-bold text-status-success flex-shrink-0 w-6 text-center tabular-nums">{s.wins}</span>
+              {/* L */}
+              <span className="text-sm font-bold text-status-live flex-shrink-0 w-6 text-center tabular-nums">{s.losses}</span>
+              {/* Movement */}
+              {t.movement === 'up' ? (
+                <span className="text-status-success flex-shrink-0"><ChevronUp className="w-4 h-4" /></span>
+              ) : t.movement === 'down' ? (
+                <span className="text-status-live flex-shrink-0"><ChevronDown className="w-4 h-4" /></span>
+              ) : (
+                <span className="text-titos-gray-500 flex-shrink-0 text-xs font-bold w-4 text-center">—</span>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

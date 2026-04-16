@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Trophy, ChevronUp, ChevronDown, ChevronDown as ChevronIcon, Clock } from 'lucide-react'
 import LeagueSelector from '@/components/ui/LeagueSelector'
 import { cn, formatDate, getSlotInfo, getTeamAbbreviation } from '@/lib/utils'
@@ -291,11 +292,18 @@ function SlotGroup({ slot, tiers }) {
 /* ═══════════════════════════════════════════════
    MAIN RESULTS CLIENT
    ═══════════════════════════════════════════════ */
-export default function ResultsClient({ leagues }) {
-  const [selected, setSelected] = useState(leagues[0]?.slug || '')
+export default function ResultsClient({ leagues, initialSlug }) {
+  const router = useRouter()
+  const [selected, setSelected] = useState(initialSlug || leagues[0]?.slug || '')
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [selectedWeek, setSelectedWeek] = useState(null)
+
+  // Keep the URL in sync with the selected league for shareable deep links
+  const handleSelect = (slug) => {
+    setSelected(slug)
+    router.replace(`/results/${slug}`, { scroll: false })
+  }
 
   useEffect(() => {
     if (!selected) return
@@ -336,7 +344,7 @@ export default function ResultsClient({ leagues }) {
         </div>
 
         <div className="mb-6">
-          <LeagueSelector leagues={leagues} selected={selected} onSelect={setSelected} />
+          <LeagueSelector leagues={leagues} selected={selected} onSelect={handleSelect} />
         </div>
 
         {loading ? (

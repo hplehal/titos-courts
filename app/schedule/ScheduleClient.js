@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Clock, ChevronDown, Shield } from 'lucide-react'
 import LeagueSelector from '@/components/ui/LeagueSelector'
 import TeamFilter from '@/components/ui/TeamFilter'
@@ -289,10 +290,17 @@ function SlotGroup({ slot, tiers, myTeam, isMens }) {
 /* ═══════════════════════════════════════════════
    MAIN SCHEDULE CLIENT
    ═══════════════════════════════════════════════ */
-export default function ScheduleClient({ leagues }) {
-  const [selected, setSelected] = useState(leagues[0]?.slug || '')
+export default function ScheduleClient({ leagues, initialSlug }) {
+  const router = useRouter()
+  const [selected, setSelected] = useState(initialSlug || leagues[0]?.slug || '')
   const [schedule, setSchedule] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  // Sync URL with selected league for shareable deep links
+  const handleSelect = (slug) => {
+    setSelected(slug)
+    router.replace(`/schedule/${slug}`, { scroll: false })
+  }
   const [myTeam, setMyTeam] = useMyTeam(selected)
 
   const isMens = selected.includes('sunday') || selected.includes('mens')
@@ -338,7 +346,7 @@ export default function ScheduleClient({ leagues }) {
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-8">
-          <LeagueSelector leagues={leagues} selected={selected} onSelect={setSelected} />
+          <LeagueSelector leagues={leagues} selected={selected} onSelect={handleSelect} />
           {[...allTeams].length > 0 && (
             <TeamFilter teams={[...allTeams].sort()} selected={myTeam} onSelect={setMyTeam} />
           )}

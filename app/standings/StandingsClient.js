@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Trophy } from 'lucide-react'
 import SectionHeading from '@/components/ui/SectionHeading'
 import LeagueSelector from '@/components/ui/LeagueSelector'
@@ -226,13 +227,20 @@ function SlotDivider({ label, color }) {
 
 /* ─── Main Component ─── */
 
-export default function StandingsClient({ leagues }) {
-  const [selected, setSelected] = useState(leagues[0]?.slug || '')
+export default function StandingsClient({ leagues, initialSlug }) {
+  const router = useRouter()
+  const [selected, setSelected] = useState(initialSlug || leagues[0]?.slug || '')
   const [standings, setStandings] = useState(null)
   const [tierView, setTierView] = useState(null)
   const [view, setView] = useState('overall')
   const [loading, setLoading] = useState(true)
   const [myTeam, setMyTeam] = useMyTeam(selected)
+
+  // Sync URL with selected league for shareable deep links
+  const handleSelect = (slug) => {
+    setSelected(slug)
+    router.replace(`/standings/${slug}`, { scroll: false })
+  }
 
   useEffect(() => {
     if (!selected) return
@@ -251,7 +259,7 @@ export default function StandingsClient({ leagues }) {
         <SectionHeading label="RANKINGS" title="Season Standings" description="Overall league standings and current tier placements." />
 
         <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-          <LeagueSelector leagues={leagues} selected={selected} onSelect={setSelected} />
+          <LeagueSelector leagues={leagues} selected={selected} onSelect={handleSelect} />
 
           <div className="flex gap-2">
             {['overall', 'tiers'].map(v => (

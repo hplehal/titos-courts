@@ -80,7 +80,7 @@ export default function LiveClient() {
 
             {data.active.length === 0 && data.recent.length === 0 && (
               <div className="text-center py-20">
-                <RefreshCw className="w-12 h-12 text-titos-gray-600 mx-auto mb-4" />
+                <RefreshCw className="w-12 h-12 text-titos-gray-500 mx-auto mb-4" />
                 <h3 className="font-display text-xl font-bold text-titos-gray-300 mb-2">No Active Matches</h3>
                 <p className="text-titos-gray-400 max-w-md mx-auto">
                   No matches are being played right now. This page will automatically update when games begin.
@@ -122,7 +122,7 @@ function LiveMatchCard({ match, isLive = false }) {
         </div>
         <div className="flex-shrink-0 flex items-center gap-3 px-4">
           <span className={`font-display text-3xl sm:text-4xl font-bold ${homeWon ? 'text-titos-gold' : 'text-titos-gray-300'}`}>{homeSetWins}</span>
-          <span className="text-titos-gray-600 text-lg">:</span>
+          <span className="text-titos-gray-500 text-lg">:</span>
           <span className={`font-display text-3xl sm:text-4xl font-bold ${awayWon ? 'text-titos-gold' : 'text-titos-gray-300'}`}>{awaySetWins}</span>
         </div>
         <div className="flex-1 pl-4">
@@ -138,7 +138,7 @@ function LiveMatchCard({ match, isLive = false }) {
             <span key={s.setNumber || s.id} className="text-sm text-titos-gray-400">
               <span className="text-titos-gray-500 text-xs mr-1">S{s.setNumber}</span>
               <span className={s.homeScore > s.awayScore ? 'text-titos-gold font-semibold' : ''}>{s.homeScore}</span>
-              <span className="text-titos-gray-600">-</span>
+              <span className="text-titos-gray-500">-</span>
               <span className={s.awayScore > s.homeScore ? 'text-titos-gold font-semibold' : ''}>{s.awayScore}</span>
             </span>
           ))}

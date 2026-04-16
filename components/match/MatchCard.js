@@ -39,7 +39,7 @@ export default function MatchCard({ match }) {
             </span>
           )}
           {tierNumber && courtNumber && (
-            <span className="text-titos-gray-600">|</span>
+            <span className="text-titos-gray-500">|</span>
           )}
           {courtNumber && <span>Court {courtNumber}</span>}
         </div>
@@ -106,7 +106,7 @@ export default function MatchCard({ match }) {
           {scores.map((set, i) => (
             <span key={i} className="px-2 py-0.5 rounded bg-titos-card">
               <span className={set.home > set.away ? 'text-titos-gold font-bold' : ''}>{set.home}</span>
-              <span className="text-titos-gray-600 mx-0.5">-</span>
+              <span className="text-titos-gray-500 mx-0.5">-</span>
               <span className={set.away > set.home ? 'text-titos-gold font-bold' : ''}>{set.away}</span>
             </span>
           ))}

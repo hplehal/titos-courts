@@ -248,7 +248,7 @@ export default function SeasonsPage() {
                                   })
                                   loadData()
                                 }}
-                                className={cn('px-2 py-0.5 rounded text-[10px] font-bold uppercase appearance-none cursor-pointer border-0 focus:outline-none',
+                                className={cn('px-2 py-0.5 rounded text-[11px] font-bold uppercase appearance-none cursor-pointer border-0 focus:outline-none',
                                   season.status === 'active' ? 'bg-status-success/15 text-status-success' :
                                   season.status === 'completed' ? 'bg-titos-gray-400/15 text-titos-gray-400' :
                                   season.status === 'playoffs' ? 'bg-titos-gold/15 text-titos-gold' :
@@ -356,20 +356,20 @@ export default function SeasonsPage() {
                                         {isEditing ? (
                                           <>
                                             <button onClick={() => saveTeam(team.id)} disabled={savingTeam}
-                                              className="px-2 py-1 rounded text-[10px] font-semibold bg-status-success/15 text-status-success border border-status-success/30 flex items-center gap-1">
+                                              className="px-2 py-1 rounded text-[11px] font-semibold bg-status-success/15 text-status-success border border-status-success/30 flex items-center gap-1">
                                               {savingTeam ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save
                                             </button>
-                                            <button onClick={cancelEditTeam} className="px-2 py-1 rounded text-[10px] font-semibold bg-titos-card text-titos-gray-300 border border-titos-border flex items-center gap-1">
+                                            <button onClick={cancelEditTeam} className="px-2 py-1 rounded text-[11px] font-semibold bg-titos-card text-titos-gray-300 border border-titos-border flex items-center gap-1">
                                               <X className="w-3 h-3" /> Cancel
                                             </button>
                                           </>
                                         ) : (
                                           <>
-                                            <button onClick={() => startEditTeam(team)} className="px-2 py-1 rounded text-[10px] font-semibold bg-titos-card text-titos-gray-300 border border-titos-border hover:text-titos-white transition-colors flex items-center gap-1">
+                                            <button onClick={() => startEditTeam(team)} className="px-2 py-1 rounded text-[11px] font-semibold bg-titos-card text-titos-gray-300 border border-titos-border hover:text-titos-white transition-colors flex items-center gap-1">
                                               <Pencil className="w-3 h-3" /> Edit
                                             </button>
                                             <button onClick={() => setExpandedPlayers(p => ({ ...p, [team.id]: !p[team.id] }))}
-                                              className={cn('px-2 py-1 rounded text-[10px] font-semibold border flex items-center gap-1 transition-colors',
+                                              className={cn('px-2 py-1 rounded text-[11px] font-semibold border flex items-center gap-1 transition-colors',
                                                 expandedPlayers[team.id] ? 'bg-titos-gold/15 text-titos-gold border-titos-gold/30' : 'bg-titos-card text-titos-gray-300 border-titos-border hover:text-titos-white')}>
                                               <Users className="w-3 h-3" /> Players ({team.players?.length || 0})
                                             </button>
@@ -377,7 +377,7 @@ export default function SeasonsPage() {
                                               if (!confirm(`Delete "${team.name}"? This removes the team and all their match data.`)) return
                                               await fetch('/api/admin/seasons', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ teamId: team.id }) })
                                               loadData()
-                                            }} className="px-2 py-1 rounded text-[10px] font-semibold bg-status-live/5 text-status-live/60 border border-status-live/15 hover:text-status-live hover:bg-status-live/10 transition-colors flex items-center gap-1">
+                                            }} className="px-2 py-1 rounded text-[11px] font-semibold bg-status-live/5 text-status-live/60 border border-status-live/15 hover:text-status-live hover:bg-status-live/10 transition-colors flex items-center gap-1">
                                               <Trash2 className="w-3 h-3" />
                                             </button>
                                           </>
@@ -392,7 +392,7 @@ export default function SeasonsPage() {
                                             {team.players.map(player => (
                                               <div key={player.id} className="flex items-center justify-between py-1 px-2 rounded hover:bg-titos-surface/50">
                                                 <div className="flex items-center gap-2">
-                                                  {player.jerseyNumber != null && <span className="text-titos-gold text-[10px] font-bold w-5 text-center">#{player.jerseyNumber}</span>}
+                                                  {player.jerseyNumber != null && <span className="text-titos-gold text-[11px] font-bold w-5 text-center">#{player.jerseyNumber}</span>}
                                                   <span className="text-titos-white text-xs">{player.name}</span>
                                                 </div>
                                                 <button onClick={() => handleRemovePlayer(player.id)} disabled={removingPlayer[player.id]} className="text-status-live/60 hover:text-status-live transition-colors p-0.5">
@@ -408,7 +408,7 @@ export default function SeasonsPage() {
                                           <input type="number" value={newPlayer[team.id]?.jerseyNumber || ''} onChange={(e) => setNewPlayer(p => ({ ...p, [team.id]: { ...p[team.id], jerseyNumber: e.target.value } }))}
                                             placeholder="#" className="w-12 px-2 py-1 bg-titos-surface border border-titos-border rounded text-titos-white text-xs focus:outline-none focus:border-titos-gold/50" />
                                           <button onClick={() => handleAddPlayer(team.id)} disabled={addingPlayer}
-                                            className="px-2 py-1 rounded text-[10px] font-semibold bg-titos-gold/15 text-titos-gold border border-titos-gold/30 flex items-center gap-1">
+                                            className="px-2 py-1 rounded text-[11px] font-semibold bg-titos-gold/15 text-titos-gold border border-titos-gold/30 flex items-center gap-1">
                                             {addingPlayer ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Add
                                           </button>
                                         </div>
@@ -494,7 +494,7 @@ function WeekCard({ week, season, onGenerateMatches, generatingMatches, onStatus
             </span>
             <span className="text-titos-gray-400 text-xs ml-2">{new Date(week.date).toLocaleDateString()}</span>
           </div>
-          <span className={cn('px-1.5 py-0.5 rounded text-[9px] font-bold uppercase',
+          <span className={cn('px-1.5 py-0.5 rounded text-[11px] font-bold uppercase',
             week.status === 'completed' ? 'bg-status-success/15 text-status-success' :
             week.status === 'active' ? 'bg-titos-gold/15 text-titos-gold' : 'bg-titos-gray-400/15 text-titos-gray-400'
           )}>{week.status}</span>
@@ -511,32 +511,32 @@ function WeekCard({ week, season, onGenerateMatches, generatingMatches, onStatus
             {/* Status changes */}
             {week.status === 'upcoming' && (
               <button onClick={() => onStatusChange(week.id, 'active')}
-                className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-titos-gold/10 text-titos-gold border border-titos-gold/30 hover:bg-titos-gold/20 transition-colors">
+                className="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase bg-titos-gold/10 text-titos-gold border border-titos-gold/30 hover:bg-titos-gold/20 transition-colors">
                 Activate
               </button>
             )}
             {week.status === 'active' && (
               <button onClick={() => onStatusChange(week.id, 'completed')}
-                className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-status-success/10 text-status-success border border-status-success/30 hover:bg-status-success/20 transition-colors">
+                className="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase bg-status-success/10 text-status-success border border-status-success/30 hover:bg-status-success/20 transition-colors">
                 Complete
               </button>
             )}
             {week.status === 'completed' && (
               <button onClick={() => handleResetStatus('active')}
-                className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-titos-gold/10 text-titos-gold border border-titos-gold/30 hover:bg-titos-gold/20 transition-colors">
+                className="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase bg-titos-gold/10 text-titos-gold border border-titos-gold/30 hover:bg-titos-gold/20 transition-colors">
                 Reopen (Active)
               </button>
             )}
             {(week.status === 'active' || week.status === 'completed') && (
               <button onClick={() => handleResetStatus('upcoming')}
-                className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-titos-card text-titos-gray-300 border border-titos-border hover:text-titos-white transition-colors">
+                className="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase bg-titos-card text-titos-gray-300 border border-titos-border hover:text-titos-white transition-colors">
                 Reset to Upcoming
               </button>
             )}
 
             {/* Score entry */}
             {matchCount > 0 && (
-              <a href="/admin/scores" className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-status-info/10 text-status-info border border-status-info/30 hover:bg-status-info/20 transition-colors">
+              <a href="/admin/scores" className="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase bg-status-info/10 text-status-info border border-status-info/30 hover:bg-status-info/20 transition-colors">
                 Enter Scores
               </a>
             )}
@@ -555,7 +555,7 @@ function WeekCard({ week, season, onGenerateMatches, generatingMatches, onStatus
             {/* Generate Matches */}
             {matchCount === 0 && placementCount > 0 && (
               <button onClick={() => onGenerateMatches(week.id)} disabled={generatingMatches[week.id]}
-                className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-titos-card text-titos-gray-300 border border-titos-border hover:text-titos-white transition-colors flex items-center gap-1">
+                className="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase bg-titos-card text-titos-gray-300 border border-titos-border hover:text-titos-white transition-colors flex items-center gap-1">
                 {generatingMatches[week.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Generate Matches
               </button>
             )}
@@ -563,7 +563,7 @@ function WeekCard({ week, season, onGenerateMatches, generatingMatches, onStatus
             {/* Delete Matches (to regenerate) */}
             {matchCount > 0 && (
               <button onClick={handleDeleteMatches} disabled={deletingMatches}
-                className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-status-live/5 text-status-live/70 border border-status-live/15 hover:bg-status-live/10 hover:text-status-live transition-colors flex items-center gap-1">
+                className="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase bg-status-live/5 text-status-live/70 border border-status-live/15 hover:bg-status-live/10 hover:text-status-live transition-colors flex items-center gap-1">
                 {deletingMatches ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />} Delete Matches ({matchCount})
               </button>
             )}
@@ -575,12 +575,12 @@ function WeekCard({ week, season, onGenerateMatches, generatingMatches, onStatus
               <>
                 <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)}
                   className="px-3 py-1.5 bg-titos-elevated border border-titos-border rounded-lg text-titos-white text-xs focus:outline-none focus:border-titos-gold/50 [color-scheme:dark]" />
-                <button onClick={handleUpdateDate} className="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-titos-gold/10 text-titos-gold border border-titos-gold/30">Save</button>
-                <button onClick={() => setEditingDate(false)} className="px-3 py-1.5 rounded-lg text-[10px] text-titos-gray-400 hover:text-titos-white">Cancel</button>
+                <button onClick={handleUpdateDate} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-titos-gold/10 text-titos-gold border border-titos-gold/30">Save</button>
+                <button onClick={() => setEditingDate(false)} className="px-3 py-1.5 rounded-lg text-[11px] text-titos-gray-400 hover:text-titos-white">Cancel</button>
               </>
             ) : (
               <button onClick={() => { setEditingDate(true); setNewDate('') }}
-                className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-titos-card text-titos-gray-300 border border-titos-border hover:text-titos-white transition-colors flex items-center gap-1">
+                className="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase bg-titos-card text-titos-gray-300 border border-titos-border hover:text-titos-white transition-colors flex items-center gap-1">
                 <Pencil className="w-3 h-3" /> Change Date
               </button>
             )}
@@ -589,7 +589,7 @@ function WeekCard({ week, season, onGenerateMatches, generatingMatches, onStatus
 
             {/* Delete Week */}
             <button onClick={handleDeleteWeek} disabled={deleting}
-              className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-status-live/5 text-status-live/60 border border-status-live/15 hover:bg-status-live/10 hover:text-status-live transition-colors flex items-center gap-1">
+              className="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase bg-status-live/5 text-status-live/60 border border-status-live/15 hover:bg-status-live/10 hover:text-status-live transition-colors flex items-center gap-1">
               {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />} Delete Week
             </button>
           </div>
@@ -682,7 +682,7 @@ function SetupTiersButton({ weekId, seasonId, teams, tiers: initialTiers, onDone
 
   const modal = open && typeof document !== 'undefined' ? createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)}>
-      <div className="bg-titos-elevated border border-titos-border rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="bg-titos-elevated border border-titos-border rounded-xl max-w-4xl w-full max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b border-titos-border flex items-center justify-between">
           <h3 className="font-display text-lg font-black text-titos-white">
             {editMode ? 'Edit Tier Assignments' : 'Setup Tier Assignments'}
@@ -759,7 +759,7 @@ function SetupTiersButton({ weekId, seasonId, teams, tiers: initialTiers, onDone
   return (
     <>
       <button onClick={openSetup}
-        className="px-2.5 py-1 rounded text-[10px] font-bold uppercase bg-titos-gold/10 text-titos-gold border border-titos-gold/30 hover:bg-titos-gold/20 transition-colors flex items-center gap-1">
+        className="px-2.5 py-1 rounded text-[11px] font-bold uppercase bg-titos-gold/10 text-titos-gold border border-titos-gold/30 hover:bg-titos-gold/20 transition-colors flex items-center gap-1">
         <Users className="w-3 h-3" /> {editMode ? 'Edit Tiers' : 'Setup Tiers'}
       </button>
       {modal}
@@ -835,7 +835,7 @@ function InlineAddTeam({ seasonId, onAdded }) {
     <form onSubmit={handleAddBulk} className="space-y-2">
       <textarea value={bulk} onChange={(e) => setBulk(e.target.value)} rows={4} required placeholder="Block Party, Jessica Chen, jessica@email.com\nNet Worth, Amanda Patel"
         className="w-full px-3 py-2 bg-titos-elevated border border-titos-border rounded-lg text-titos-white text-sm placeholder-titos-gray-500 focus:outline-none focus:border-titos-gold/50 font-mono" />
-      <p className="text-titos-gray-500 text-[10px]">One per line: Team Name, Captain, Email</p>
+      <p className="text-titos-gray-500 text-[11px]">One per line: Team Name, Captain, Email</p>
       <div className="flex items-center gap-2">
         <button type="submit" disabled={saving} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-titos-gold/15 text-titos-gold border border-titos-gold/30 flex items-center gap-1">
           {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Add All

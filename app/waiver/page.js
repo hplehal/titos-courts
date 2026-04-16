@@ -76,7 +76,7 @@ export default function WaiverPage() {
   if (submitted) {
     return (
       <div className="py-20 px-4 min-h-screen flex items-center justify-center">
-        <div className="card rounded-2xl p-10 text-center max-w-md mx-auto">
+        <div className="card rounded-xl p-10 text-center max-w-md mx-auto">
           <div className="w-16 h-16 rounded-full bg-status-success/15 flex items-center justify-center mx-auto mb-6">
             <Check className="w-8 h-8 text-status-success" />
           </div>
@@ -109,7 +109,7 @@ export default function WaiverPage() {
 
         <form onSubmit={handleSubmit}>
           {/* Player Info */}
-          <div className="card-flat rounded-2xl p-6 mb-6">
+          <div className="card-flat rounded-xl p-6 mb-6">
             <h2 className="font-display text-lg font-black text-titos-white mb-4">Player Information</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
@@ -180,7 +180,7 @@ export default function WaiverPage() {
           </div>
 
           {/* Agreements */}
-          <div className="card-flat rounded-2xl p-6 mb-6 space-y-4">
+          <div className="card-flat rounded-xl p-6 mb-6 space-y-4">
             <h2 className="font-display text-lg font-black text-titos-white mb-2">Agreement</h2>
 
             <label className="flex items-start gap-3 cursor-pointer group">
@@ -209,7 +209,7 @@ export default function WaiverPage() {
           </div>
 
           {/* Signature */}
-          <div className="card-flat rounded-2xl p-6 mb-6">
+          <div className="card-flat rounded-xl p-6 mb-6">
             <h2 className="font-display text-lg font-black text-titos-white mb-4">Electronic Signature</h2>
             <p className="text-titos-gray-400 text-xs mb-4">
               By typing your full legal name below, you acknowledge that this constitutes your electronic signature
@@ -227,7 +227,7 @@ export default function WaiverPage() {
                 className="w-full px-4 py-4 bg-titos-elevated border-2 border-titos-border rounded-lg text-titos-white text-lg font-display italic focus:outline-none focus:border-titos-gold/50"
               />
             </div>
-            <p className="text-titos-gray-500 text-[10px] mt-2">
+            <p className="text-titos-gray-500 text-[11px] mt-2">
               Date: {new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>

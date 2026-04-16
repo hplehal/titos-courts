@@ -55,7 +55,7 @@ export default function TournamentAdminPage() {
 
             {tournaments.length === 0 && (
               <div className="card rounded-xl p-8 text-center">
-                <Trophy className="w-10 h-10 text-titos-gray-600 mx-auto mb-3" />
+                <Trophy className="w-10 h-10 text-titos-gray-500 mx-auto mb-3" />
                 <p className="text-titos-gray-400">No tournaments created yet.</p>
               </div>
             )}

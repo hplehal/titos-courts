@@ -8,7 +8,7 @@ import { cn, formatDate, getTierColor, getSlotInfo, getDivisionInfo, getMovement
 
 export default function LeagueDetailClient({ data }) {
   const { league, season, standings, weeks } = data
-  const [tab, setTab] = useState('results')
+  const [tab, setTab] = useState('standings')
 
   if (!season) {
     return (
@@ -20,9 +20,8 @@ export default function LeagueDetailClient({ data }) {
   }
 
   const tabs = [
-    { id: 'results', label: 'Results' },
-    { id: 'schedule', label: 'Schedule' },
     { id: 'standings', label: 'Standings' },
+    { id: 'schedule', label: 'Schedule' },
     { id: 'teams', label: 'Teams' },
   ]
 
@@ -103,14 +102,14 @@ export default function LeagueDetailClient({ data }) {
           <div className="card rounded-xl overflow-hidden">
             <div className="px-5 py-3 border-b border-titos-border bg-titos-gold/5 flex items-center justify-between">
               <h3 className="font-display font-bold text-titos-gold">Overall Season Standings</h3>
-              <span className="text-titos-gray-500 text-[10px] uppercase tracking-wider">PTS = Tier Factor + Sets Won</span>
+              <span className="text-titos-gray-400 text-[11px] uppercase tracking-wider">PTS = Tier Factor + Sets Won</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-titos-border/50">
                     {['#', 'Team', 'SW', 'SL', '+/-', 'Tier', 'Sets', 'PTS', 'Div'].map(h => (
-                      <th key={h} className={`px-2.5 py-3 text-[10px] font-semibold uppercase tracking-wider text-titos-gray-400 ${h === 'Team' ? 'text-left' : 'text-center'}`}>
+                      <th key={h} className={`px-2.5 py-3 text-[11px] font-semibold uppercase tracking-wider text-titos-gray-400 ${h === 'Team' ? 'text-left' : 'text-center'}`}>
                         {h}
                       </th>
                     ))}
@@ -137,7 +136,7 @@ export default function LeagueDetailClient({ data }) {
                         <td className="px-2.5 py-3 text-center text-titos-gray-400 text-sm">{team.setsWon}</td>
                         <td className="px-2.5 py-3 text-center font-black text-titos-gold text-sm">{team.totalPoints}</td>
                         <td className="px-2.5 py-3 text-center">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold text-${div.color}`}>{div.name}</span>
+                          <span className={`px-2 py-0.5 rounded text-[11px] font-semibold text-${div.color}`}>{div.name}</span>
                         </td>
                       </tr>
                     )
@@ -148,9 +147,18 @@ export default function LeagueDetailClient({ data }) {
           </div>
         )}
 
-        {/* Results Tab */}
-        {tab === 'results' && (
-          <ResultsTab weeks={weeks} league={league} completedWeeks={completedWeeks} lastCompletedWeek={lastCompletedWeek} currentWeek={currentWeek} standings={standings} />
+        {/* Results link */}
+        {tab === 'standings' && completedWeeks.length > 0 && (
+          <div className="mb-6">
+            <Link
+              href="/results"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-titos-gold/10 text-titos-gold text-sm font-bold hover:bg-titos-gold/15 transition-colors"
+            >
+              <Trophy className="w-4 h-4" />
+              View Match Results & Scores
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         )}
 
         {/* OLD This Week — replaced by Results tab */}
@@ -214,7 +222,7 @@ export default function LeagueDetailClient({ data }) {
                     }
 
                     return (
-                      <div key={tier.tierNumber} className="card-flat rounded-2xl overflow-hidden">
+                      <div key={tier.tierNumber} className="card-flat rounded-xl overflow-hidden">
                         {/* Tier header */}
                         <div className={`px-5 py-3 flex items-center justify-between ${tc.bg}`} style={{ borderLeft: `3px solid var(--color-${tc.accent})` }}>
                           <div className="flex items-center gap-3">
@@ -227,7 +235,7 @@ export default function LeagueDetailClient({ data }) {
                           <div className="flex flex-col lg:flex-row gap-4">
                             {/* Left: Team roster */}
                             <div className="lg:w-1/3 space-y-1.5">
-                              <span className="text-titos-gray-500 text-[10px] font-bold uppercase tracking-wider block mb-2">Teams</span>
+                              <span className="text-titos-gray-400 text-[11px] font-bold uppercase tracking-wider block mb-2">Teams</span>
                               {sortedTeams.map((t, idx) => (
                                 <div
                                   key={t.id}
@@ -240,7 +248,7 @@ export default function LeagueDetailClient({ data }) {
                                 >
                                   <div className="flex items-center gap-2 min-w-0">
                                     <span className={cn(
-                                      'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0',
+                                      'w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0',
                                       idx === 0 ? 'bg-titos-gold/20 text-titos-gold' :
                                       idx === 2 ? 'bg-status-live/15 text-status-live' :
                                       'bg-titos-charcoal text-titos-gray-400'
@@ -251,7 +259,7 @@ export default function LeagueDetailClient({ data }) {
                                   </div>
                                   {t.movement && (
                                     <span className={cn(
-                                      'text-[10px] font-black px-1.5 py-0.5 rounded flex-shrink-0',
+                                      'text-[11px] font-black px-1.5 py-0.5 rounded flex-shrink-0',
                                       t.movement === 'up' ? 'text-status-success bg-status-success/10' :
                                       t.movement === 'down' ? 'text-status-live bg-status-live/10' :
                                       'text-titos-gray-500'
@@ -265,15 +273,15 @@ export default function LeagueDetailClient({ data }) {
 
                             {/* Right: Game schedule table */}
                             <div className="lg:w-2/3">
-                              <span className="text-titos-gray-500 text-[10px] font-bold uppercase tracking-wider block mb-2">Schedule</span>
+                              <span className="text-titos-gray-400 text-[11px] font-bold uppercase tracking-wider block mb-2">Schedule</span>
                               <div className="bg-titos-elevated rounded-xl border border-titos-border/50 overflow-hidden">
                                 <table className="w-full">
                                   <thead>
                                     <tr className="border-b border-titos-border/30">
-                                      <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-titos-gray-500 text-left">Game</th>
-                                      <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-titos-gray-500 text-left">Match</th>
-                                      <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-titos-gray-500 text-center">Ref</th>
-                                      <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-titos-gray-500 text-center">Score</th>
+                                      <th className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-titos-gray-400 text-left">Game</th>
+                                      <th className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-titos-gray-400 text-left">Match</th>
+                                      <th className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-titos-gray-400 text-center">Ref</th>
+                                      <th className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-titos-gray-400 text-center">Score</th>
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -301,13 +309,13 @@ export default function LeagueDetailClient({ data }) {
                                                 {actualMatch.scores.map(s => (
                                                   <span key={s.setNumber} className="text-xs">
                                                     <span className={s.homeScore > s.awayScore ? 'text-titos-gold font-bold' : 'text-titos-gray-400'}>{s.homeScore}</span>
-                                                    <span className="text-titos-gray-600">-</span>
+                                                    <span className="text-titos-gray-500">-</span>
                                                     <span className={s.awayScore > s.homeScore ? 'text-titos-gold font-bold' : 'text-titos-gray-400'}>{s.awayScore}</span>
                                                   </span>
                                                 ))}
                                               </div>
                                             ) : (
-                                              <span className="text-titos-gray-600 text-xs">--</span>
+                                              <span className="text-titos-gray-500 text-xs">--</span>
                                             )}
                                           </td>
                                         </tr>
@@ -495,7 +503,7 @@ function ResultsTab({ weeks, league, completedWeeks, lastCompletedWeek, currentW
               }
 
               return (
-                <div key={tier.tierNumber} className="card-flat rounded-2xl overflow-hidden">
+                <div key={tier.tierNumber} className="card-flat rounded-xl overflow-hidden">
                   {/* Tier header */}
                   <div className={cn('px-5 py-3 flex items-center justify-between', slot.bg)} style={{ borderLeft: `3px solid var(--color-${slotVar})` }}>
                     <span className={cn('font-display text-base font-black', slot.color)}>Tier {tier.tierNumber}</span>
@@ -506,7 +514,7 @@ function ResultsTab({ weeks, league, completedWeeks, lastCompletedWeek, currentW
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="text-[9px] font-bold uppercase tracking-wider text-titos-gray-500">
+                        <tr className="text-[11px] font-bold uppercase tracking-wider text-titos-gray-400">
                           <th className="px-4 pt-3 pb-2 text-left">#</th>
                           <th className="pt-3 pb-2 text-left">Team</th>
                           <th className="pt-3 pb-2 text-center w-12">W</th>
@@ -523,14 +531,14 @@ function ResultsTab({ weeks, league, completedWeeks, lastCompletedWeek, currentW
                               idx === 0 ? 'bg-titos-gold/[0.05]' : idx === 2 ? 'bg-status-live/[0.03]' : ''
                             )}>
                               <td className="px-4 py-2.5">
-                                <span className={cn('w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black',
+                                <span className={cn('w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black',
                                   idx === 0 ? 'bg-titos-gold/20 text-titos-gold' : idx === 2 ? 'bg-status-live/15 text-status-live' : 'bg-titos-charcoal text-titos-gray-400'
                                 )}>{t.finishPosition || idx + 1}</span>
                               </td>
                               <td className="py-2.5 text-sm">
                                 <span className="text-titos-white font-bold">{t.name}</span>
                                 {rankLookup[t.id] && (
-                                  <span className={cn('ml-2 text-[10px] font-black',
+                                  <span className={cn('ml-2 text-[11px] font-black',
                                     rankLookup[t.id] <= 5 ? 'text-titos-gold' : 'text-titos-gray-500'
                                   )}>#{rankLookup[t.id]}</span>
                                 )}
@@ -542,8 +550,8 @@ function ResultsTab({ weeks, league, completedWeeks, lastCompletedWeek, currentW
                               )}>{stats.pointDiff > 0 ? '+' : ''}{stats.pointDiff}</td>
                               <td className="px-4 py-2.5 text-right">
                                 {t.movement && (
-                                  <span className={cn('text-[10px] font-black',
-                                    t.movement === 'up' ? 'text-status-success' : t.movement === 'down' ? 'text-status-live' : 'text-titos-gray-600')}>
+                                  <span className={cn('text-[11px] font-black',
+                                    t.movement === 'up' ? 'text-status-success' : t.movement === 'down' ? 'text-status-live' : 'text-titos-gray-500')}>
                                     {t.movement === 'up' ? '▲' : t.movement === 'down' ? '▼' : '—'}
                                   </span>
                                 )}
@@ -568,10 +576,10 @@ function ResultsTab({ weeks, league, completedWeeks, lastCompletedWeek, currentW
                             {score ? (
                               <span className="font-mono text-center whitespace-nowrap px-1">
                                 <span className={cn('font-bold', homeWon ? 'text-titos-gold' : 'text-titos-gray-500')}>{score.homeScore}</span>
-                                <span className="text-titos-gray-600 mx-0.5">-</span>
+                                <span className="text-titos-gray-500 mx-0.5">-</span>
                                 <span className={cn('font-bold', awayWon ? 'text-titos-gold' : 'text-titos-gray-500')}>{score.awayScore}</span>
                               </span>
-                            ) : <span className="text-center text-titos-gray-600">—</span>}
+                            ) : <span className="text-center text-titos-gray-500">—</span>}
                             <span className={cn('text-left font-medium truncate pl-2', awayWon ? 'text-titos-gold' : 'text-titos-gray-300')}>{m.awayTeam?.name}</span>
                           </div>
                         )
@@ -705,13 +713,13 @@ function ScheduleTab({ weeks, league }) {
                               <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] divide-y sm:divide-y-0 sm:divide-x divide-titos-border/20">
                                 {/* Left: Roster */}
                                 <div className="p-3 space-y-1.5">
-                                  <span className="text-titos-gray-500 text-[9px] font-bold uppercase tracking-wider">Roster</span>
+                                  <span className="text-titos-gray-400 text-[11px] font-bold uppercase tracking-wider">Roster</span>
                                   {teams.map(t => (
                                     <div key={t.id} className={cn(
                                       'flex items-center gap-2 px-2 py-1 rounded',
                                       teamFilter === t.name ? 'bg-titos-gold/15' : ''
                                     )}>
-                                      <span className="text-titos-gold text-[10px] font-bold w-6">{getTeamAbbreviation(t.name)}</span>
+                                      <span className="text-titos-gold text-[11px] font-bold w-6">{getTeamAbbreviation(t.name)}</span>
                                       <span className={cn('text-xs font-medium truncate', teamFilter === t.name ? 'text-titos-gold' : 'text-titos-white')}>{t.name}</span>
                                     </div>
                                   ))}
@@ -722,7 +730,7 @@ function ScheduleTab({ weeks, league }) {
                                   <div className="overflow-x-auto">
                                     <table className="w-full text-sm">
                                       <thead>
-                                        <tr className="text-titos-gray-500 text-[9px] font-bold uppercase tracking-wider">
+                                        <tr className="text-titos-gray-400 text-[11px] font-bold uppercase tracking-wider">
                                           <th className="text-left pb-1.5 w-[45%]">Match</th>
                                           <th className="text-center pb-1.5 w-[25%]">Score</th>
                                           <th className="text-right pb-1.5 w-[30%]">Ref</th>
@@ -741,7 +749,7 @@ function ScheduleTab({ weeks, league }) {
                                               {parseInt(roundNum) > 1 && (
                                                 <tr><td colSpan={3} className="py-1"><div className="border-t border-dashed border-titos-border/30" /></td></tr>
                                               )}
-                                              <tr><td colSpan={3} className="text-titos-gray-600 text-[9px] uppercase tracking-wider font-bold pb-0.5 pt-1">Round {roundNum}</td></tr>
+                                              <tr><td colSpan={3} className="text-titos-gray-500 text-[11px] uppercase tracking-wider font-bold pb-0.5 pt-1">Round {roundNum}</td></tr>
                                               {roundMatches.map(m => {
                                                 const isMyMatch = teamFilter && (m.homeTeam?.name === teamFilter || m.awayTeam?.name === teamFilter)
                                                 const score = m.scores?.[0]
@@ -754,18 +762,18 @@ function ScheduleTab({ weeks, league }) {
                                                   )}>
                                                     <td className="py-1.5 pr-2">
                                                       <span className={cn('font-medium', homeWon ? 'text-titos-gold' : 'text-titos-white')}>{getTeamAbbreviation(m.homeTeam?.name)}</span>
-                                                      <span className="text-titos-gray-600 mx-1.5">v</span>
+                                                      <span className="text-titos-gray-500 mx-1.5">v</span>
                                                       <span className={cn('font-medium', awayWon ? 'text-titos-gold' : 'text-titos-white')}>{getTeamAbbreviation(m.awayTeam?.name)}</span>
                                                     </td>
                                                     <td className="py-1.5 text-center">
                                                       {score ? (
                                                         <span className="font-mono text-xs">
                                                           <span className={homeWon ? 'text-titos-gold font-bold' : 'text-titos-gray-300'}>{score.homeScore}</span>
-                                                          <span className="text-titos-gray-600"> - </span>
+                                                          <span className="text-titos-gray-500"> - </span>
                                                           <span className={awayWon ? 'text-titos-gold font-bold' : 'text-titos-gray-300'}>{score.awayScore}</span>
                                                         </span>
                                                       ) : (
-                                                        <span className="text-titos-gray-600 text-xs">—</span>
+                                                        <span className="text-titos-gray-500 text-xs">—</span>
                                                       )}
                                                     </td>
                                                     <td className="py-1.5 text-right text-titos-gray-400 text-xs">

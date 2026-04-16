@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { Clock, ChevronDown, Shield } from 'lucide-react'
 import LeagueSelector from '@/components/ui/LeagueSelector'
@@ -197,9 +197,6 @@ function MatchPanel({ tier, myTeam, slotColorVar, isMens }) {
                     isMyGame ? 'bg-titos-gold/[0.06] ring-1 ring-titos-gold/10' : 'bg-titos-elevated/40'
                   )}
                 >
-                  {/* Game number */}
-                  <span className="text-titos-gray-500 text-xs font-bold w-5 flex-shrink-0">{game.game}.</span>
-
                   {/* Home vs Away */}
                   <div className="flex items-center gap-1.5 flex-1 min-w-0">
                     <span className={cn('text-sm font-semibold truncate', homeWon ? 'text-titos-gold' : 'text-titos-white')}>
@@ -266,21 +263,32 @@ function SlotGroup({ slot, tiers, myTeam, isMens }) {
       {/* Grid + expanded panel */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         {sorted.map((tier) => (
-          <TierCard
-            key={tier.tierNumber}
-            tier={tier}
-            myTeam={myTeam}
-            slotColorVar={slotColorVar}
-            isSelected={expandedTier === tier.tierNumber}
-            onClick={() => setExpandedTier(expandedTier === tier.tierNumber ? null : tier.tierNumber)}
-          />
+          <Fragment key={tier.tierNumber}>
+            <TierCard
+              tier={tier}
+              myTeam={myTeam}
+              slotColorVar={slotColorVar}
+              isSelected={expandedTier === tier.tierNumber}
+              onClick={() => setExpandedTier(expandedTier === tier.tierNumber ? null : tier.tierNumber)}
+            />
+            {/* MOBILE ONLY — inline panel appears directly below the clicked card */}
+            {expandedTier === tier.tierNumber && (
+              <div className="sm:hidden">
+                <MatchPanel tier={tier} myTeam={myTeam} slotColorVar={slotColorVar} isMens={isMens} />
+              </div>
+            )}
+          </Fragment>
         ))}
 
-        {/* Full-width match panel — renders INSIDE the grid as col-span-full */}
+        {/* DESKTOP ONLY — full-width panel at the end of the grid row */}
         {expandedTier && (() => {
           const tier = sorted.find(t => t.tierNumber === expandedTier)
           if (!tier) return null
-          return <MatchPanel tier={tier} myTeam={myTeam} slotColorVar={slotColorVar} isMens={isMens} />
+          return (
+            <div className="hidden sm:block col-span-full">
+              <MatchPanel tier={tier} myTeam={myTeam} slotColorVar={slotColorVar} isMens={isMens} />
+            </div>
+          )
         })()}
       </div>
     </div>

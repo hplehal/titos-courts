@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trophy, ChevronUp, ChevronDown, ChevronDown as ChevronIcon, Clock } from 'lucide-react'
 import LeagueSelector from '@/components/ui/LeagueSelector'
@@ -215,7 +215,6 @@ function ResultPanel({ tier, slotColorVar }) {
 
                 return (
                   <div key={i} className={cn('flex items-center gap-3 px-3 sm:px-4 py-2.5 rounded-xl bg-titos-elevated/40')}>
-                    <span className="text-titos-gray-500 text-xs font-bold w-5 flex-shrink-0">{i + 1}.</span>
                     <span className={cn('flex-1 text-right text-sm font-semibold truncate', homeWon ? 'text-titos-gold' : 'text-titos-white')}>
                       {m.homeTeam}
                     </span>
@@ -269,20 +268,31 @@ function SlotGroup({ slot, tiers }) {
       {/* Grid + expanded panel */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         {sorted.map(tier => (
-          <TierCard
-            key={tier.tierNumber}
-            tier={tier}
-            slotColorVar={slotColorVar}
-            isSelected={expandedTier === tier.tierNumber}
-            onClick={() => setExpandedTier(expandedTier === tier.tierNumber ? null : tier.tierNumber)}
-          />
+          <Fragment key={tier.tierNumber}>
+            <TierCard
+              tier={tier}
+              slotColorVar={slotColorVar}
+              isSelected={expandedTier === tier.tierNumber}
+              onClick={() => setExpandedTier(expandedTier === tier.tierNumber ? null : tier.tierNumber)}
+            />
+            {/* MOBILE ONLY — inline panel appears directly below the clicked card */}
+            {expandedTier === tier.tierNumber && (
+              <div className="sm:hidden">
+                <ResultPanel tier={tier} slotColorVar={slotColorVar} />
+              </div>
+            )}
+          </Fragment>
         ))}
 
-        {/* Full-width panel below grid */}
+        {/* DESKTOP ONLY — full-width panel at the end of the grid row */}
         {expandedTier && (() => {
           const tier = sorted.find(t => t.tierNumber === expandedTier)
           if (!tier) return null
-          return <ResultPanel tier={tier} slotColorVar={slotColorVar} />
+          return (
+            <div className="hidden sm:block col-span-full">
+              <ResultPanel tier={tier} slotColorVar={slotColorVar} />
+            </div>
+          )
         })()}
       </div>
     </div>

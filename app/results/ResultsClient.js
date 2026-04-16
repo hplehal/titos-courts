@@ -129,7 +129,7 @@ function TierCard({ tier, slotColorVar, isSelected, onClick }) {
 /* ═══════════════════════════════════════════════
    EXPANDED PANEL — full-width below grid
    ═══════════════════════════════════════════════ */
-function ResultPanel({ tier, slotColorVar }) {
+function ResultPanel({ tier, slotColorVar, compact = false }) {
   const teams = tier.teams || []
   const matches = tier.matches || []
   const stats = computeTeamStats(teams, matches)
@@ -147,19 +147,27 @@ function ResultPanel({ tier, slotColorVar }) {
       className="col-span-full rounded-xl overflow-hidden ring-1 ring-titos-gold/15 animate-fade-in"
       style={{ background: 'linear-gradient(180deg, rgba(242,165,39,0.03) 0%, rgba(17,17,17,1) 100%)' }}
     >
-      {/* Panel header */}
-      <div className="px-5 py-3 flex items-center justify-between border-b border-titos-border/20">
-        <div className="flex items-center gap-3">
-          <span className="font-display text-base font-black" style={{ color: `var(--color-${slotColorVar})` }}>
-            Tier {tier.tierNumber}
-          </span>
-          <span className="text-titos-gray-400 text-sm">Court {tier.courtNumber}</span>
+      {/* Panel header — hidden on compact (mobile inline) since tier card above shows it */}
+      {!compact && (
+        <div className="px-5 py-3 flex items-center justify-between border-b border-titos-border/20">
+          <div className="flex items-center gap-3">
+            <span className="font-display text-base font-black" style={{ color: `var(--color-${slotColorVar})` }}>
+              Tier {tier.tierNumber}
+            </span>
+            <span className="text-titos-gray-400 text-sm">Court {tier.courtNumber}</span>
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="p-5 flex flex-col lg:flex-row gap-6">
-        {/* Left: Team standings */}
-        <div className="lg:w-72 flex-shrink-0">
+      <div className={cn(
+        'p-5 flex flex-col lg:flex-row gap-6',
+        compact && 'pt-4 pb-4'
+      )}>
+        {/* Left: Team standings — hidden on compact (mobile inline) since tier card above shows W/L */}
+        <div className={cn(
+          'lg:w-72 flex-shrink-0',
+          compact && 'hidden'
+        )}>
           <span className="text-titos-gray-400 text-xs font-bold uppercase tracking-wider block mb-3">Standings</span>
           <div className="space-y-2">
             {sorted.map((t, idx) => {
@@ -278,7 +286,7 @@ function SlotGroup({ slot, tiers }) {
             {/* MOBILE ONLY — inline panel appears directly below the clicked card */}
             {expandedTier === tier.tierNumber && (
               <div className="sm:hidden">
-                <ResultPanel tier={tier} slotColorVar={slotColorVar} />
+                <ResultPanel tier={tier} slotColorVar={slotColorVar} compact />
               </div>
             )}
           </Fragment>

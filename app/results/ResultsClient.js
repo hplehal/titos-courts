@@ -365,26 +365,58 @@ export default function ResultsClient({ leagues, initialSlug }) {
           <LeagueSelector leagues={leagues} selected={selected} onSelect={handleSelect} />
         </div>
 
+        {/* Outer min-height keeps the page from collapsing when switching
+            between loading / empty / full states to prevent CLS */}
+        <div className="min-h-[1800px]">
         {loading ? (
           <div>
+            {/* Week selector placeholder (min-h 44px to match real pills) */}
             <div className="flex gap-2 mb-6">
-              {[1, 2, 3].map(i => <div key={i} className="w-16 h-10 rounded-lg bg-titos-charcoal animate-pulse" />)}
+              {[1, 2, 3].map(i => <div key={i} className="w-20 h-11 rounded-xl bg-titos-charcoal animate-pulse" />)}
+            </div>
+            {/* Week info header placeholder (48px) */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="h-7 bg-titos-charcoal rounded w-24 animate-pulse" />
+              <div className="h-5 bg-titos-charcoal rounded w-28 animate-pulse" />
+              <div className="h-5 bg-titos-charcoal rounded w-20 animate-pulse" />
+            </div>
+            {/* Slot group placeholder */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-9 bg-titos-charcoal rounded-lg w-28 animate-pulse" />
+              <div className="flex-1 h-px bg-titos-border/20" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="rounded-xl bg-titos-card ring-1 ring-titos-border/20 p-5 animate-pulse min-h-[320px]">
+                  <div className="h-5 bg-titos-charcoal rounded w-20 mb-4" />
+                  <div className="space-y-3">
+                    <div className="h-10 bg-titos-charcoal/50 rounded-xl" />
+                    <div className="h-10 bg-titos-charcoal/50 rounded-xl" />
+                    <div className="h-10 bg-titos-charcoal/50 rounded-xl" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Second slot group placeholder */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-9 bg-titos-charcoal rounded-lg w-28 animate-pulse" />
+              <div className="flex-1 h-px bg-titos-border/20" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {[1, 2, 3, 4].map(i => (
-                <div key={i} className="rounded-xl bg-titos-card ring-1 ring-titos-border/20 p-5 animate-pulse">
-                  <div className="h-4 bg-titos-charcoal rounded w-20 mb-4" />
+                <div key={`b${i}`} className="rounded-xl bg-titos-card ring-1 ring-titos-border/20 p-5 animate-pulse min-h-[320px]">
+                  <div className="h-5 bg-titos-charcoal rounded w-20 mb-4" />
                   <div className="space-y-3">
-                    <div className="h-8 bg-titos-charcoal/50 rounded-xl" />
-                    <div className="h-8 bg-titos-charcoal/50 rounded-xl" />
-                    <div className="h-8 bg-titos-charcoal/50 rounded-xl" />
+                    <div className="h-10 bg-titos-charcoal/50 rounded-xl" />
+                    <div className="h-10 bg-titos-charcoal/50 rounded-xl" />
+                    <div className="h-10 bg-titos-charcoal/50 rounded-xl" />
                   </div>
                 </div>
               ))}
             </div>
           </div>
         ) : completedWeeks.length === 0 ? (
-          <div className="rounded-xl bg-titos-card ring-1 ring-titos-border/20 p-10 sm:p-16 text-center">
+          <div className="rounded-xl bg-titos-card ring-1 ring-titos-border/20 p-10 sm:p-16 text-center flex flex-col items-center justify-center min-h-[600px]">
             <Trophy className="w-10 h-10 text-titos-gray-500 mx-auto mb-4" />
             <h3 className="font-display text-lg font-bold text-titos-white mb-2">No Results Yet</h3>
             <p className="text-titos-gray-400 text-sm max-w-md mx-auto">
@@ -434,12 +466,13 @@ export default function ResultsClient({ leagues, initialSlug }) {
                 })}
               </div>
             ) : (
-              <div className="rounded-xl bg-titos-card ring-1 ring-titos-border/20 p-8 text-center">
+              <div className="rounded-xl bg-titos-card ring-1 ring-titos-border/20 p-8 text-center min-h-[400px] flex items-center justify-center">
                 <p className="text-titos-gray-400 text-sm">No tier data available for this week.</p>
               </div>
             )}
           </div>
         )}
+        </div>
       </div>
     </div>
   )

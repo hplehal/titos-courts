@@ -184,10 +184,11 @@ export default function SeasonsPage() {
           </button>
         </div>
 
+        {/* Message — fixed toast so it doesn't push season list */}
         {message && (
-          <div className="mb-4 p-3 rounded-lg bg-titos-gold/10 border border-titos-gold/30 text-titos-gold text-sm font-medium flex items-center justify-between">
-            {message}
-            <button onClick={() => setMessage('')} className="text-titos-gold/60 hover:text-titos-gold"><X className="w-4 h-4" /></button>
+          <div className="fixed top-20 right-6 z-40 max-w-sm p-3 rounded-lg bg-titos-gold/15 border border-titos-gold/40 backdrop-blur-md shadow-lg text-titos-gold text-sm font-medium flex items-center justify-between gap-3">
+            <span className="flex-1">{message}</span>
+            <button onClick={() => setMessage('')} className="text-titos-gold/60 hover:text-titos-gold flex-shrink-0"><X className="w-4 h-4" /></button>
           </div>
         )}
 
@@ -223,7 +224,18 @@ export default function SeasonsPage() {
 
         {/* Seasons List */}
         {loading ? (
-          <div className="text-center py-20"><Loader2 className="w-8 h-8 text-titos-gold mx-auto animate-spin" /></div>
+          <div className="space-y-8 min-h-[1200px]">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i}>
+                <div className="h-6 bg-titos-charcoal rounded w-48 mb-4 animate-pulse" />
+                <div className="space-y-3">
+                  {Array.from({ length: 2 }).map((_, j) => (
+                    <div key={j} className="card rounded-xl p-5 min-h-[140px] animate-pulse" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="space-y-8">
             {Object.entries(seasonsByLeague).map(([leagueName, leagueSeasons]) => (

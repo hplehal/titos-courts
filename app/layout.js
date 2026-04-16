@@ -8,11 +8,18 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
+  display: 'swap',
+  adjustFontFallback: 'Arial',
+  preload: true,
 })
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-jakarta',
+  display: 'swap',
+  adjustFontFallback: 'Arial',
+  preload: true,
+  weight: ['400', '500', '600', '700', '800'],
 })
 
 export const metadata = {

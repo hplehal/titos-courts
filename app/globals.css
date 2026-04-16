@@ -135,6 +135,22 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.025em;
 }
 
+/*
+  CLS fix — reserve vertical box for large display headings so font swap
+  (fallback -> Plus Jakarta Sans) does NOT change the rendered line-box height.
+  Only affects the biggest headings (text-5xl and up) where metric differences
+  produce visible shift. Keeps the headline's bounding box stable across the
+  swap, eliminating CLS on /champions, homepage, and league detail h1/h2.
+*/
+h1, h2 {
+  min-height: 1em;
+  /* Use text-box-trim where supported (Safari 16.4+, Chrome 133+) to clip
+     the line-box to the cap-to-baseline region so fallback vs web font cap
+     height differences don't shift neighboring content. */
+  text-box-trim: trim-both;
+  text-box-edge: cap alphabetic;
+}
+
 a { color: inherit; text-decoration: none; }
 img { max-width: 100%; }
 

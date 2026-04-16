@@ -96,8 +96,10 @@ export default function Navbar() {
               <Image
                 src="/images/titosvl.png"
                 alt="Tito's Courts"
-                width={44}
-                height={44}
+                width={240}
+                height={127}
+                quality={95}
+                sizes="240px"
                 className="h-11 w-auto transition-transform duration-300 group-hover:scale-105"
                 priority
               />

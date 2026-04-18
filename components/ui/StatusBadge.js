@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils'
 
 const statusStyles = {
   registration: 'bg-status-info/15 text-status-info border-status-info/30',
+  full: 'bg-titos-gold/15 text-titos-gold border-titos-gold/30',
   active: 'bg-status-success/15 text-status-success border-status-success/30',
   playoffs: 'bg-titos-gold-muted text-titos-gold border-titos-gold/30',
   completed: 'bg-titos-gray-500/20 text-titos-gray-300 border-titos-gray-500/30',

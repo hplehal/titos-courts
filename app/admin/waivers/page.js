@@ -21,7 +21,8 @@ export default function WaiversPage() {
     ? waivers.filter(w =>
         w.fullName.toLowerCase().includes(search.toLowerCase()) ||
         w.email.toLowerCase().includes(search.toLowerCase()) ||
-        w.teamName?.toLowerCase().includes(search.toLowerCase())
+        w.teamName?.toLowerCase().includes(search.toLowerCase()) ||
+        w.tournamentName?.toLowerCase().includes(search.toLowerCase())
       )
     : waivers
 
@@ -70,6 +71,7 @@ export default function WaiversPage() {
                     </div>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-titos-gray-400">
                       {w.leagueDay && <span className="px-2 py-0.5 bg-titos-card rounded border border-titos-border/30">{w.leagueDay}</span>}
+                      {w.tournamentName && <span className="px-2 py-0.5 bg-titos-gold/10 text-titos-gold rounded border border-titos-gold/30">{w.tournamentName}</span>}
                       {w.teamName && <span>{w.teamName}</span>}
                       {w.phone && <span>{w.phone}</span>}
                       <span>{formatDate(w.signedAt)}</span>

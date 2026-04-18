@@ -11,6 +11,9 @@ const nextConfig = {
     // Device breakpoints tuned for mobile-first volleyball audience.
     deviceSizes: [360, 640, 750, 828, 1080, 1200, 1440, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Next 16 enforces an allowlist for per-image `quality` props. 75 is the
+    // default; 95 is used by the hero/logo images that benefit from higher fidelity.
+    qualities: [75, 95],
   },
   async headers() {
     return [

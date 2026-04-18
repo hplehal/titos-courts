@@ -16,6 +16,7 @@ const leagueDropdown = [
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/leagues', label: 'Leagues', children: leagueDropdown },
+  { href: '/tournaments', label: 'Tournaments' },
   { href: '/standings', label: 'Standings' },
   { href: '/schedule', label: 'Schedule' },
   { href: '/results', label: 'Results' },

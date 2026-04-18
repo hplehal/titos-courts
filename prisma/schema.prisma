@@ -179,6 +179,10 @@ model Tournament {
   name                 String
   slug                 String             @unique
   date                 DateTime
+  endDate              DateTime?
+  venue                String?
+  poolSize             Int?
+  poolCount            Int?
   description          String?
   format               String?
   registrationFee      Int?
@@ -240,17 +244,27 @@ model TournamentMatch {
   homeTeam        TournamentTeam?      @relation("TournHomeTeam", fields: [homeTeamId], references: [id])
   awayTeamId      String?
   awayTeam        TournamentTeam?      @relation("TournAwayTeam", fields: [awayTeamId], references: [id])
+  homeSeedLabel   String?              // display label like "A1" before team resolves (bracket)
+  awaySeedLabel   String?
   courtNumber     Int?
   scheduledTime   DateTime?
   status          String               @default("scheduled")
-  bracketRound    Int?
-  bracketPosition Int?
+  winnerId        String?              // TournamentTeam id once decided
+  roundNumber     Int?                 // pool: round of round-robin; bracket: unused
+  gameOrder       Int?                 // ordering within a round
+  bracketRound    Int?                 // 1=QF, 2=SF, 3=F
+  bracketPosition Int?                 // slot within bracket round
+  nextMatchId     String?              // bracket: winner advances to this match
+  nextMatch       TournamentMatch?     @relation("BracketAdvance", fields: [nextMatchId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  feederMatches   TournamentMatch[]    @relation("BracketAdvance")
   scores          TournamentSetScore[]
 
   @@index([poolId])
   @@index([bracketId])
   @@index([homeTeamId])
   @@index([awayTeamId])
+  @@index([nextMatchId])
+  @@index([status])
 }
 
 model TournamentSetScore {
@@ -303,6 +317,7 @@ model Waiver {
   emergencyName    String?
   emergencyPhone   String?
   leagueDay        String?
+  tournamentName   String?
   teamName         String?
   agreedToTerms    Boolean  @default(false)
   agreedToLiability Boolean @default(false)

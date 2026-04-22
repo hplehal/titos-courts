@@ -75,12 +75,20 @@ describe('getDivisionInfo()', () => {
   it('returns Bronze for last in COED', () => {
     expect(getDivisionInfo(24, 24, 'coed').name).toBe('Bronze')
   })
-  it('returns Diamond for rank 1-3 in MENS', () => {
-    expect(getDivisionInfo(1, 15, 'mens').name).toBe('Diamond')
-    expect(getDivisionInfo(3, 15, 'mens').name).toBe('Diamond')
+  it('splits MENS evenly into Diamond and Platinum (12 teams)', () => {
+    expect(getDivisionInfo(1, 12, 'mens').name).toBe('Diamond')
+    expect(getDivisionInfo(6, 12, 'mens').name).toBe('Diamond')
+    expect(getDivisionInfo(7, 12, 'mens').name).toBe('Platinum')
+    expect(getDivisionInfo(12, 12, 'mens').name).toBe('Platinum')
   })
-  it('returns Platinum for rank 4-6 in MENS', () => {
-    expect(getDivisionInfo(4, 15, 'mens').name).toBe('Platinum')
+  it('gives MENS Diamond the extra seat on odd totals (15 teams)', () => {
+    // 15 teams → ceil(15/2) = 8 → Diamond 1-8, Platinum 9-15
+    expect(getDivisionInfo(8, 15, 'mens').name).toBe('Diamond')
+    expect(getDivisionInfo(9, 15, 'mens').name).toBe('Platinum')
+  })
+  it('never surfaces Gold/Silver/Bronze on MENS', () => {
+    const names = Array.from({ length: 12 }, (_, i) => getDivisionInfo(i + 1, 12, 'mens').name)
+    expect(names.every(n => n === 'Diamond' || n === 'Platinum')).toBe(true)
   })
 })
 

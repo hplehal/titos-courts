@@ -54,7 +54,7 @@ export default async function TournamentsPage() {
         <SectionHeading
           label="EVENTS"
           title="Tournaments"
-          description="One-day volleyball tournaments open to all teams. Multiple events per month."
+          description="One-day volleyball tournaments open to all teams. Pool play into Gold and Silver brackets."
         />
 
         {live.length > 0 && (

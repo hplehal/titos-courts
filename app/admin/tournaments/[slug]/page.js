@@ -34,6 +34,21 @@ function toLocalInput(iso) {
   return local.toISOString().slice(0, 16)
 }
 
+// Inverse of toLocalInput. <input type="datetime-local"> returns a bare
+// "YYYY-MM-DDTHH:mm" string with no timezone designator. The browser's Date
+// constructor interprets that as *local time* (which is what the admin typed),
+// so .toISOString() produces the correct UTC instant.
+//
+// If we skip this step and send the raw string to the server, `new Date(str)`
+// on a UTC-runtime server (Vercel) parses it as UTC — shifting the saved time
+// by the admin's TZ offset (e.g. EST admin types 10:00, DB ends up with 10:00
+// UTC = 6:00 EST). Convert here so the server never has to guess.
+function localInputToISO(value) {
+  if (!value) return null
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? null : d.toISOString()
+}
+
 function ConfigForm({ tournament, onSaved }) {
   const [form, setForm] = useState({
     name: tournament.name,
@@ -55,7 +70,15 @@ function ConfigForm({ tournament, onSaved }) {
     e.preventDefault()
     setBusy(true); setMsg('')
     try {
-      const res = await adminPatch(`/api/admin/tournaments/${tournament.slug}`, form)
+      // Convert datetime-local strings from "admin's local time" to proper UTC
+      // ISO before sending. Otherwise the server (Vercel = UTC) treats them as
+      // UTC and the stored time is off by the admin's TZ offset.
+      const payload = {
+        ...form,
+        date: localInputToISO(form.date),
+        endDate: form.endDate ? localInputToISO(form.endDate) : null,
+      }
+      const res = await adminPatch(`/api/admin/tournaments/${tournament.slug}`, payload)
       if (!res.ok) {
         const d = await res.json()
         setMsg(d.error || 'Failed to save')

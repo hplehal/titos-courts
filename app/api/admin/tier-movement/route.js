@@ -15,7 +15,13 @@ export async function POST(request) {
     const week = await prisma.week.findUnique({
       where: { id: weekId },
       include: {
-        season: { include: { tiers: { orderBy: { tierNumber: 'asc' } } } },
+        season: {
+          include: {
+            tiers: { orderBy: { tierNumber: 'asc' } },
+            // League slug decides which tiebreaker cascade to apply.
+            league: { select: { slug: true } },
+          },
+        },
         matches: {
           where: { status: 'completed' },
           include: { scores: true },
@@ -30,6 +36,23 @@ export async function POST(request) {
     })
 
     if (!week) return NextResponse.json({ error: 'Week not found' }, { status: 404 })
+
+    // Head-to-head point diff, built once per week from the raw scores.
+    // h2h[a][b] = A's net points across every set A played against B this week.
+    // Only consulted as a tiebreaker for Sunday MENS (3 sets per matchup gives
+    // a meaningful sample — see lib/server/leagues.js for the matching rule on
+    // season standings).
+    const h2h = {}
+    for (const match of week.matches) {
+      for (const score of match.scores) {
+        const diff = score.homeScore - score.awayScore
+        if (!h2h[match.homeTeamId]) h2h[match.homeTeamId] = {}
+        if (!h2h[match.awayTeamId]) h2h[match.awayTeamId] = {}
+        h2h[match.homeTeamId][match.awayTeamId] = (h2h[match.homeTeamId][match.awayTeamId] || 0) + diff
+        h2h[match.awayTeamId][match.homeTeamId] = (h2h[match.awayTeamId][match.homeTeamId] || 0) - diff
+      }
+    }
+    const useHeadToHead = week.season.league?.slug === 'sunday-mens'
 
     // Group placements by tier
     const tierData = {}
@@ -60,8 +83,16 @@ export async function POST(request) {
         team.pointDiff = pointDiff
       }
 
-      // Sort: sets won desc, then point diff desc
-      data.teams.sort((a, b) => b.setsWon - a.setsWon || b.pointDiff - a.pointDiff)
+      // Sort: sets won desc, then (Sunday MENS only) head-to-head, then point diff desc.
+      // COED leagues stick with the legacy setsWon → pointDiff rule on purpose.
+      data.teams.sort((a, b) => {
+        if (b.setsWon !== a.setsWon) return b.setsWon - a.setsWon
+        if (useHeadToHead) {
+          const h = (h2h[b.id]?.[a.id] ?? 0) - (h2h[a.id]?.[b.id] ?? 0)
+          if (h !== 0) return h
+        }
+        return b.pointDiff - a.pointDiff
+      })
 
       // Assign positions
       data.teams.forEach((t, i) => { t.position = i + 1 })

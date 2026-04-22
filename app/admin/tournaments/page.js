@@ -8,6 +8,17 @@ import { adminFetch, adminPost, adminDelete } from '@/lib/adminFetch'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { formatDate } from '@/lib/utils'
 
+// <input type="datetime-local"> returns "YYYY-MM-DDTHH:mm" with no timezone.
+// The browser's Date constructor parses that as *local time* (what the admin
+// typed), so .toISOString() yields the correct UTC instant. Without this
+// conversion, the UTC-runtime server (Vercel) parses the raw string as UTC
+// and shifts the stored time by the admin's TZ offset.
+function localInputToISO(value) {
+  if (!value) return null
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? null : d.toISOString()
+}
+
 function CreateTournamentForm({ onCreated }) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -21,7 +32,14 @@ function CreateTournamentForm({ onCreated }) {
     e.preventDefault()
     setBusy(true); setErr('')
     try {
-      const res = await adminPost('/api/admin/tournaments', form)
+      // Convert local-time inputs to proper UTC ISO before sending so the
+      // server-side `new Date(...)` can't re-interpret them as UTC.
+      const payload = {
+        ...form,
+        date: localInputToISO(form.date),
+        endDate: form.endDate ? localInputToISO(form.endDate) : null,
+      }
+      const res = await adminPost('/api/admin/tournaments', payload)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create')
       onCreated()

@@ -7,6 +7,7 @@
 import { cn } from '@/lib/utils'
 import LiveIndicator from './LiveIndicator'
 import { tallySetsWon } from '@/lib/tournament/computeMatchStatus'
+import { cleanTeamName } from '@/lib/tournament/displayName'
 
 function fmtTime(date) {
   if (!date) return null
@@ -21,8 +22,8 @@ function fmtTime(date) {
 }
 
 export default function LiveMatchCard({ match, poolName }) {
-  const home = match.homeTeam?.name || match.homeSeedLabel || 'Home'
-  const away = match.awayTeam?.name || match.awaySeedLabel || 'Away'
+  const home = cleanTeamName(match.homeTeam?.name) || match.homeSeedLabel || 'Home'
+  const away = cleanTeamName(match.awayTeam?.name) || match.awaySeedLabel || 'Away'
 
   const sortedScores = (match.scores || [])
     .slice()

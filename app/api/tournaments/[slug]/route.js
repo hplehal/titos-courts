@@ -16,6 +16,7 @@ export async function GET(request, { params }) {
             include: {
               homeTeam: { select: { id: true, name: true } },
               awayTeam: { select: { id: true, name: true } },
+              refTeam: { select: { id: true, name: true } },
               scores: { orderBy: { setNumber: 'asc' } },
             },
           },
@@ -27,6 +28,7 @@ export async function GET(request, { params }) {
             include: {
               homeTeam: { select: { id: true, name: true } },
               awayTeam: { select: { id: true, name: true } },
+              refTeam: { select: { id: true, name: true } },
               scores: { orderBy: { setNumber: 'asc' } },
             },
             orderBy: [{ bracketRound: 'asc' }, { bracketPosition: 'asc' }],

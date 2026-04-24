@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { Users } from 'lucide-react'
+import { cleanTeamName } from '@/lib/tournament/displayName'
 
 const STORAGE_KEY_PREFIX = 'titos:tourney-team:'
 
@@ -57,7 +58,7 @@ export default function TeamPicker({ slug, pools = [], value, onChange }) {
                 .sort((a, b) => (a.seed ?? 99) - (b.seed ?? 99))
                 .map((t) => (
                   <option key={t.id} value={t.id}>
-                    {t.seed ? `${t.seed}. ` : ''}{t.name}
+                    {t.seed ? `${t.seed}. ` : ''}{cleanTeamName(t.name)}
                   </option>
                 ))}
             </optgroup>

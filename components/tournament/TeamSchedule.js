@@ -16,6 +16,7 @@ import { MapPin, Clock, Mic } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { refAssignmentForMatch } from '@/lib/tournament/refRotation'
 import { tallySetsWon } from '@/lib/tournament/computeMatchStatus'
+import { cleanTeamName } from '@/lib/tournament/displayName'
 
 function fmtTime(date) {
   if (!date) return '—'
@@ -109,13 +110,13 @@ export default function TeamSchedule({ team, pool }) {
   return (
     <section
       className="mb-8 card-flat rounded-2xl overflow-hidden border border-titos-gold/30"
-      aria-label={`Schedule for ${team.name}`}
+      aria-label={`Schedule for ${cleanTeamName(team.name)}`}
     >
       <header className="px-5 py-3 bg-titos-gold/10 border-b border-titos-gold/20 flex items-baseline justify-between gap-3 flex-wrap">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-titos-gold">Your team</p>
           <h2 className="font-display text-xl font-black text-titos-white leading-tight">
-            {team.name}
+            {cleanTeamName(team.name)}
           </h2>
         </div>
         <div className="text-[11px] text-titos-gray-400">
@@ -133,9 +134,9 @@ export default function TeamSchedule({ team, pool }) {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <span className="text-titos-white text-base font-semibold">
               vs{' '}
-              {nextMatch.homeTeamId === teamId
-                ? nextMatch.awayTeam?.name || 'TBD'
-                : nextMatch.homeTeam?.name || 'TBD'}
+              {(nextMatch.homeTeamId === teamId
+                ? cleanTeamName(nextMatch.awayTeam?.name)
+                : cleanTeamName(nextMatch.homeTeam?.name)) || 'TBD'}
             </span>
             <span className="inline-flex items-center gap-1 text-sm text-titos-gray-300">
               <Clock className="w-3.5 h-3.5" aria-hidden="true" />
@@ -158,9 +159,9 @@ export default function TeamSchedule({ team, pool }) {
           <ul className="space-y-2.5">
             {myMatches.map((m) => {
               const opp =
-                m.homeTeamId === teamId
-                  ? m.awayTeam?.name || 'TBD'
-                  : m.homeTeam?.name || 'TBD'
+                (m.homeTeamId === teamId
+                  ? cleanTeamName(m.awayTeam?.name)
+                  : cleanTeamName(m.homeTeam?.name)) || 'TBD'
               const result = computeResultText(m, teamId)
               const setsText = setSummary(m)
               const isLive = m.status === 'live'
@@ -229,9 +230,9 @@ export default function TeamSchedule({ team, pool }) {
                   </span>
                 </div>
                 <div className="text-sm text-titos-white font-medium truncate">
-                  {m.homeTeam?.name || 'TBD'}{' '}
+                  {cleanTeamName(m.homeTeam?.name) || 'TBD'}{' '}
                   <span className="text-titos-gray-500">vs</span>{' '}
-                  {m.awayTeam?.name || 'TBD'}
+                  {cleanTeamName(m.awayTeam?.name) || 'TBD'}
                 </div>
               </li>
             ))}

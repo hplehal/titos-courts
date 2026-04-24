@@ -2,9 +2,14 @@ import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { checkAdminPassword, unauthorized } from '@/lib/server/adminAuth'
 import { revalidateTournament } from '@/lib/server/tournaments'
-import { canStartBrackets } from '@/lib/tournament/canStartBrackets'
+import { diagnoseBracketReadiness } from '@/lib/tournament/canStartBrackets'
 import { generateBracketSeeding } from '@/lib/tournament/generateBracketSeeding'
 import { computeStandingsFromMatches } from '@/lib/tournament/calculateStandings'
+import {
+  courtFor,
+  scheduledTimeFor,
+  initialQfRef,
+} from '@/lib/tournament/canonicalBracketSchedule'
 import {
   DIVISIONS,
   MATCH_STATUS, BRACKET_ROUND,
@@ -51,10 +56,12 @@ export async function POST(request, { params }) {
       )
     }
 
-    const ready = await canStartBrackets(t.id, prisma)
-    if (!ready) {
+    const readiness = await diagnoseBracketReadiness(t.id, prisma)
+    if (!readiness.ok) {
+      // Surface the specific pending matches so the admin knows exactly which
+      // pool matches still need scores instead of a generic "not ready" error.
       return NextResponse.json(
-        { error: 'Not all pool matches are complete yet.' },
+        { error: readiness.reason, pending: readiness.pending ?? [] },
         { status: 400 },
       )
     }
@@ -67,6 +74,7 @@ export async function POST(request, { params }) {
     })
 
     const createdBrackets = []
+    const kickoff = t.date ? new Date(t.date) : null
 
     for (const division of DIVISIONS) {
       const qfSeeds = generateBracketSeeding(poolsForSeeding, division)
@@ -93,12 +101,18 @@ export async function POST(request, { params }) {
             homeSeedLabel: 'SF1 Winner',
             awaySeedLabel: 'SF2 Winner',
             status: MATCH_STATUS.SCHEDULED,
+            courtNumber: courtFor({ division, bracketRound: BRACKET_ROUND.FINAL, bracketPosition: 0 }),
+            scheduledTime: scheduledTimeFor({ kickoff, bracketRound: BRACKET_ROUND.FINAL, bracketPosition: 0 }),
           },
         })
         finalId = finalMatch.id
       }
 
       // SF shells — each SF feeds `finalId` (when present).
+      // Per PDF: same-court QFs feed the same SF. QF pos 0 & pos 2 (both
+      // on the lower court) feed SF pos 0; QF pos 1 & pos 3 (both on the
+      // upper court) feed SF pos 1. So SF s is fed by QFs at positions
+      // `s` and `s + 2` — labels below reflect that.
       const sfIds = []
       for (let s = 0; s < sfCount; s++) {
         const sf = await prisma.tournamentMatch.create({
@@ -106,20 +120,24 @@ export async function POST(request, { params }) {
             bracketId: bracket.id,
             bracketRound: BRACKET_ROUND.SEMIFINAL,
             bracketPosition: s,
-            homeSeedLabel: `QF${s * 2 + 1} Winner`,
-            awaySeedLabel: `QF${s * 2 + 2} Winner`,
+            homeSeedLabel: `QF${s + 1} Winner`,
+            awaySeedLabel: `QF${s + 3} Winner`,
             nextMatchId: finalId, // SF winners advance to the single Final
             status: MATCH_STATUS.SCHEDULED,
+            courtNumber: courtFor({ division, bracketRound: BRACKET_ROUND.SEMIFINAL, bracketPosition: s }),
+            scheduledTime: scheduledTimeFor({ kickoff, bracketRound: BRACKET_ROUND.SEMIFINAL, bracketPosition: s }),
           },
         })
         sfIds.push(sf.id)
       }
 
-      // QF matches — each QF feeds sfIds[floor(i/2)].
+      // QF matches — same-court wiring: QF at position i feeds sfIds[i % 2]
+      // so (pos 0, pos 2) both feed SF0 and (pos 1, pos 3) both feed SF1.
+      const createdQfs = []
       for (let i = 0; i < qfCount; i++) {
         const qf = qfSeeds[i]
-        const sfIndex = Math.floor(i / 2)
-        await prisma.tournamentMatch.create({
+        const sfIndex = i % sfCount
+        const created = await prisma.tournamentMatch.create({
           data: {
             bracketId: bracket.id,
             bracketRound: BRACKET_ROUND.QUARTERFINAL,
@@ -130,8 +148,25 @@ export async function POST(request, { params }) {
             awaySeedLabel: qf.teamBSeedLabel ?? null,
             nextMatchId: sfIds[sfIndex] ?? null,
             status: MATCH_STATUS.SCHEDULED,
+            courtNumber: courtFor({ division, bracketRound: BRACKET_ROUND.QUARTERFINAL, bracketPosition: i }),
+            scheduledTime: scheduledTimeFor({ kickoff, bracketRound: BRACKET_ROUND.QUARTERFINAL, bracketPosition: i }),
           },
         })
+        createdQfs.push(created)
+      }
+
+      // Pass 2: assign the generation-time refs for the two 1:00 PM QFs.
+      // Each gets its ref from the HOME team of the QF playing the same court
+      // at 1:45 PM (guaranteed idle, known at this point). Later slots get
+      // their refs via advanceBracketWinner once earlier matches finalize.
+      for (const qf of createdQfs) {
+        const refTeamId = initialQfRef(qf, createdQfs)
+        if (refTeamId) {
+          await prisma.tournamentMatch.update({
+            where: { id: qf.id },
+            data: { refTeamId },
+          })
+        }
       }
 
       createdBrackets.push({ id: bracket.id, division, qf: qfCount, sf: sfCount, final: needsFinal ? 1 : 0 })
@@ -146,7 +181,17 @@ export async function POST(request, { params }) {
 }
 
 /**
- * DELETE — tear down all bracket matches and brackets (only if no scores saved).
+ * DELETE — tear down ALL bracket matches and brackets, unconditionally.
+ *
+ * This is an explicit admin "wipe the bracket" action (distinct from the
+ * per-match "clear scores" button). It cascades:
+ *   1) Wipe every TournamentSetScore attached to a bracket match.
+ *   2) Null every nextMatchId pointer so the self-FK chain is safe to drop.
+ *   3) Delete the bracket matches, then the brackets themselves.
+ *
+ * Scores are intentionally NOT a guard here: once pool play advances the
+ * wrong teams or the schedule itself is wrong, the only recovery is to
+ * regenerate — which requires this to actually succeed.
  */
 export async function DELETE(request, { params }) {
   if (!checkAdminPassword(request)) return unauthorized()
@@ -160,27 +205,29 @@ export async function DELETE(request, { params }) {
 
     const matches = await prisma.tournamentMatch.findMany({
       where: { bracket: { tournamentId: t.id } },
-      select: { id: true, scores: { select: { id: true } } },
+      select: { id: true },
     })
-    const hasScores = matches.some(m => m.scores.length > 0)
-    if (hasScores) {
-      return NextResponse.json(
-        { error: 'Cannot delete — bracket matches have scores entered.' },
-        { status: 409 },
-      )
-    }
-
     const ids = matches.map(m => m.id)
+
     if (ids.length) {
-      // Null nextMatchId chain first to avoid FK constraints on delete
-      await prisma.tournamentMatch.updateMany({ where: { id: { in: ids } }, data: { nextMatchId: null } })
-      await prisma.tournamentSetScore.deleteMany({ where: { matchId: { in: ids } } })
-      await prisma.tournamentMatch.deleteMany({ where: { id: { in: ids } } })
+      // Transaction so a partial teardown never leaves dangling FK refs —
+      // either the whole bracket is gone or nothing changed.
+      await prisma.$transaction([
+        prisma.tournamentSetScore.deleteMany({ where: { matchId: { in: ids } } }),
+        prisma.tournamentMatch.updateMany({
+          where: { id: { in: ids } },
+          data: { nextMatchId: null },
+        }),
+        prisma.tournamentMatch.deleteMany({ where: { id: { in: ids } } }),
+        prisma.tournamentBracket.deleteMany({ where: { tournamentId: t.id } }),
+      ])
+    } else {
+      // No matches — just drop any orphan bracket rows.
+      await prisma.tournamentBracket.deleteMany({ where: { tournamentId: t.id } })
     }
-    await prisma.tournamentBracket.deleteMany({ where: { tournamentId: t.id } })
 
     revalidateTournament(slug)
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, deletedMatches: ids.length })
   } catch (error) {
     console.error('Delete brackets error:', error)
     return NextResponse.json({ error: 'Failed to delete brackets' }, { status: 500 })

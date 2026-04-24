@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { checkAdminPassword, unauthorized } from '@/lib/server/adminAuth'
 import { revalidateTournament } from '@/lib/server/tournaments'
 import { computeMatchStatus } from '@/lib/tournament/computeMatchStatus'
+import { MATCH_STATUS } from '@/lib/tournament/constants'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,5 +62,36 @@ export async function PATCH(request, { params }) {
   } catch (error) {
     console.error('Save match scores error:', error)
     return NextResponse.json({ error: 'Failed to save scores' }, { status: 500 })
+  }
+}
+
+/**
+ * DELETE — wipe all set scores for a pool match and reset its status to
+ * SCHEDULED (winnerId cleared). Used by the admin "Clear scores" button
+ * when a result needs to be redone from scratch.
+ */
+export async function DELETE(request, { params }) {
+  if (!checkAdminPassword(request)) return unauthorized()
+  const { slug, matchId } = await params
+  try {
+    const match = await prisma.tournamentMatch.findUnique({
+      where: { id: matchId },
+      select: { id: true, poolId: true },
+    })
+    if (!match) return NextResponse.json({ error: 'Match not found' }, { status: 404 })
+
+    await prisma.$transaction(async (tx) => {
+      await tx.tournamentSetScore.deleteMany({ where: { matchId } })
+      await tx.tournamentMatch.update({
+        where: { id: matchId },
+        data: { status: MATCH_STATUS.SCHEDULED, winnerId: null },
+      })
+    })
+
+    revalidateTournament(slug)
+    return NextResponse.json({ cleared: true })
+  } catch (error) {
+    console.error('Clear match scores error:', error)
+    return NextResponse.json({ error: 'Failed to clear scores' }, { status: 500 })
   }
 }

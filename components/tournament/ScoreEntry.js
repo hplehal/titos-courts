@@ -24,11 +24,12 @@
 //     aria-live="polite") on save results.
 
 import { useState, useEffect } from 'react'
-import { Loader2, Save, Minus, Plus, ChevronDown, ChevronUp } from 'lucide-react'
+import { Loader2, Save, Minus, Plus, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { adminPatch } from '@/lib/adminFetch'
+import { adminPatch, adminDelete } from '@/lib/adminFetch'
 import { refAssignmentForMatch } from '@/lib/tournament/refRotation'
 import { tallySetsWon } from '@/lib/tournament/computeMatchStatus'
+import { cleanTeamName } from '@/lib/tournament/displayName'
 
 function statusChip(status) {
   if (status === 'completed') {
@@ -59,7 +60,7 @@ function clampScore(v) {
   return Math.round(n)
 }
 
-export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null }) {
+export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null, flush = false }) {
   const setCount = match.poolId ? 2 : 3
   const buildInitial = () => Array.from({ length: setCount }).map((_, i) => {
     const s = match.scores?.find(x => x.setNumber === i + 1)
@@ -68,13 +69,18 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null }
   const [sets, setSets] = useState(buildInitial)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
-  // Default to collapsed for FINAL matches — admins rarely need to edit them.
-  const [expanded, setExpanded] = useState(match.status !== 'completed')
+  // Default collapsed except for LIVE matches — bracket admin pages render
+  // 14 matches (4 QF + 2 SF + 1 F per division) and expanding them all by
+  // default made the page scroll ~8000px. LIVE stays open because that's
+  // the one the admin is actively editing; everything else opens on click.
+  const [expanded, setExpanded] = useState(match.status === 'live')
 
   useEffect(() => {
     setSets(buildInitial())
-    // If the status flips to FINAL out-of-band, collapse; if it reopens, expand.
-    setExpanded(match.status !== 'completed')
+    // Re-sync when the match status flips. LIVE auto-expands, everything
+    // else collapses back unless the admin already opened it — we only
+    // force state on real transitions, never mid-edit.
+    setExpanded(match.status === 'live')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match.id, match.scores?.length, match.status, setCount])
 
@@ -115,8 +121,39 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null }
     setBusy(false)
   }
 
-  const home = match.homeTeam?.name || match.homeSeedLabel || 'TBD'
-  const away = match.awayTeam?.name || match.awaySeedLabel || 'TBD'
+  // Wipe all saved scores for this match and reset it to SCHEDULED. On the
+  // bracket side this also best-effort un-advances any winner into the next
+  // round + clears auto-assigned refs downstream (handled server-side).
+  // Guarded with a native confirm() because this is destructive and can
+  // invalidate downstream matches if they've already started.
+  const hasSavedScores = (match.scores?.length ?? 0) > 0
+  const clear = async () => {
+    if (typeof window !== 'undefined') {
+      const ok = window.confirm(
+        'Clear all scores for this match? This will reset the match to scheduled and cannot be undone.',
+      )
+      if (!ok) return
+    }
+    setBusy(true); setMsg('')
+    try {
+      const res = await adminDelete(saveUrl)
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setMsg(data.error || 'Failed')
+      } else {
+        // Reset the local inputs to blanks so the UI matches the server.
+        setSets(Array.from({ length: setCount }).map((_, i) => ({
+          setNumber: i + 1, homeScore: '', awayScore: '',
+        })))
+        setMsg('Cleared')
+        onSaved?.(data)
+      }
+    } catch { setMsg('Connection error') }
+    setBusy(false)
+  }
+
+  const home = cleanTeamName(match.homeTeam?.name) || match.homeSeedLabel || 'TBD'
+  const away = cleanTeamName(match.awayTeam?.name) || match.awaySeedLabel || 'TBD'
   const refs = match.poolId && poolTeams ? refAssignmentForMatch(match, poolTeams) : null
 
   // Set-win tally for the header chip ("Home 2 – 0 Away"). Only completed
@@ -138,7 +175,13 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null }
   const meta = [match.roundNumber ? `R${match.roundNumber}` : null, time, court].filter(Boolean).join(' · ')
 
   return (
-    <div className="card-flat rounded-lg overflow-hidden" data-status={match.status}>
+    <div
+      className={cn(
+        'overflow-hidden',
+        flush ? 'bg-transparent' : 'card-flat rounded-lg',
+      )}
+      data-status={match.status}
+    >
       {/* Header — always visible. Clicking toggles collapse. */}
       <button
         type="button"
@@ -149,9 +192,17 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null }
       >
         {/* Mobile-first layout: status chip + meta on row 1, teams + tally on
             row 2. Keeps every line ≥14px + avoids horizontal truncation that
-            made long team names unreadable at 375px. */}
+            made long team names unreadable at 375px.
+            When `flush`, the parent wrapper already shows status+teams as its
+            own identity strip, so we drop the duplicate team row and keep
+            only the compact meta/tally/chevron line here. */}
         <div className="flex items-center gap-2 mb-1.5">
-          {statusChip(match.status)}
+          {!flush && statusChip(match.status)}
+          {flush && (
+            <span className="text-[10px] font-bold uppercase tracking-wider text-titos-gray-500">
+              {expanded ? 'Hide scores' : 'Enter scores'}
+            </span>
+          )}
           {meta && <span className="text-[10px] text-titos-gray-500 truncate flex-1">{meta}</span>}
           {(tally.home > 0 || tally.away > 0) && (
             <span className="text-sm font-bold tabular-nums text-titos-white shrink-0">
@@ -162,11 +213,13 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null }
             ? <ChevronUp className="w-4 h-4 text-titos-gray-400 shrink-0" aria-hidden="true" />
             : <ChevronDown className="w-4 h-4 text-titos-gray-400 shrink-0" aria-hidden="true" />}
         </div>
-        <div className="text-sm text-titos-white leading-snug">
-          <span className={cn('break-words', tally.home > tally.away && 'text-titos-gold font-semibold')}>{home}</span>
-          <span className="text-titos-gray-600 mx-1.5">vs</span>
-          <span className={cn('break-words', tally.away > tally.home && 'text-titos-gold font-semibold')}>{away}</span>
-        </div>
+        {!flush && (
+          <div className="text-sm text-titos-white leading-snug">
+            <span className={cn('break-words', tally.home > tally.away && 'text-titos-gold font-semibold')}>{home}</span>
+            <span className="text-titos-gray-600 mx-1.5">vs</span>
+            <span className={cn('break-words', tally.away > tally.home && 'text-titos-gold font-semibold')}>{away}</span>
+          </div>
+        )}
       </button>
 
       {expanded && (
@@ -177,7 +230,7 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null }
           {refs?.ref && (
             <p className="text-[11px] text-titos-gray-400">
               <span className="font-semibold uppercase tracking-wider text-titos-gray-500">Ref: </span>
-              <span className="text-titos-gray-300">{refs.ref.name}</span>
+              <span className="text-titos-gray-300">{cleanTeamName(refs.ref.name)}</span>
             </p>
           )}
 
@@ -196,27 +249,45 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null }
             />
           ))}
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3 pt-1">
-            {msg && (
-              <span
-                className={cn(
-                  'text-xs order-last sm:order-none text-center sm:text-left',
-                  msg === 'Saved' ? 'text-status-success' : 'text-titos-gray-400',
-                )}
-                role="status"
-                aria-live="polite"
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 pt-1">
+            {/* Clear button lives on the left — visually separated from the
+                primary Save CTA so it's never confused with it. Only shown
+                once the match has saved scores to clear. */}
+            {hasSavedScores ? (
+              <button
+                type="button"
+                onClick={clear}
+                disabled={busy}
+                aria-label="Clear all saved scores for this match"
+                className="text-xs py-2 px-3 min-h-[40px] inline-flex items-center justify-center gap-1.5 rounded border border-titos-border/60 text-titos-gray-300 hover:text-status-error hover:border-status-error/60 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-error disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
               >
-                {msg}
-              </span>
-            )}
-            <button
-              onClick={save}
-              disabled={busy}
-              aria-label="Save scores"
-              className="btn-primary text-sm py-2.5 px-5 min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4" /> Save</>}
-            </button>
+                <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                Clear scores
+              </button>
+            ) : <span className="hidden sm:block" aria-hidden="true" />}
+
+            <div className="flex items-center gap-3 sm:justify-end">
+              {msg && (
+                <span
+                  className={cn(
+                    'text-xs order-last sm:order-none text-center sm:text-left',
+                    (msg === 'Saved' || msg === 'Cleared') ? 'text-status-success' : 'text-titos-gray-400',
+                  )}
+                  role="status"
+                  aria-live="polite"
+                >
+                  {msg}
+                </span>
+              )}
+              <button
+                onClick={save}
+                disabled={busy}
+                aria-label="Save scores"
+                className="btn-primary text-sm py-2.5 px-5 min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4" /> Save</>}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -287,10 +358,6 @@ function SetRow({ setNumber, home, away, homeScore, awayScore, onChange, onBump,
         </button>
       </div>
 
-      <p className="mt-2 text-[10px] text-titos-gray-500 hidden md:block">
-        Tip: <kbd className="font-mono text-titos-gray-400">↑</kbd>/<kbd className="font-mono text-titos-gray-400">↓</kbd> adjust by 1,
-        {' '}<kbd className="font-mono text-titos-gray-400">Shift</kbd>+arrow by 5
-      </p>
     </fieldset>
   )
 }

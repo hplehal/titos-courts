@@ -5,7 +5,41 @@ import Link from 'next/link'
 import { ArrowLeft, Loader2, RefreshCw, Trophy, Medal } from 'lucide-react'
 import AuthGate from '@/components/admin/AuthGate'
 import ScoreEntry from '@/components/tournament/ScoreEntry'
+import BracketMatchMeta from '@/components/tournament/BracketMatchMeta'
 import { BRACKET_ROUND } from '@/lib/tournament/constants'
+import { cleanTeamName } from '@/lib/tournament/displayName'
+
+// Small identity strip at the top of each match card. Admins kept asking
+// "which match am I editing?" because court/ref controls floated above a
+// collapsed score card with no shared framing — now the teams + status sit
+// at the very top so the whole block reads as one match.
+function MatchIdentity({ match }) {
+  const home = cleanTeamName(match.homeTeam?.name) || match.homeSeedLabel || 'TBD'
+  const away = cleanTeamName(match.awayTeam?.name) || match.awaySeedLabel || 'TBD'
+  const statusTone =
+    match.status === 'live' ? 'text-status-live'
+    : match.status === 'completed' ? 'text-status-success'
+    : 'text-titos-gray-500'
+  const statusLabel =
+    match.status === 'live' ? 'Live'
+    : match.status === 'completed' ? 'Final'
+    : 'Scheduled'
+  return (
+    <div className="px-3 py-2 bg-titos-elevated/40 border-b border-titos-border/40 flex items-center gap-3 flex-wrap">
+      <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${statusTone}`}>
+        {match.status === 'live' && (
+          <span className="w-1.5 h-1.5 rounded-full bg-status-live animate-pulse" aria-hidden="true" />
+        )}
+        {statusLabel}
+      </span>
+      <span className="text-sm font-semibold text-titos-white truncate flex-1 min-w-0">
+        {home}
+        <span className="text-titos-gray-600 mx-1.5">vs</span>
+        {away}
+      </span>
+    </div>
+  )
+}
 
 const ROUND_LABELS = {
   [BRACKET_ROUND.QUARTERFINAL]: 'Quarterfinals',
@@ -68,14 +102,35 @@ function Inner({ slug }) {
                       <h3 className="text-xs font-bold uppercase tracking-wider text-titos-gray-500 mb-2">
                         {ROUND_LABELS[Number(round)] || `Round ${round}`}
                       </h3>
-                      <div className="space-y-2">
+                      {/* 2-up at md+ so 4 QFs become 2 rows instead of 4.
+                          SFs + Finals also pair up nicely when both divisions
+                          are generated. Cuts page scroll roughly in half. */}
+                      <div className="grid gap-3 md:grid-cols-2">
                         {matches.map(m => (
-                          <ScoreEntry
+                          // Unified match card: identity strip → court/ref
+                          // controls → score entry. Everything inside reads
+                          // as belonging to ONE match, so there's no chance
+                          // of editing the wrong row's court/ref.
+                          <div
                             key={m.id}
-                            match={m}
-                            saveUrl={`/api/admin/tournaments/${slug}/bracket-matches/${m.id}/scores`}
-                            onSaved={load}
-                          />
+                            className="card-flat rounded-lg overflow-hidden border border-titos-border/40"
+                            data-status={m.status}
+                          >
+                            <MatchIdentity match={m} />
+                            <BracketMatchMeta
+                              match={m}
+                              slug={slug}
+                              tournamentTeams={tournament.tournamentTeams || []}
+                              onSaved={load}
+                              flush
+                            />
+                            <ScoreEntry
+                              match={m}
+                              saveUrl={`/api/admin/tournaments/${slug}/bracket-matches/${m.id}/scores`}
+                              onSaved={load}
+                              flush
+                            />
+                          </div>
                         ))}
                       </div>
                     </div>

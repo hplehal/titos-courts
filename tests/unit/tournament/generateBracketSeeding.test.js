@@ -21,51 +21,62 @@ describe('generateBracketSeeding — 4 pools / Gold bracket', () => {
     expect(matches.every(m => m.round === 1)).toBe(true)
   })
 
-  it('pairs top seeds with second seeds from a different pool', () => {
+  it('matches the Captains Package schedule (position → matchup)', () => {
+    // Per PDF: the two 1:00 PM QFs come first (positions 0,1 — Courts 1 & 2),
+    // then the two 1:45 PM "rematch" QFs (positions 2,3 — Courts 1 & 2).
+    // Home/away preserves the PDF's left-to-right column order.
     const matches = generateBracketSeeding(pools, DIVISION_GOLD)
-    // All matches must cross pools — verify no first-round rematch of pool opponents
+    expect(matches[0]).toMatchObject({ teamASeedLabel: 'A1', teamBSeedLabel: 'B2' })
+    expect(matches[1]).toMatchObject({ teamASeedLabel: 'C1', teamBSeedLabel: 'D2' })
+    expect(matches[2]).toMatchObject({ teamASeedLabel: 'A2', teamBSeedLabel: 'B1' })
+    expect(matches[3]).toMatchObject({ teamASeedLabel: 'C2', teamBSeedLabel: 'D1' })
+  })
+
+  it('never rematches pool opponents in round 1', () => {
+    const matches = generateBracketSeeding(pools, DIVISION_GOLD)
     for (const m of matches) {
-      const poolA = m.teamASeedLabel[0]
-      const poolB = m.teamBSeedLabel[0]
-      expect(poolA).not.toBe(poolB)
+      expect(m.teamASeedLabel[0]).not.toBe(m.teamBSeedLabel[0])
     }
   })
 
-  it('uses rank-1 and rank-2 seeds (Gold)', () => {
+  it('only uses rank-1 and rank-2 seeds (Gold)', () => {
     const matches = generateBracketSeeding(pools, DIVISION_GOLD)
-    // A-side must always be "<pool>1", B-side must always be "<pool>2"
     for (const m of matches) {
-      expect(m.teamASeedLabel).toMatch(/^[A-D]1$/)
-      expect(m.teamBSeedLabel).toMatch(/^[A-D]2$/)
+      expect(m.teamASeedLabel).toMatch(/^[A-D][12]$/)
+      expect(m.teamBSeedLabel).toMatch(/^[A-D][12]$/)
     }
   })
 
-  it('includes every pool as a top seed exactly once', () => {
+  it('uses each pool-seed slot (A1..D2) exactly once across all matches', () => {
     const matches = generateBracketSeeding(pools, DIVISION_GOLD)
-    const topSides = matches.map(m => m.teamASeedLabel).sort()
-    expect(topSides).toEqual(['A1', 'B1', 'C1', 'D1'])
-  })
-
-  it('includes every pool as a second seed exactly once', () => {
-    const matches = generateBracketSeeding(pools, DIVISION_GOLD)
-    const secondSides = matches.map(m => m.teamBSeedLabel).sort()
-    expect(secondSides).toEqual(['A2', 'B2', 'C2', 'D2'])
+    const allSeeds = matches.flatMap(m => [m.teamASeedLabel, m.teamBSeedLabel]).sort()
+    expect(allSeeds).toEqual(['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'D1', 'D2'])
   })
 })
 
 describe('generateBracketSeeding — 4 pools / Silver bracket', () => {
   const pools = [poolWith('A'), poolWith('B'), poolWith('C'), poolWith('D')]
 
-  it('uses rank-3 and rank-4 seeds', () => {
+  it('matches the Captains Package schedule (position → matchup)', () => {
+    // Silver mirrors Gold but with the pool's bottom two seeds (rank-3 home
+    // vs rank-4 away at 1:00 PM; rank-4 home vs rank-3 away at 1:45 PM).
     const matches = generateBracketSeeding(pools, DIVISION_SILVER)
     expect(matches).toHaveLength(4)
+    expect(matches[0]).toMatchObject({ teamASeedLabel: 'A3', teamBSeedLabel: 'B4' })
+    expect(matches[1]).toMatchObject({ teamASeedLabel: 'C3', teamBSeedLabel: 'D4' })
+    expect(matches[2]).toMatchObject({ teamASeedLabel: 'A4', teamBSeedLabel: 'B3' })
+    expect(matches[3]).toMatchObject({ teamASeedLabel: 'C4', teamBSeedLabel: 'D3' })
+  })
+
+  it('only uses rank-3 and rank-4 seeds (Silver)', () => {
+    const matches = generateBracketSeeding(pools, DIVISION_SILVER)
     for (const m of matches) {
-      expect(m.teamASeedLabel).toMatch(/^[A-D]3$/)
-      expect(m.teamBSeedLabel).toMatch(/^[A-D]4$/)
+      expect(m.teamASeedLabel).toMatch(/^[A-D][34]$/)
+      expect(m.teamBSeedLabel).toMatch(/^[A-D][34]$/)
     }
   })
 
-  it('silver matches also cross pools (no first-round rematches)', () => {
+  it('never rematches pool opponents in round 1', () => {
     const matches = generateBracketSeeding(pools, DIVISION_SILVER)
     for (const m of matches) {
       expect(m.teamASeedLabel[0]).not.toBe(m.teamBSeedLabel[0])

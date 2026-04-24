@@ -566,6 +566,18 @@ function PoolsPanel({ tournament, onChange }) {
     else onChange()
     setBusy('')
   }
+  const resetScores = async () => {
+    if (!confirm('Reset ALL pool scores? Matches, pairings, and seeds stay — only scores + winners are wiped. Useful for re-running pool play in testing.')) return
+    setBusy('reset'); setErr(''); setInfo('')
+    const res = await adminPost(`/api/admin/tournaments/${tournament.slug}/reset-scores`, {})
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) { setErr(data.error || 'Failed') }
+    else {
+      setInfo(`Reset ${data.reset ?? 0} match${data.reset === 1 ? '' : 'es'} · cleared ${data.scoresDeleted ?? 0} set score${data.scoresDeleted === 1 ? '' : 's'}`)
+      onChange()
+    }
+    setBusy('')
+  }
 
   const assignTeam = async (teamId, poolId) => {
     const res = await adminPatch(`/api/admin/tournaments/${tournament.slug}/pool-teams`, { teamId, poolId })
@@ -607,6 +619,17 @@ function PoolsPanel({ tournament, onChange }) {
             <button onClick={generateSchedule} disabled={busy === 'schedule'} className="btn-primary text-xs py-2">
               {busy === 'schedule' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
               Generate Schedule
+            </button>
+          )}
+          {poolsHaveMatches && (
+            <button
+              onClick={resetScores}
+              disabled={busy === 'reset'}
+              title="Wipe every pool-match score and flip all matches back to 'scheduled'. Keeps pairings, courts, and seeds intact — perfect for re-running pool play while testing."
+              className="inline-flex items-center gap-1.5 text-xs py-2 px-3 text-titos-gray-300 border border-titos-border rounded-lg hover:border-titos-gold/40 hover:text-titos-white transition-colors"
+            >
+              {busy === 'reset' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              Reset Scores
             </button>
           )}
           {poolsHaveMatches && (
@@ -685,17 +708,27 @@ function PoolsPanel({ tournament, onChange }) {
 function BracketPanel({ tournament, onChange }) {
   const [busy, setBusy] = useState('')
   const [err, setErr] = useState('')
+  const [pending, setPending] = useState([])
 
   const generateBrackets = async () => {
-    setBusy('generate'); setErr('')
+    setBusy('generate'); setErr(''); setPending([])
     const res = await adminPost(`/api/admin/tournaments/${tournament.slug}/brackets`, {})
-    if (!res.ok) { const d = await res.json(); setErr(d.error || 'Failed') }
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      setErr(d.error || 'Failed')
+      // Surface the specific pool matches still blocking bracket generation,
+      // so the admin sees exactly what to fix instead of a generic error.
+      if (Array.isArray(d.pending)) setPending(d.pending)
+    }
     else onChange()
     setBusy('')
   }
   const deleteBrackets = async () => {
-    if (!confirm('Delete all brackets?')) return
-    setBusy('delete'); setErr('')
+    // Explicit: this wipes every bracket match AND any scores already entered
+    // on them. Pool play is untouched. We prompt plainly so nobody trips the
+    // button expecting a no-op.
+    if (!confirm('Delete all brackets? This also wipes any bracket match scores. Pool play is untouched.')) return
+    setBusy('delete'); setErr(''); setPending([])
     const res = await adminDelete(`/api/admin/tournaments/${tournament.slug}/brackets`)
     if (!res.ok) { const d = await res.json(); setErr(d.error || 'Failed') }
     else onChange()
@@ -726,6 +759,18 @@ function BracketPanel({ tournament, onChange }) {
       }
     >
       {err && <p className="text-status-live text-sm mb-3">{err}</p>}
+      {pending.length > 0 && (
+        <div className="mb-3 p-3 rounded-lg border border-status-live/30 bg-status-live/5">
+          <p className="text-titos-gray-300 text-xs mb-2">Pool matches still pending:</p>
+          <ul className="space-y-1">
+            {pending.map(m => (
+              <li key={m.id} className="text-titos-white text-sm">
+                <span className="text-titos-gray-500">Pool {m.pool} · {m.status}</span> — {m.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {tournament.brackets.length === 0 ? (
         <p className="text-titos-gray-500 text-sm">
           Brackets appear once all pool matches are FINAL. Click Generate Brackets to seed Gold + Silver.

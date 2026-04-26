@@ -109,9 +109,6 @@ const sundayMENSTeams = [
   { name: 'Vertical Limit', captain: 'Sean Murphy', email: 'sean.murphy@email.com' },
   { name: 'Slam Dunk VB', captain: 'Tony Russo', email: 'tony.russo@email.com' },
   { name: 'Full Send', captain: 'Liam Fletcher', email: 'liam.fletcher@email.com' },
-  { name: 'Zero Gravity', captain: 'Ravi Sharma', email: 'ravi.sharma@email.com' },
-  { name: 'Side Out Kings', captain: 'James O\'Brien', email: 'james.obrien@email.com' },
-  { name: 'Service Aces', captain: 'Miles Henderson', email: 'miles.henderson@email.com' },
 ]
 
 // Tuesday COED: 8 tiers, early slot 8PM-10PM, late slot 10PM-12AM
@@ -126,13 +123,12 @@ const tuesdayTierDefs = [
   { tierNumber: 8, courtNumber: 10, timeSlot: 'late' },
 ]
 
-// Sunday MENS: 5 tiers, 5 courts, single time slot 9PM-12AM
+// Sunday MENS: 4 tiers, 4 courts, single time slot 9PM-12AM
 const sundayTierDefs = [
-  { tierNumber: 1, courtNumber: 7, timeSlot: 'single' },
-  { tierNumber: 2, courtNumber: 6, timeSlot: 'single' },
-  { tierNumber: 3, courtNumber: 8, timeSlot: 'single' },
-  { tierNumber: 4, courtNumber: 9, timeSlot: 'single' },
-  { tierNumber: 5, courtNumber: 10, timeSlot: 'single' },
+  { tierNumber: 1, courtNumber: 6, timeSlot: 'single' },
+  { tierNumber: 2, courtNumber: 8, timeSlot: 'single' },
+  { tierNumber: 3, courtNumber: 9, timeSlot: 'single' },
+  { tierNumber: 4, courtNumber: 10, timeSlot: 'single' },
 ]
 
 // ─── MATCH & TIER SIMULATION ENGINE ───
@@ -440,7 +436,7 @@ async function main() {
   console.log('Simulating Tuesday COED season...')
 
   const totalTueTiers = 8
-  const totalSunTiers = 5
+  const totalSunTiers = 4
 
   // Week 1: Random placement (completed)
   console.log('  Week 1 (Placement — completed)...')

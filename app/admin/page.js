@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { Shield, Loader2, Save, Check, CheckCircle2, Plus, RefreshCw, AlertTriangle, Calendar, Users, Trophy, FileText, X } from 'lucide-react'
+import { Shield, Loader2, Save, Check, CheckCircle2, Plus, RefreshCw, AlertTriangle, Calendar, Users, Trophy, FileText, X, MapPin } from 'lucide-react'
 import { cn, getSlotInfo } from '@/lib/utils'
 
 const TABS = ['Scores', 'Results', 'Tiers', 'Next Week']
@@ -756,6 +756,7 @@ export default function AdminPage() {
         <div className="mt-10 pt-6 border-t border-titos-border/20 flex flex-wrap justify-center gap-4 text-xs">
           {[
             { label: 'Seasons', href: '/admin/seasons', icon: Calendar },
+            { label: 'Courts', href: '/admin/courts', icon: MapPin },
             { label: 'Registrations', href: '/admin/registrations', icon: Users },
             { label: 'Waivers', href: '/admin/waivers', icon: FileText },
             { label: 'Tournaments', href: '/admin/tournaments', icon: Trophy },

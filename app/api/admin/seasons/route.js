@@ -146,6 +146,37 @@ export async function PATCH(request) {
   try {
     const body = await request.json()
 
+    // Update a single tier's court number. Propagates to existing Match
+    // records ON UPCOMING WEEKS (date >= today) so the schedule view picks
+    // up the new court immediately. Completed weeks keep their historical
+    // court number — that's a record of where the games were actually played.
+    if (body.action === 'update-tier-court') {
+      const { tierId, courtNumber } = body
+      const ct = parseInt(courtNumber, 10)
+      if (!tierId || !Number.isFinite(ct)) {
+        return NextResponse.json({ error: 'tierId and courtNumber required' }, { status: 400 })
+      }
+      const tier = await prisma.tier.findUnique({ where: { id: tierId } })
+      if (!tier) return NextResponse.json({ error: 'Tier not found' }, { status: 404 })
+
+      await prisma.tier.update({ where: { id: tierId }, data: { courtNumber: ct } })
+
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const upcomingWeeks = await prisma.week.findMany({
+        where: { seasonId: tier.seasonId, date: { gte: today } },
+        select: { id: true },
+      })
+      const result = await prisma.match.updateMany({
+        where: {
+          weekId: { in: upcomingWeeks.map(w => w.id) },
+          tierNumber: tier.tierNumber,
+        },
+        data: { courtNumber: ct },
+      })
+      return NextResponse.json({ success: true, matchesUpdated: result.count })
+    }
+
     // Update team action
     if (body.action === 'update-team') {
       const { teamId, name, captainName, captainEmail } = body
@@ -200,6 +231,28 @@ export async function DELETE(request) {
 
     // Delete a team (body based)
     const body = await request.json().catch(() => ({}))
+
+    // Delete a single tier — only allowed if it has no placements and no
+    // matches reference it (via tierNumber + season). Use this to drop a
+    // tier that exists in the DB but isn't actually being used.
+    if (body.action === 'delete-tier') {
+      const { tierId } = body
+      if (!tierId) return NextResponse.json({ error: 'tierId required' }, { status: 400 })
+      const tier = await prisma.tier.findUnique({ where: { id: tierId } })
+      if (!tier) return NextResponse.json({ error: 'Tier not found' }, { status: 404 })
+      const placementCount = await prisma.tierPlacement.count({ where: { tierId } })
+      if (placementCount > 0) {
+        return NextResponse.json({ error: `Tier has ${placementCount} placement(s); remove them first.` }, { status: 409 })
+      }
+      const matchCount = await prisma.match.count({
+        where: { tierNumber: tier.tierNumber, week: { seasonId: tier.seasonId } },
+      })
+      if (matchCount > 0) {
+        return NextResponse.json({ error: `Tier has ${matchCount} match(es); cannot delete.` }, { status: 409 })
+      }
+      await prisma.tier.delete({ where: { id: tierId } })
+      return NextResponse.json({ success: true })
+    }
     if (body.teamId) {
       const teamId = body.teamId
       // Delete in order: playerStats → setScores (via matches) → matches → tierPlacements → players → team

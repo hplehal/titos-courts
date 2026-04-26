@@ -125,6 +125,7 @@ export default function MatchCard({ match, variant = 'pool', poolTeams = null, s
           opposingPerSet={sortedScores.map(s => s.awayScore)}
           showNumbers={match.status !== 'scheduled'}
           mode={mode}
+          variant={variant}
         />
         <TeamRow
           name={away}
@@ -134,8 +135,31 @@ export default function MatchCard({ match, variant = 'pool', poolTeams = null, s
           opposingPerSet={sortedScores.map(s => s.homeScore)}
           showNumbers={match.status !== 'scheduled'}
           mode={mode}
+          variant={variant}
         />
       </div>
+      {/* Bracket-only per-set strip. The narrow bracket card can't fit
+          inline per-set columns + a sets-won pill + a readable team name,
+          so we drop the inline columns from the team rows and surface the
+          set-by-set scores here as a single compact line under both teams.
+          Each set is a tiny home–away pair, with the set winner's score
+          weighted bold so the rhythm of "who took which set" still reads
+          at a glance. */}
+      {variant === 'bracket' && sortedScores.length > 0 && match.status !== 'scheduled' && (
+        <div className="px-3 py-1.5 border-t border-titos-border/30 flex items-center justify-center gap-2 text-[11px] tabular-nums">
+          {sortedScores.map((s, i) => {
+            const w = setWinnerAt(s, i, mode)
+            return (
+              <span key={s.setNumber ?? i} className="inline-flex items-center gap-0.5">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-titos-gray-600 mr-0.5">S{s.setNumber ?? i + 1}</span>
+                <span className={cn(w === 'home' ? 'font-bold text-titos-white' : 'text-titos-gray-500')}>{s.homeScore}</span>
+                <span className="text-titos-gray-700">–</span>
+                <span className={cn(w === 'away' ? 'font-bold text-titos-white' : 'text-titos-gray-500')}>{s.awayScore}</span>
+              </span>
+            )
+          })}
+        </div>
+      )}
       {refName && (
         <div className="px-3 py-1.5 border-t border-titos-border/30 bg-titos-elevated/40 text-[11px] text-titos-gray-400 flex items-center gap-1.5">
           <UserCheck className="w-3 h-3 text-titos-gray-500 shrink-0" aria-hidden="true" />
@@ -147,7 +171,12 @@ export default function MatchCard({ match, variant = 'pool', poolTeams = null, s
   )
 }
 
-function TeamRow({ name, winner, setsWon, perSet, opposingPerSet, showNumbers, mode }) {
+function TeamRow({ name, winner, setsWon, perSet, opposingPerSet, showNumbers, mode, variant }) {
+  // Bracket cards are only ~14.5rem wide — inline per-set columns crush
+  // the team name. Bracket variant shows just the sets-won pill (the
+  // number that actually matters in a tree) and surfaces per-set detail
+  // in a strip below both team rows.
+  const isBracket = variant === 'bracket'
   return (
     <div
       className={cn(
@@ -165,10 +194,7 @@ function TeamRow({ name, winner, setsWon, perSet, opposingPerSet, showNumbers, m
       </span>
       {showNumbers && (
         <div className="flex items-center gap-1 shrink-0">
-          {perSet.map((pts, i) => {
-            // Only emphasise the winner's score once the set is actually
-            // complete — a mid-set lead stays neutral. Reconstructing as
-            // {homeScore=me, awayScore=them}, a 'home' winner means this side.
+          {!isBracket && perSet.map((pts, i) => {
             const wonSet =
               setWinnerAt(
                 { homeScore: pts, awayScore: opposingPerSet[i] ?? 0 },
@@ -180,10 +206,6 @@ function TeamRow({ name, winner, setsWon, perSet, opposingPerSet, showNumbers, m
                 key={i}
                 className={cn(
                   'min-w-[1.75rem] sm:min-w-[2.5rem] text-center text-sm tabular-nums',
-                  // Step up the emphasis for winning scores: bold + full
-                  // white; losing scores drop to semibold gray so the set
-                  // winner pops at a glance without needing the S1/S2/S3
-                  // column headers to parse the readout.
                   wonSet
                     ? 'font-bold text-titos-white'
                     : 'font-medium text-titos-gray-500',
@@ -193,13 +215,10 @@ function TeamRow({ name, winner, setsWon, perSet, opposingPerSet, showNumbers, m
               </span>
             )
           })}
-          {/* Sets-won total — pill-ified with its own bg so the divider
-              isn't the only affordance separating "score of set 3" from
-              "total sets won". Makes the column read as a clear summary,
-              not another set score. */}
           <span
             className={cn(
-              'ml-1 sm:ml-1.5 inline-flex items-center justify-center min-w-[1.75rem] sm:min-w-[2rem] h-7 px-1.5 rounded-md text-sm font-black tabular-nums',
+              'inline-flex items-center justify-center h-7 px-2 rounded-md text-base font-black tabular-nums',
+              isBracket ? 'min-w-[2rem]' : 'ml-1 sm:ml-1.5 min-w-[1.75rem] sm:min-w-[2rem] text-sm px-1.5',
               winner
                 ? 'bg-titos-gold/25 text-titos-gold ring-1 ring-titos-gold/40'
                 : 'bg-titos-elevated/60 text-titos-gray-300',

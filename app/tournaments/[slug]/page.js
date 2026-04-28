@@ -7,6 +7,8 @@ import { formatDate } from '@/lib/utils'
 import { getTournamentHub } from '@/lib/server/tournaments'
 import TournamentHubClient from './TournamentHubClient'
 import Countdown from '@/components/tournament/Countdown'
+import PhotosLink from '@/components/PhotosLink'
+import { getTournamentPhotosUrl } from '@/lib/photoLinks'
 import { TOURNAMENT_STATUS } from '@/lib/tournament/constants'
 
 export const dynamic = 'force-dynamic'
@@ -104,6 +106,7 @@ export default async function TournamentDetailPage({ params }) {
             >
               <Trophy className="h-4 w-4" aria-hidden="true" /> View Bracket
             </Link>
+            <PhotosLink url={getTournamentPhotosUrl(slug)} />
           </div>
         </section>
       )}
@@ -113,13 +116,14 @@ export default async function TournamentDetailPage({ params }) {
 
         {/* Secondary bracket CTA for completed/live tournaments (upcoming already has the sticky CTA above) */}
         {!(isUpcoming && hasFutureDate) && (
-          <div className="mt-12 text-center">
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-3">
             <Link
               href={`/tournaments/${slug}/bracket`}
               className="inline-flex items-center gap-2 rounded-full bg-titos-gold px-6 py-3 text-sm font-semibold text-titos-surface hover:bg-titos-gold-light transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-titos-gold focus-visible:ring-offset-2 focus-visible:ring-offset-titos-surface"
             >
               <Trophy className="w-4 h-4" aria-hidden="true" /> View Bracket
             </Link>
+            <PhotosLink url={getTournamentPhotosUrl(slug)} />
           </div>
         )}
       </div>

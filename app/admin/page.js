@@ -45,8 +45,8 @@ function AuthGate({ onAuth }) {
 }
 
 // ─── Score Entry Table (per tier) ───
-function TierScoreBlock({ tierNum, tierMatches, inputRefs, onScoreChange, allInputKeys }) {
-  const slot = getSlotInfo(parseInt(tierNum), tierMatches[0]?.timeSlot)
+function TierScoreBlock({ tierNum, tierMatches, inputRefs, onScoreChange, allInputKeys, leagueSlug }) {
+  const slot = getSlotInfo(parseInt(tierNum), tierMatches[0]?.timeSlot, leagueSlug)
   const slotVar = parseInt(tierNum) <= 4 ? 'slot-early' : parseInt(tierNum) <= 8 ? 'slot-late' : 'slot-single'
 
   const handleKeyDown = (e, matchId, field) => {
@@ -121,7 +121,7 @@ function TierScoreBlock({ tierNum, tierMatches, inputRefs, onScoreChange, allInp
 }
 
 // ─── Results Tab ───
-function ResultsView({ matches }) {
+function ResultsView({ matches, leagueSlug }) {
   // Group by tier, compute standings
   const byTier = {}
   for (const m of matches) {
@@ -132,7 +132,7 @@ function ResultsView({ matches }) {
   return (
     <div className="space-y-4">
       {Object.entries(byTier).sort(([a], [b]) => a - b).map(([tierNum, tierMatches]) => {
-        const slot = getSlotInfo(parseInt(tierNum), tierMatches[0]?.timeSlot)
+        const slot = getSlotInfo(parseInt(tierNum), tierMatches[0]?.timeSlot, leagueSlug)
         const slotVar = parseInt(tierNum) <= 4 ? 'slot-early' : parseInt(tierNum) <= 8 ? 'slot-late' : 'slot-single'
         // Build team stats
         const stats = {}
@@ -730,7 +730,7 @@ export default function AdminPage() {
                     <div className="space-y-4">
                       {Object.entries(matchesByTier).sort(([a], [b]) => a - b).map(([tierNum, tierMatches]) => (
                         <TierScoreBlock key={tierNum} tierNum={tierNum} tierMatches={tierMatches} inputRefs={inputRefs}
-                          onScoreChange={updateMatchScore} allInputKeys={allInputKeys} />
+                          onScoreChange={updateMatchScore} allInputKeys={allInputKeys} leagueSlug={activeLeague?.slug} />
                       ))}
                     </div>
                     {matches.length === 0 && <p className="text-titos-gray-400 text-center py-8">No matches for this week.</p>}
@@ -738,7 +738,7 @@ export default function AdminPage() {
                 )}
 
                 {/* RESULTS TAB */}
-                {activeTab === 'Results' && <ResultsView matches={matches} />}
+                {activeTab === 'Results' && <ResultsView matches={matches} leagueSlug={activeLeague?.slug} />}
 
                 {/* TIERS TAB */}
                 {activeTab === 'Tiers' && selectedWeek && <TiersView weekId={selectedWeek.id} weeks={weeks} onReloadMatches={loadMatches} />}

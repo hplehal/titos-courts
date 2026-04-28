@@ -243,9 +243,9 @@ function MatchPanel({ tier, myTeam, slotColorVar, isMens, compact = false }) {
 /* ═══════════════════════════════════════════════
    SLOT GROUP — manages which tier is expanded
    ═══════════════════════════════════════════════ */
-function SlotGroup({ slot, tiers, myTeam, isMens }) {
+function SlotGroup({ slot, tiers, myTeam, isMens, leagueSlug }) {
   const [expandedTier, setExpandedTier] = useState(null)
-  const slotInfo = getSlotInfo(tiers[0].tierNumber, slot)
+  const slotInfo = getSlotInfo(tiers[0].tierNumber, slot, leagueSlug)
   const slotColorVar = slot === 'early' ? 'slot-early' : slot === 'late' ? 'slot-late' : 'slot-single'
   const sorted = [...tiers].sort((a, b) => a.tierNumber - b.tierNumber)
 
@@ -344,7 +344,7 @@ export default function ScheduleClient({ leagues, initialSlug, initialData }) {
     for (const tier of (currentGameWeek.tiers || [])) {
       const found = tier.teams?.find(t => t.name === myTeam)
       if (found) {
-        const slot = getSlotInfo(tier.tierNumber, tier.timeSlot)
+        const slot = getSlotInfo(tier.tierNumber, tier.timeSlot, selected)
         const opponents = tier.teams.filter(t => t.name !== myTeam).map(t => t.name)
         return { tier: tier.tierNumber, court: tier.courtNumber, slotLabel: slot.label, opponents, slot }
       }
@@ -486,7 +486,7 @@ export default function ScheduleClient({ leagues, initialSlug, initialData }) {
                     {['early', 'late', 'single'].map(slot => {
                       const slotTiers = currentGameWeek.tiers.filter(t => t.timeSlot === slot)
                       if (!slotTiers.length) return null
-                      return <SlotGroup key={slot} slot={slot} tiers={slotTiers} myTeam={myTeam} isMens={isMens} />
+                      return <SlotGroup key={slot} slot={slot} tiers={slotTiers} myTeam={myTeam} isMens={isMens} leagueSlug={selected} />
                     })}
                   </div>
                 ) : (

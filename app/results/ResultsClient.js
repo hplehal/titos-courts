@@ -248,9 +248,9 @@ function ResultPanel({ tier, slotColorVar, compact = false }) {
 /* ═══════════════════════════════════════════════
    SLOT GROUP — manages which tier is expanded
    ═══════════════════════════════════════════════ */
-function SlotGroup({ slot, tiers }) {
+function SlotGroup({ slot, tiers, leagueSlug }) {
   const [expandedTier, setExpandedTier] = useState(null)
-  const slotInfo = getSlotInfo(tiers[0].tierNumber, slot)
+  const slotInfo = getSlotInfo(tiers[0].tierNumber, slot, leagueSlug)
   const slotColorVar = slot === 'early' ? 'slot-early' : slot === 'late' ? 'slot-late' : 'slot-single'
   const sorted = [...tiers].sort((a, b) => a.tierNumber - b.tierNumber)
 
@@ -473,7 +473,7 @@ export default function ResultsClient({ leagues, initialSlug, initialData }) {
                 {['early', 'late', 'single'].map(slot => {
                   const slotTiers = tiersBySlot[slot]
                   if (!slotTiers?.length) return null
-                  return <SlotGroup key={slot} slot={slot} tiers={slotTiers} />
+                  return <SlotGroup key={slot} slot={slot} tiers={slotTiers} leagueSlug={selected} />
                 })}
               </div>
             ) : (

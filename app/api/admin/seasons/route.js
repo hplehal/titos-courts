@@ -1,6 +1,18 @@
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { slugify } from '@/lib/utils'
+import { revalidateLeague } from '@/lib/server/leagues'
+
+// Resolve a tier's league slug so we can bust public schedule/standings
+// caches after a write. Returns null if the tier was deleted in the same
+// request — caller should fall back gracefully.
+async function leagueSlugForTier(tierId) {
+  const tier = await prisma.tier.findUnique({
+    where: { id: tierId },
+    select: { season: { select: { league: { select: { slug: true } } } } },
+  })
+  return tier?.season?.league?.slug || null
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -116,8 +128,20 @@ export async function POST(request) {
         for (const t of mensTiers) {
           await prisma.tier.create({ data: { seasonId: season.id, ...t } })
         }
+      } else if (league.slug.includes('thursday')) {
+        // Thursday REC COED: 4 tiers, 6:30–8:30 PM (early) for 1-2,
+        // 8:30–10:30 PM (late) for 3-4. Courts 9 & 10 only.
+        const thursdayTiers = [
+          { tierNumber: 1, courtNumber: 9, timeSlot: 'early' },
+          { tierNumber: 2, courtNumber: 10, timeSlot: 'early' },
+          { tierNumber: 3, courtNumber: 9, timeSlot: 'late' },
+          { tierNumber: 4, courtNumber: 10, timeSlot: 'late' },
+        ]
+        for (const t of thursdayTiers) {
+          await prisma.tier.create({ data: { seasonId: season.id, ...t } })
+        }
       } else {
-        // COED: 8 tiers, courts 6,8,9,10, early/late slots
+        // Tuesday COED: 8 tiers, courts 6,8,9,10, early/late slots
         const coedTiers = [
           { tierNumber: 1, courtNumber: 6, timeSlot: 'early' },
           { tierNumber: 2, courtNumber: 8, timeSlot: 'early' },
@@ -174,7 +198,26 @@ export async function PATCH(request) {
         },
         data: { courtNumber: ct },
       })
+      const slug = await leagueSlugForTier(tierId)
+      if (slug) revalidateLeague(slug)
       return NextResponse.json({ success: true, matchesUpdated: result.count })
+    }
+
+    // Update a single tier's timeSlot ('early' | 'late' | 'single').
+    // Tier.timeSlot is metadata used to group tiers in the schedule view —
+    // doesn't propagate to Match records (matches don't carry timeSlot).
+    if (body.action === 'update-tier-slot') {
+      const { tierId, timeSlot } = body
+      const allowed = ['early', 'late', 'single']
+      if (!tierId || !allowed.includes(timeSlot)) {
+        return NextResponse.json({ error: 'tierId and valid timeSlot required' }, { status: 400 })
+      }
+      const tier = await prisma.tier.findUnique({ where: { id: tierId } })
+      if (!tier) return NextResponse.json({ error: 'Tier not found' }, { status: 404 })
+      await prisma.tier.update({ where: { id: tierId }, data: { timeSlot } })
+      const slug = await leagueSlugForTier(tierId)
+      if (slug) revalidateLeague(slug)
+      return NextResponse.json({ success: true })
     }
 
     // Update team action

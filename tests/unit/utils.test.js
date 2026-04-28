@@ -66,6 +66,14 @@ describe('getSlotInfo()', () => {
     const info = getSlotInfo(6, 'late')
     expect(info.label).toBe('10 PM – 12 AM')
   })
+  it('uses Thursday-specific labels for thursday slugs', () => {
+    expect(getSlotInfo(1, 'early', 'thursday-rec-coed').label).toBe('6:30 – 8:30 PM')
+    expect(getSlotInfo(6, 'late', 'thursday-rec-coed').label).toBe('8:30 – 10:30 PM')
+  })
+  it('Thursday tiers 3-4 belong to LATE slot when their timeSlot says so', () => {
+    expect(getSlotInfo(3, 'late', 'thursday-rec-coed').label).toBe('8:30 – 10:30 PM')
+    expect(getSlotInfo(4, 'late', 'thursday-rec-coed').label).toBe('8:30 – 10:30 PM')
+  })
 })
 
 describe('getDivisionInfo()', () => {
@@ -127,8 +135,10 @@ describe('getLeagueTimeDisplay()', () => {
   it('returns 9 PM for Sunday/MENS leagues', () => {
     expect(getLeagueTimeDisplay('sunday-mens')).toBe('9 PM – 12 AM')
   })
-  it('returns 8 PM for other leagues', () => {
+  it('returns 8 PM default for Tuesday COED', () => {
     expect(getLeagueTimeDisplay('tuesday-coed')).toBe('8 PM – 12 AM')
-    expect(getLeagueTimeDisplay('thursday-rec-coed')).toBe('8 PM – 12 AM')
+  })
+  it('returns 6:30 PM for Thursday REC COED (earlier schedule)', () => {
+    expect(getLeagueTimeDisplay('thursday-rec-coed')).toBe('6:30 – 10:30 PM')
   })
 })

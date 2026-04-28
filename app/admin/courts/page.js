@@ -50,28 +50,42 @@ function AuthGate({ onAuth }) {
 
 function TierRow({ tier, onSaved }) {
   const [court, setCourt] = useState(String(tier.courtNumber))
+  const [slot, setSlot] = useState(tier.timeSlot || 'early')
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
 
-  const dirty = String(tier.courtNumber) !== court.trim() && court.trim() !== ''
+  const courtDirty = String(tier.courtNumber) !== court.trim() && court.trim() !== ''
+  const slotDirty = tier.timeSlot !== slot
+  const dirty = courtDirty || slotDirty
 
   const save = async () => {
     const ct = parseInt(court, 10)
     if (!Number.isFinite(ct)) { setErr('Enter a number'); return }
     setSaving(true); setErr(''); setMsg('')
     try {
-      const res = await fetch('/api/admin/seasons', {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'update-tier-court', tierId: tier.id, courtNumber: ct }),
-      })
-      const data = await res.json()
-      if (!res.ok) setErr(data.error || 'Failed')
-      else {
-        setMsg(`Saved (${data.matchesUpdated} upcoming match${data.matchesUpdated === 1 ? '' : 'es'} updated)`)
-        onSaved?.()
+      const messages = []
+      if (courtDirty) {
+        const res = await fetch('/api/admin/seasons', {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'update-tier-court', tierId: tier.id, courtNumber: ct }),
+        })
+        const data = await res.json()
+        if (!res.ok) { setErr(data.error || 'Failed'); setSaving(false); return }
+        messages.push(`court → ${ct} (${data.matchesUpdated} match${data.matchesUpdated === 1 ? '' : 'es'} updated)`)
       }
+      if (slotDirty) {
+        const res = await fetch('/api/admin/seasons', {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'update-tier-slot', tierId: tier.id, timeSlot: slot }),
+        })
+        const data = await res.json()
+        if (!res.ok) { setErr(data.error || 'Failed'); setSaving(false); return }
+        messages.push(`slot → ${slot}`)
+      }
+      setMsg(`Saved: ${messages.join(', ')}`)
+      onSaved?.()
     } catch { setErr('Network error') }
     setSaving(false)
   }
@@ -93,9 +107,8 @@ function TierRow({ tier, onSaved }) {
 
   return (
     <div className="card-flat rounded-xl px-4 py-3 flex flex-wrap items-center gap-3">
-      <div className="min-w-[6rem]">
+      <div className="min-w-[5rem]">
         <span className="font-display text-base font-black text-titos-white">Tier {tier.tierNumber}</span>
-        <span className="block text-[11px] text-titos-gray-500 uppercase tracking-wider">{tier.timeSlot}</span>
       </div>
       <label className="flex items-center gap-2 text-sm text-titos-gray-300">
         Court
@@ -107,6 +120,18 @@ function TierRow({ tier, onSaved }) {
           onChange={(e) => setCourt(e.target.value)}
           className="w-20 px-2 py-1.5 bg-titos-surface border border-titos-border rounded text-center text-titos-white font-bold focus:outline-none focus:border-titos-gold focus:ring-1 focus:ring-titos-gold/30"
         />
+      </label>
+      <label className="flex items-center gap-2 text-sm text-titos-gray-300">
+        Slot
+        <select
+          value={slot}
+          onChange={(e) => setSlot(e.target.value)}
+          className="px-2 py-1.5 bg-titos-surface border border-titos-border rounded text-titos-white font-semibold focus:outline-none focus:border-titos-gold focus:ring-1 focus:ring-titos-gold/30"
+        >
+          <option value="early">early</option>
+          <option value="late">late</option>
+          <option value="single">single</option>
+        </select>
       </label>
       <button
         onClick={save}

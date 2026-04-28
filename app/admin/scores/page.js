@@ -203,7 +203,7 @@ export default function ScoreEntryPage() {
         ) : (
           <div className="space-y-4">
             {Object.entries(matchesByTier).sort(([a], [b]) => a - b).map(([tierNum, tierMatches]) => {
-              const slot = getSlotInfo(parseInt(tierNum), tierMatches[0]?.timeSlot)
+              const slot = getSlotInfo(parseInt(tierNum), tierMatches[0]?.timeSlot, selectedLeague)
               const slotVar = parseInt(tierNum) <= 4 ? 'slot-early' : parseInt(tierNum) <= 8 ? 'slot-late' : 'slot-single'
 
               return (

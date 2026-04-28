@@ -4,6 +4,8 @@ import { useState, Fragment } from 'react'
 import Link from 'next/link'
 import { Calendar, Users, Trophy, ArrowUp, ArrowDown, ArrowRight, Minus, MapPin } from 'lucide-react'
 import StatusBadge from '@/components/ui/StatusBadge'
+import PhotosLink from '@/components/PhotosLink'
+import { getLeaguePhotosUrl } from '@/lib/photoLinks'
 import { cn, formatDate, getTierColor, getSlotInfo, getDivisionInfo, getMovementIcon, getTeamAbbreviation, getLeagueTimeDisplay } from '@/lib/utils'
 
 export default function LeagueDetailClient({ data }) {
@@ -32,11 +34,13 @@ export default function LeagueDetailClient({ data }) {
   const leagueType = (league.slug && (league.slug.includes('sunday') || league.slug.includes('mens'))) ? 'mens' : 'coed'
   const timeDisplay = getLeagueTimeDisplay(league.slug)
 
-  // Time slot labels vary by league type
+  // Time slot labels vary by league type. Thursday REC COED runs an
+  // earlier schedule than Tuesday COED, so we don't hardcode 8/10 PM.
   const isMens = leagueType === 'mens'
+  const isThursday = league.slug && league.slug.includes('thursday')
   const singleSlotLabel = '9:00 PM – 12:00 AM'
-  const earlySlotLabel = '8:00 PM – 10:00 PM'
-  const lateSlotLabel = '10:00 PM – 12:00 AM'
+  const earlySlotLabel = isThursday ? '6:30 PM – 8:30 PM' : '8:00 PM – 10:00 PM'
+  const lateSlotLabel = isThursday ? '8:30 PM – 10:30 PM' : '10:00 PM – 12:00 AM'
   const numRounds = isMens ? 3 : 2
 
   return (
@@ -54,12 +58,13 @@ export default function LeagueDetailClient({ data }) {
               <h1 className="font-display text-3xl sm:text-4xl font-bold text-titos-white">{league.name}</h1>
               <p className="text-titos-gold font-semibold mt-1">{season.name}</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <StatusBadge status={season.status} />
               <span className="text-titos-gray-400 text-sm flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" />
                 {league.dayOfWeek}s &middot; {timeDisplay}
               </span>
+              <PhotosLink url={getLeaguePhotosUrl(league.slug)} size="sm" />
             </div>
           </div>
 
@@ -476,7 +481,7 @@ function ResultsTab({ weeks, league, completedWeeks, lastCompletedWeek, currentW
 
           <div className="space-y-4">
             {tiers.map(({ tier, teams, matches }) => {
-              const slot = getSlotInfo(tier.tierNumber, tier.timeSlot)
+              const slot = getSlotInfo(tier.tierNumber, tier.timeSlot, league.slug)
               const slotVar = tier.tierNumber <= 4 ? 'slot-early' : 'slot-late'
               const sortedTeams = [...teams].sort((a, b) => (a.finishPosition || 99) - (b.finishPosition || 99))
 
@@ -701,7 +706,7 @@ function ScheduleTab({ weeks, league }) {
                   {filteredTiers.length > 0 ? (
                     <div className="space-y-4">
                       {filteredTiers.map(({ tier, teams, matches }) => {
-                        const slotC = getSlotInfo(tier.tierNumber, tier.timeSlot)
+                        const slotC = getSlotInfo(tier.tierNumber, tier.timeSlot, league.slug)
                         const slotVar = tier.tierNumber <= 4 ? 'slot-early' : 'slot-late'
                         return (
                           <div key={tier.tierNumber} className="bg-titos-surface rounded-xl overflow-hidden border border-titos-border/30">

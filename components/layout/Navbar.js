@@ -20,6 +20,7 @@ const navLinks = [
   { href: '/standings', label: 'Standings' },
   { href: '/schedule', label: 'Schedule' },
   { href: '/results', label: 'Results' },
+  { href: '/stats', label: 'Stats' },
   { href: '/rules', label: 'Rules & Info' },
   { href: '/about', label: 'About' },
 ]

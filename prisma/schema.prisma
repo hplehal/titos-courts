@@ -113,6 +113,7 @@ model Week {
   status         String          @default("upcoming")
   matches        Match[]
   tierPlacements TierPlacement[]
+  playerStats    PlayerStat[]
 
   @@unique([seasonId, weekNumber])
   @@index([seasonId, status])
@@ -155,21 +156,29 @@ model SetScore {
   @@unique([matchId, setNumber])
 }
 
+// Per-week (and optionally per-match) player stats. `matchId` is nullable so
+// we can record season-totals-style rows imported from the master sheet
+// without splitting numbers across individual matches. The unique constraint
+// is on (playerId, weekId) — one row per player per week — with matchId as
+// optional extra context for future per-match tracking.
 model PlayerStat {
-  id       String @id @default(cuid())
+  id       String  @id @default(cuid())
   playerId String
-  player   Player @relation(fields: [playerId], references: [id])
-  matchId  String
-  match    Match  @relation(fields: [matchId], references: [id])
-  kills    Int    @default(0)
-  assists  Int    @default(0)
-  digs     Int    @default(0)
-  blocks   Int    @default(0)
-  aces     Int    @default(0)
-  errors   Int    @default(0)
+  player   Player  @relation(fields: [playerId], references: [id])
+  matchId  String?
+  match    Match?  @relation(fields: [matchId], references: [id])
+  weekId   String?
+  week     Week?   @relation(fields: [weekId], references: [id])
+  kills    Int     @default(0)
+  assists  Int     @default(0)
+  digs     Int     @default(0)
+  blocks   Int     @default(0)
+  aces     Int     @default(0)
+  errors   Int     @default(0)
 
-  @@unique([playerId, matchId])
+  @@unique([playerId, weekId])
   @@index([matchId])
+  @@index([weekId])
 }
 
 // ─── TOURNAMENT SYSTEM ───

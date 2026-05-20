@@ -194,10 +194,20 @@ export default function StatsAdminPage() {
         {meta?.teams?.length > 0 && (
           <div className="mb-6 p-4 bg-titos-card border border-titos-border/40 rounded-lg">
             <span className="block text-titos-gray-400 text-xs uppercase tracking-wider font-bold mb-2">Teams in this season</span>
+            <p className="text-titos-gray-500 text-xs mb-3">
+              The count next to each team is how many players have been imported at least once (not the full roster). New names in your paste become Player records on commit.
+            </p>
             <div className="flex flex-wrap gap-2">
               {meta.teams.map(t => (
-                <span key={t.id} className="px-2.5 py-1 bg-titos-elevated rounded-md text-titos-gray-200 text-xs font-medium border border-titos-border/20">
-                  {t.name} <span className="text-titos-gray-500">· {t.players.length}p</span>
+                <span
+                  key={t.id}
+                  className="px-2.5 py-1 bg-titos-elevated rounded-md text-titos-gray-200 text-xs font-medium border border-titos-border/20"
+                  title="Players imported at least once for this team. Pasting new names adds to this count."
+                >
+                  {t.name}{' '}
+                  <span className="text-titos-gray-500">
+                    · {t.players.length} {t.players.length === 1 ? 'player' : 'players'}
+                  </span>
                 </span>
               ))}
             </div>

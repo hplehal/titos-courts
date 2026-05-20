@@ -216,14 +216,33 @@ export default function StatsAdminPage() {
 
         {/* Paste area */}
         <div className="mb-4">
-          <label htmlFor="paste" className="block text-sm font-medium text-titos-gray-300 mb-2">
-            Paste rows (tab-separated from Google Sheets)
-          </label>
+          <div className="flex items-center justify-between mb-2 gap-3 flex-wrap">
+            <label htmlFor="paste" className="text-sm font-medium text-titos-gray-300">
+              Paste rows (tab-separated from Google Sheets)
+            </label>
+            <div className="flex items-center gap-2">
+              {paste && (
+                <span className="text-xs font-mono text-titos-gold bg-titos-gold/10 px-2 py-1 rounded">
+                  {paste.split('\n').filter(l => l.trim() && !l.trim().startsWith('#')).length} rows pasted
+                </span>
+              )}
+              {paste && (
+                <button
+                  type="button"
+                  onClick={() => setPaste('')}
+                  className="text-xs text-titos-gray-400 hover:text-status-live transition-colors cursor-pointer underline"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
           <textarea
             id="paste" value={paste} onChange={e => setPaste(e.target.value)}
             placeholder={EXAMPLE_PASTE}
             spellCheck={false}
-            className="w-full min-h-[200px] px-4 py-3 bg-titos-card border border-titos-border rounded-lg text-titos-white text-sm font-mono placeholder-titos-gray-600 focus:outline-none focus:border-titos-gold/50 resize-y"
+            wrap="off"
+            className="w-full min-h-[360px] px-4 py-3 bg-black/40 border-2 border-titos-border rounded-lg text-titos-white text-sm font-mono leading-relaxed placeholder:text-titos-gray-700 placeholder:italic focus:outline-none focus:border-titos-gold focus:bg-black/60 resize-y"
           />
           <p className="text-titos-gray-500 text-xs mt-2">
             Columns: TEAM · PLAYER · # (optional) · KILLS · ASSISTS · DIGS · ACES · BLOCKS. Lines starting with <code>#</code> are skipped.

@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trophy, Target, Shield, Zap, Hand, Sparkles } from 'lucide-react'
+import { Trophy, Target, Shield, Zap, Hand, Sparkles, Users, ChevronDown, BarChart3 } from 'lucide-react'
 import LeagueSelector from '@/components/ui/LeagueSelector'
 import { cn, getTeamAbbreviation } from '@/lib/utils'
 
@@ -208,11 +208,223 @@ function TeamRollup({ teams, statKey }) {
   )
 }
 
+/* ──────────────────────────────────────────────────────────────
+   TEAM ROSTERS — every team rendered as an expandable card with
+   each player's full stat line. Roster cards open by default so
+   parents/captains can find their player without an extra click;
+   the chevron flips state for users who want to compact the page.
+   ────────────────────────────────────────────────────────────── */
+
+const STAT_KEYS = ['kills', 'assists', 'digs', 'aces', 'blocks']
+
+function TeamRosterCard({ team, players, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen)
+
+  // Sort the roster by overall stat impact (sum of all five) so the most
+  // active players surface first. Ties broken by name for determinism.
+  const roster = useMemo(() => {
+    return [...players]
+      .map(p => ({ ...p, _impact: STAT_KEYS.reduce((s, k) => s + (p.totals[k] || 0), 0) }))
+      .sort((a, b) => (b._impact - a._impact) || a.name.localeCompare(b.name))
+  }, [players])
+
+  const teamTotals = useMemo(() => {
+    const t = { kills: 0, assists: 0, digs: 0, aces: 0, blocks: 0 }
+    for (const p of players) for (const k of STAT_KEYS) t[k] += p.totals[k] || 0
+    return t
+  }, [players])
+
+  const totalImpact = Object.values(teamTotals).reduce((a, b) => a + b, 0)
+
+  return (
+    <article className="rounded-xl bg-titos-card ring-1 ring-titos-border/30 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-controls={`roster-${team.id}`}
+        className="w-full px-5 py-4 flex items-center gap-3 sm:gap-5 text-left hover:bg-titos-elevated/30 transition-colors duration-200 cursor-pointer min-h-[64px]"
+      >
+        <div className="flex-1 min-w-0">
+          <h3 className="font-display text-lg sm:text-xl font-black text-titos-white truncate">{team.name}</h3>
+          <span className="text-titos-gray-500 text-xs uppercase tracking-wider font-bold">
+            {players.length} {players.length === 1 ? 'player' : 'players'}
+            {totalImpact === 0 && <span className="text-titos-gray-600"> · no stats yet</span>}
+          </span>
+        </div>
+        {/* Stat-total chips — desktop only, otherwise too noisy on mobile */}
+        <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+          {STAT_TABS.map(tab => (
+            <span
+              key={tab.key}
+              className="px-2 py-1 rounded-md bg-titos-elevated text-[11px] font-bold uppercase tracking-wider flex items-center gap-1"
+              title={`${tab.label}: ${teamTotals[tab.key]}`}
+            >
+              <span className={tab.color}>{tab.short}</span>
+              <span className="text-titos-gray-300 font-mono">{teamTotals[tab.key]}</span>
+            </span>
+          ))}
+        </div>
+        <ChevronDown
+          className={cn('w-5 h-5 text-titos-gray-500 transition-transform duration-200 flex-shrink-0', open && 'rotate-180')}
+          aria-hidden="true"
+        />
+      </button>
+
+      {open && (
+        <div id={`roster-${team.id}`} className="border-t border-titos-border/20 overflow-x-auto">
+          <table className="w-full text-sm">
+            <caption className="sr-only">{team.name} roster with player stats</caption>
+            <thead className="bg-titos-elevated/40">
+              <tr className="text-titos-gray-400 text-[11px] uppercase tracking-wider">
+                <th scope="col" className="px-3 sm:px-4 py-2.5 text-left font-bold w-10">#</th>
+                <th scope="col" className="px-3 sm:px-4 py-2.5 text-left font-bold">Player</th>
+                {STAT_TABS.map(tab => (
+                  <th
+                    key={tab.key}
+                    scope="col"
+                    className="px-2 sm:px-3 py-2.5 text-right font-bold w-12 sm:w-14"
+                    title={tab.label}
+                  >
+                    <span className={tab.color}>{tab.short}</span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {roster.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-6 text-center text-titos-gray-500 text-sm">
+                    No players on the roster yet.
+                  </td>
+                </tr>
+              ) : roster.map(p => {
+                const hasStats = p._impact > 0
+                return (
+                  <tr
+                    key={p.id}
+                    className={cn(
+                      'border-t border-titos-border/15 transition-colors duration-150',
+                      hasStats ? 'hover:bg-titos-elevated/25' : 'opacity-60'
+                    )}
+                  >
+                    <td className="px-3 sm:px-4 py-2.5 text-titos-gray-500 text-xs font-mono">
+                      {p.jerseyNumber ?? '—'}
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 text-titos-white font-semibold">
+                      {p.name}
+                      {p.gamesPlayed > 0 && (
+                        <span className="text-titos-gray-500 text-xs font-normal ml-2">
+                          · {p.gamesPlayed}w
+                        </span>
+                      )}
+                    </td>
+                    {STAT_TABS.map(tab => {
+                      const v = p.totals[tab.key]
+                      return (
+                        <td key={tab.key} className="px-2 sm:px-3 py-2.5 text-right font-mono">
+                          <span className={cn(v > 0 ? tab.color : 'text-titos-gray-600')}>
+                            {v}
+                          </span>
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </article>
+  )
+}
+
+function TeamRosters({ teams, players }) {
+  // Group players by team. Sort teams by total stat impact (active teams
+  // first) so empty rosters sink to the bottom.
+  const grouped = useMemo(() => {
+    const byTeam = {}
+    for (const t of teams) byTeam[t.id] = { team: t, players: [] }
+    for (const p of players) {
+      if (byTeam[p.teamId]) byTeam[p.teamId].players.push(p)
+    }
+    return Object.values(byTeam).sort((a, b) => {
+      const impactA = STAT_KEYS.reduce((s, k) => s + (a.team[k] || 0), 0)
+      const impactB = STAT_KEYS.reduce((s, k) => s + (b.team[k] || 0), 0)
+      if (impactB !== impactA) return impactB - impactA
+      return a.team.name.localeCompare(b.team.name)
+    })
+  }, [teams, players])
+
+  if (grouped.length === 0) {
+    return (
+      <div className="rounded-xl bg-titos-card ring-1 ring-titos-border/20 p-8 text-center">
+        <p className="text-titos-gray-500 text-sm">No teams in this season yet.</p>
+      </div>
+    )
+  }
+
+  return (
+    <section aria-labelledby="team-rosters-heading" className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 id="team-rosters-heading" className="font-display text-xl sm:text-2xl font-black text-titos-white flex items-center gap-2">
+          <Users className="w-5 h-5 text-titos-gold" aria-hidden="true" />
+          Team Rosters
+        </h2>
+        <span className="text-titos-gray-500 text-xs uppercase tracking-wider font-bold">
+          {grouped.length} {grouped.length === 1 ? 'team' : 'teams'}
+        </span>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {grouped.map(({ team, players: roster }) => (
+          <TeamRosterCard key={team.id} team={team} players={roster} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function ViewToggle({ value, onChange }) {
+  const options = [
+    { key: 'leaders', label: 'Leaders', Icon: Trophy },
+    { key: 'teams',   label: 'Teams',   Icon: Users },
+  ]
+  return (
+    <div className="inline-flex p-1 bg-titos-card border border-titos-border rounded-lg" role="tablist" aria-label="Stats view">
+      {options.map(opt => {
+        const Icon = opt.Icon
+        const isActive = value === opt.key
+        return (
+          <button
+            key={opt.key}
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onChange(opt.key)}
+            className={cn(
+              'min-h-[44px] px-4 py-2 rounded-md text-sm font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-2 cursor-pointer',
+              isActive
+                ? 'bg-titos-gold/15 text-titos-gold shadow-sm'
+                : 'text-titos-gray-400 hover:text-titos-white'
+            )}
+          >
+            <Icon className="w-4 h-4" aria-hidden="true" />
+            {opt.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function StatsClient({ leagues, initialSlug, initialData }) {
   const router = useRouter()
   const [selected, setSelected] = useState(initialSlug || leagues[0]?.slug || '')
   const [data, setData] = useState(initialData || null)
   const [activeStat, setActiveStat] = useState('kills')
+  // 'leaders' shows the MVP + leaderboard; 'teams' shows full rosters.
+  // Synced to ?view=… in the URL so the choice is shareable.
+  const [view, setView] = useState('leaders')
   const [loading, setLoading] = useState(!initialData)
   const seedConsumedRef = useRef(!!initialData)
 
@@ -221,12 +433,14 @@ export default function StatsClient({ leagues, initialSlug, initialData }) {
     router.replace(`/stats/${slug}`, { scroll: false })
   }
 
-  // Read ?stat=… from URL on mount for shareable deep links.
+  // Read ?stat=… and ?view=… from URL on mount for shareable deep links.
   useEffect(() => {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
     const fromUrl = params.get('stat')
     if (fromUrl && STAT_TABS.some(t => t.key === fromUrl)) setActiveStat(fromUrl)
+    const v = params.get('view')
+    if (v === 'leaders' || v === 'teams') setView(v)
   }, [])
 
   useEffect(() => {
@@ -245,6 +459,15 @@ export default function StatsClient({ leagues, initialSlug, initialData }) {
     if (typeof window === 'undefined') return
     const url = new URL(window.location.href)
     url.searchParams.set('stat', key)
+    window.history.replaceState({}, '', url)
+  }
+
+  const onViewChange = (key) => {
+    setView(key)
+    if (typeof window === 'undefined') return
+    const url = new URL(window.location.href)
+    if (key === 'teams') url.searchParams.set('view', key)
+    else url.searchParams.delete('view')
     window.history.replaceState({}, '', url)
   }
 
@@ -270,9 +493,10 @@ export default function StatsClient({ leagues, initialSlug, initialData }) {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-titos-white leading-none">STATS</h1>
         </div>
 
-        {/* League selector */}
-        <div className="mb-8">
+        {/* League selector + view toggle */}
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <LeagueSelector leagues={leagues} selected={selected} onSelect={handleSelect} />
+          <ViewToggle value={view} onChange={onViewChange} />
         </div>
 
         {loading ? (
@@ -281,14 +505,23 @@ export default function StatsClient({ leagues, initialSlug, initialData }) {
             <div className="h-12 bg-titos-card rounded-lg animate-pulse w-full max-w-xl" />
             <div className="h-96 bg-titos-card rounded-xl animate-pulse" />
           </div>
-        ) : !hasAnyStats ? (
+        ) : !hasAnyStats && view === 'leaders' ? (
           <div className="rounded-xl bg-titos-card ring-1 ring-titos-border/20 p-12 text-center">
             <Trophy className="w-12 h-12 text-titos-gray-600 mx-auto mb-4" aria-hidden="true" />
             <h2 className="font-display text-xl font-black text-titos-white mb-2">No stats yet</h2>
-            <p className="text-titos-gray-400 text-sm max-w-md mx-auto">
+            <p className="text-titos-gray-400 text-sm max-w-md mx-auto mb-4">
               Player stats appear once the league admin imports the master sheet. Check back after the next game night.
             </p>
+            <button
+              onClick={() => onViewChange('teams')}
+              className="text-titos-gold text-sm font-bold hover:underline cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <Users className="w-4 h-4" aria-hidden="true" />
+              View team rosters anyway
+            </button>
           </div>
+        ) : view === 'teams' ? (
+          <TeamRosters teams={teams} players={players} />
         ) : (
           <div className="space-y-8">
             {/* MVP hero */}

@@ -86,7 +86,7 @@ function StatTabs({ activeStat, onChange }) {
   )
 }
 
-function PlayerLeaderboard({ players, statKey, limit = 25 }) {
+function PlayerLeaderboard({ players, statKey, limit = 10 }) {
   const tab = STAT_TABS.find(t => t.key === statKey)
   const sorted = useMemo(() => {
     return [...players]

@@ -64,13 +64,26 @@ function buildRounds(tournament) {
   return { rounds, poolTeamsById }
 }
 
-// Decide which round is "current". Priority: a round with a live match wins.
-// Otherwise, pick the latest round whose scheduledTime is <= now. If nothing
-// has started yet, pick the first round.
+// Decide which round is "current" for the Jump-to-current button. Priority:
+//   1. A round with a live match (always wins)
+//   2. The earliest round that ISN'T fully final — i.e. the next round that
+//      still needs scores entered. Skips past completed rounds even if
+//      their scheduled time is in the past.
+//   3. Falls back to the latest round whose time has started (legacy
+//      behaviour for fully-final tournaments).
+//   4. Otherwise, the first round.
 function pickCurrentRound(rounds, now = Date.now()) {
   if (!rounds.length) return null
   const live = rounds.find(r => r.anyLive)
   if (live) return live.roundNumber
+
+  // Earliest round that still has work to do — this is what admins actually
+  // want to jump to when "NOW" says we're between rounds.
+  const nextUnfinished = rounds.find(r => !r.allFinal)
+  if (nextUnfinished) return nextUnfinished.roundNumber
+
+  // Everything's final — fall back to the latest round that's started, or
+  // the first round if nothing has started yet.
   let best = rounds[0].roundNumber
   for (const r of rounds) {
     if (r.firstScheduled && new Date(r.firstScheduled).getTime() <= now) {

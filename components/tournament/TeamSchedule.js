@@ -97,8 +97,15 @@ export default function TeamSchedule({ team, pool }) {
   const myMatches = allMatches.filter(
     (m) => m.homeTeamId === teamId || m.awayTeamId === teamId,
   )
+  // Prefer the manually-assigned refTeam (set per-match by the seeder or
+  // admin). Falls back to the canonical 4-team rotation algorithm so
+  // legacy gold/silver tournaments without explicit ref assignments still
+  // surface ref duties. 5-team pools (May 23 Titos REC) always rely on
+  // the explicit refTeamId — the canonical rotation only handles 4-team
+  // pools.
   const refDuties = allMatches.filter((m) => {
     if (m.homeTeamId === teamId || m.awayTeamId === teamId) return false
+    if (m.refTeamId) return m.refTeamId === teamId
     const refs = refAssignmentForMatch(m, poolTeams)
     return refs.ref?.id === teamId
   })

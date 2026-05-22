@@ -47,9 +47,11 @@ export async function PATCH(request, { params }) {
     const scores = await prisma.tournamentSetScore.findMany({
       where: { matchId }, orderBy: { setNumber: 'asc' },
     })
-    // Pool matches are 2 fixed sets (captain's package). Fall back to bracket
-    // mode for any match lacking a poolId (shouldn't happen for this route).
-    const mode = match.poolId ? 'pool' : 'bracket'
+    // Resolve the scoring mode from the match's explicit matchFormat field
+    // (e.g. 'pool-1set-25-cap-27' for the May 23 REC tournament). Falls back
+    // to the legacy "poolId → pool" heuristic when matchFormat is null so
+    // older tournaments keep their 2-set pool behaviour.
+    const mode = match.matchFormat || (match.poolId ? 'pool' : 'bracket')
     const { status, winnerId } = computeMatchStatus(scores, match, { mode })
 
     await prisma.tournamentMatch.update({

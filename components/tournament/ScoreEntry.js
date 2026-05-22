@@ -60,8 +60,20 @@ function clampScore(v) {
   return Math.round(n)
 }
 
+// Translate the match's stored format into (mode, setCount) for the entry UI.
+// Falls back to the legacy heuristic (poolId → pool, else bracket) when
+// matchFormat isn't set — preserves behaviour for old tournaments.
+function resolveMatchMode(match) {
+  const fmt = match.matchFormat
+  if (fmt === 'pool-1set-25-cap-27' || fmt === 'pool-1set') return { mode: 'pool-1set', setCount: 1 }
+  if (fmt === 'pool-2set-25-cap-27' || fmt === 'pool') return { mode: 'pool', setCount: 2 }
+  if (fmt === 'bo3-25-15-no-cap' || fmt === 'bracket-no-cap') return { mode: 'bracket-no-cap', setCount: 3 }
+  if (fmt === 'bo3-25-15-cap-17' || fmt === 'bracket') return { mode: 'bracket', setCount: 3 }
+  return match.poolId ? { mode: 'pool', setCount: 2 } : { mode: 'bracket', setCount: 3 }
+}
+
 export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null, flush = false }) {
-  const setCount = match.poolId ? 2 : 3
+  const { mode, setCount } = resolveMatchMode(match)
   const buildInitial = () => Array.from({ length: setCount }).map((_, i) => {
     const s = match.scores?.find(x => x.setNumber === i + 1)
     return { setNumber: i + 1, homeScore: s?.homeScore ?? '', awayScore: s?.awayScore ?? '' }
@@ -159,7 +171,8 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null, 
   // Set-win tally for the header chip ("Home 2 – 0 Away"). Only completed
   // sets count — 18–15 mid-set does NOT yet score 1–0. Reuses the same
   // target/cap rules that drive the match-status computation server-side.
-  const mode = match.poolId ? 'pool' : 'bracket'
+  // `mode` is already resolved at the top of the component from
+  // match.matchFormat → pool / pool-1set / bracket / bracket-no-cap.
   const numericSets = sets
     .filter(s => s.homeScore !== '' && s.awayScore !== '')
     .map(s => ({

@@ -69,7 +69,7 @@ function HubBody({ slug, tournament }) {
     if (!tournament?.pools) return []
     const enriched = tournament.pools.map(pool => ({
       ...pool,
-      standings: pool.standings || computeStandingsFromMatches(pool.teams || [], pool.matches || []),
+      standings: pool.standings || computeStandingsFromMatches(pool.teams || [], pool.matches || [], { bracketFormat: tournament?.bracketFormat }),
       // Present matches in round order (= time order since rounds are
       // stamped at 30-min intervals). Stable tie-break on gameOrder.
       matches: (pool.matches || []).slice().sort((a, b) => {

@@ -48,7 +48,11 @@ export async function PATCH(request, { params }) {
     const scores = await prisma.tournamentSetScore.findMany({
       where: { matchId }, orderBy: { setNumber: 'asc' },
     })
-    const { status, winnerId } = computeMatchStatus(scores, match)
+    // Bracket matches default to best-of-3 25/25/15 (cap 17), but a
+    // tournament can opt into 'bo3-25-15-no-cap' via matchFormat — honour
+    // it so the deciding-set cap doesn't pre-emptively finalize a match.
+    const mode = match.matchFormat || 'bracket'
+    const { status, winnerId } = computeMatchStatus(scores, match, { mode })
 
     await prisma.tournamentMatch.update({
       where: { id: matchId },

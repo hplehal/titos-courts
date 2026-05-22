@@ -285,7 +285,11 @@ async function generateCrossoverBracketAndPlayIns({ tournament, pools }) {
     final:   dayOffsetMinutes(15, 15),
   }
   const bracketMatchFormat = tournament.bracketMatchFormat || 'bo3-25-15-no-cap'
-  const playInMatchFormat = tournament.poolMatchFormat || 'pool-1set-25-cap-27'
+  // Play-in is a true elimination game (loser is out of the bracket), so we
+  // play it with the same best-of-3 rules as the rest of the playoffs — NOT
+  // the 1-set pool format. Captains explicitly asked for this so the
+  // qualifying game has the same weight as a QF.
+  const playInMatchFormat = bracketMatchFormat
 
   // One container bracket — there is only one division in this format.
   const bracket = await prisma.tournamentBracket.create({

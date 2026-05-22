@@ -47,6 +47,12 @@ const ROUND_LABELS = {
   [BRACKET_ROUND.FINAL]: 'Final',
 }
 
+// Special "round" key used to group play-in matches. They have
+// bracketRound=null in the DB (they sit BEFORE the bracket numbering),
+// so the grouping logic uses this sentinel to surface them first.
+const PLAYIN_ROUND_KEY = 0
+const ROUND_LABEL_FOR = (k) => k === PLAYIN_ROUND_KEY ? 'Play-In' : (ROUND_LABELS[k] || `Round ${k}`)
+
 function Inner({ slug }) {
   const [tournament, setTournament] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -84,23 +90,35 @@ function Inner({ slug }) {
 
         <div className="space-y-6">
           {tournament.brackets?.map(bracket => {
+            // Group matches by stage/round. Play-in matches (stage='play-in',
+            // bracketRound=null) get the sentinel key 0 so they sort BEFORE
+            // QF (1), SF (2), F (3). Legacy matches without a stage field
+            // fall through to bracketRound-based grouping unchanged.
             const byRound = {}
             for (const m of bracket.matches) {
-              const r = m.bracketRound || 1
+              const isPlayIn = m.stage === 'play-in'
+              const r = isPlayIn ? PLAYIN_ROUND_KEY : (m.bracketRound || 1)
               if (!byRound[r]) byRound[r] = []
               byRound[r].push(m)
             }
+            // For crossover format the single bracket is named 'Open' — no
+            // gold/silver distinction. Show a less loud header in that case.
+            const isOpenBracket = bracket.division === 'Open'
             return (
               <section key={bracket.id} className="card-flat rounded-xl overflow-hidden">
                 <header className="px-5 py-3 border-b border-titos-border/30 bg-titos-gold/5 flex items-center gap-2">
-                  {bracket.division === 'Gold' ? <Trophy className="w-4 h-4 text-titos-gold" /> : <Medal className="w-4 h-4 text-titos-gray-300" />}
-                  <h2 className="font-display font-bold text-titos-gold text-sm">{bracket.division} Division</h2>
+                  {bracket.division === 'Gold' || isOpenBracket
+                    ? <Trophy className="w-4 h-4 text-titos-gold" />
+                    : <Medal className="w-4 h-4 text-titos-gray-300" />}
+                  <h2 className="font-display font-bold text-titos-gold text-sm">
+                    {isOpenBracket ? 'Playoffs' : `${bracket.division} Division`}
+                  </h2>
                 </header>
                 <div className="p-4 space-y-5">
                   {Object.entries(byRound).sort(([a], [b]) => Number(a) - Number(b)).map(([round, matches]) => (
                     <div key={round}>
                       <h3 className="text-xs font-bold uppercase tracking-wider text-titos-gray-500 mb-2">
-                        {ROUND_LABELS[Number(round)] || `Round ${round}`}
+                        {ROUND_LABEL_FOR(Number(round))}
                       </h3>
                       {/* 2-up at md+ so 4 QFs become 2 rows instead of 4.
                           SFs + Finals also pair up nicely when both divisions

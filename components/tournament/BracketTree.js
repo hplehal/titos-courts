@@ -27,16 +27,21 @@ import MatchCard from './MatchCard'
 import { BRACKET_ROUND } from '@/lib/tournament/constants'
 
 const LABELS = {
+  0: 'Play-In',
   [BRACKET_ROUND.QUARTERFINAL]: 'Quarterfinals',
   [BRACKET_ROUND.SEMIFINAL]: 'Semifinals',
   [BRACKET_ROUND.FINAL]: 'Final',
 }
 
 export default function BracketTree({ matches }) {
-  // Group matches by round
+  // Group matches by round. Play-in matches (stage='play-in', bracketRound
+  // null) become column 0 so the tree reads left-to-right as PI → QF → SF
+  // → F. Legacy bracket matches without a stage field fall through to the
+  // bracketRound-based grouping.
   const byRound = {}
   for (const m of matches || []) {
-    const r = m.bracketRound || 1
+    const isPlayIn = m.stage === 'play-in'
+    const r = isPlayIn ? 0 : (m.bracketRound || 1)
     if (!byRound[r]) byRound[r] = []
     byRound[r].push(m)
   }

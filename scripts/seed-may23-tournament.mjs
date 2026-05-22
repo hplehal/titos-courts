@@ -183,8 +183,13 @@ async function main() {
     return d
   }
 
+  // Each 20-minute time slot becomes one round. roundNumber is what the
+  // admin scores page uses to group matches across courts, so without this
+  // every match would collapse into a single round 0.
   let gameOrder = 1
-  for (const slot of POOL_PLAY) {
+  for (let roundIdx = 0; roundIdx < POOL_PLAY.length; roundIdx++) {
+    const slot = POOL_PLAY[roundIdx]
+    const roundNumber = roundIdx + 1
     const teamByPoolSeed = (teams, seed) => teams.find(x => x.seed === seed)
 
     // Pool A match on Court 1
@@ -200,6 +205,7 @@ async function main() {
         awaySeedLabel: `A${slot.away}`,
         courtNumber: 1,
         scheduledTime: scheduledAtFor(slot.time),
+        roundNumber,
         gameOrder: gameOrder++,
         status: 'scheduled',
       },
@@ -218,12 +224,13 @@ async function main() {
         awaySeedLabel: `B${slot.away}`,
         courtNumber: 2,
         scheduledTime: scheduledAtFor(slot.time),
+        roundNumber,
         gameOrder: gameOrder++,
         status: 'scheduled',
       },
     })
   }
-  console.log(`Created ${(gameOrder - 1)} pool-play matches`)
+  console.log(`Created ${(gameOrder - 1)} pool-play matches across ${POOL_PLAY.length} rounds`)
 
   console.log('\nDone. Tournament is live at:')
   console.log(`  /tournaments/${SLUG}`)

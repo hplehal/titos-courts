@@ -6,8 +6,20 @@
 
 import { cn } from '@/lib/utils'
 import LiveIndicator from './LiveIndicator'
-import { tallySetsWon } from '@/lib/tournament/computeMatchStatus'
+import { tallySetsWon, expectedSetCount } from '@/lib/tournament/computeMatchStatus'
 import { cleanTeamName } from '@/lib/tournament/displayName'
+
+// Pick the scoring mode + total set count from the match's explicit
+// matchFormat field. Falls back to the legacy "poolId → pool" heuristic so
+// older tournaments without matchFormat keep the 2-set/3-set behaviour.
+function resolveMode(match) {
+  const fmt = match.matchFormat
+  if (fmt === 'pool-1set-25-cap-27' || fmt === 'pool-1set') return 'pool-1set'
+  if (fmt === 'pool-2set-25-cap-27' || fmt === 'pool') return 'pool'
+  if (fmt === 'bo3-25-15-no-cap' || fmt === 'bracket-no-cap') return 'bracket-no-cap'
+  if (fmt === 'bo3-25-15-cap-17' || fmt === 'bracket') return 'bracket'
+  return match.poolId ? 'pool' : 'bracket'
+}
 
 function fmtTime(date) {
   if (!date) return null
@@ -35,11 +47,13 @@ export default function LiveMatchCard({ match, poolName }) {
   const homeCurrent = currentSet?.homeScore ?? 0
   const awayCurrent = currentSet?.awayScore ?? 0
 
-  // Pool vs bracket = different set caps; infer from the match shape. Live
-  // matches use the proper set-complete check so the "Sets won" row doesn't
-  // falsely reward a mid-set lead.
-  const mode = match.poolId ? 'pool' : 'bracket'
+  // Resolve scoring mode from matchFormat (with legacy poolId fallback).
+  // For pool-1set tournaments (May 23 REC), there's only ever one set —
+  // the per-set row and "Sets won" line are noise, so we hide them.
+  const mode = resolveMode(match)
+  const totalSets = expectedSetCount(mode)
   const { setsHome, setsAway } = tallySetsWon(sortedScores, mode)
+  const isSingleSet = totalSets === 1
 
   const homeLeading = homeCurrent > awayCurrent
   const awayLeading = awayCurrent > homeCurrent
@@ -72,7 +86,7 @@ export default function LiveMatchCard({ match, poolName }) {
           <span className="text-[11px] text-titos-gray-400 truncate">{meta}</span>
         </div>
         <span className="text-[10px] font-bold uppercase tracking-wider text-status-live">
-          Set {currentSet?.setNumber ?? 1}
+          {isSingleSet ? 'Race to 25' : `Set ${currentSet?.setNumber ?? 1}`}
         </span>
       </div>
 
@@ -82,12 +96,14 @@ export default function LiveMatchCard({ match, poolName }) {
           score={homeCurrent}
           leading={homeLeading}
           setsWon={setsHome}
+          showSetsWon={!isSingleSet}
         />
         <TeamRow
           name={away}
           score={awayCurrent}
           leading={awayLeading}
           setsWon={setsAway}
+          showSetsWon={!isSingleSet}
         />
       </div>
 
@@ -98,7 +114,10 @@ export default function LiveMatchCard({ match, poolName }) {
         {strap}
       </div>
 
-      {sortedScores.length > 1 && (
+      {/* Per-set breakdown — only meaningful when the match has more than
+          one set. 1-set matches would render a redundant duplicate of the
+          headline scoreline. */}
+      {!isSingleSet && sortedScores.length > 1 && (
         <div className="px-4 py-2 flex items-center justify-center gap-3 text-[11px] text-titos-gray-500 border-t border-titos-border/30">
           {sortedScores.map((s) => (
             <span key={s.setNumber} className="tabular-nums">
@@ -118,7 +137,7 @@ export default function LiveMatchCard({ match, poolName }) {
   )
 }
 
-function TeamRow({ name, score, leading, setsWon }) {
+function TeamRow({ name, score, leading, setsWon, showSetsWon = true }) {
   return (
     <div
       className={cn(
@@ -135,9 +154,11 @@ function TeamRow({ name, score, leading, setsWon }) {
         >
           {name}
         </div>
-        <div className="text-[10px] uppercase tracking-wider text-titos-gray-500 tabular-nums">
-          Sets won: {setsWon}
-        </div>
+        {showSetsWon && (
+          <div className="text-[10px] uppercase tracking-wider text-titos-gray-500 tabular-nums">
+            Sets won: {setsWon}
+          </div>
+        )}
       </div>
       <div
         className={cn(

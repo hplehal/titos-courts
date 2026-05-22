@@ -190,14 +190,27 @@ model Tournament {
   date                 DateTime
   endDate              DateTime?
   venue                String?
+  venueAddress         String?
   poolSize             Int?
   poolCount            Int?
   description          String?
   format               String?
+  // bracketFormat: 'gold-silver' (legacy 4-pool double-bracket) or
+  // 'crossover-single-elim' (May 23 style: 2-pool, top 3 + 1 play-in
+  // winner per pool feeds an 8-team single-elim bracket with A↔B crossover).
+  // Defaults to 'gold-silver' so existing tournaments keep their behaviour.
+  bracketFormat        String             @default("gold-silver")
+  // Per-match defaults applied when seeding the schedule:
+  //   poolMatchFormat: 'pool-2set-25-cap-27' (default) | 'pool-1set-25-cap-27'
+  //   bracketMatchFormat: 'bo3-25-15-cap-17' (default) | 'bo3-25-15-no-cap'
+  poolMatchFormat      String             @default("pool-2set-25-cap-27")
+  bracketMatchFormat   String             @default("bo3-25-15-cap-17")
   registrationFee      Int?
   maxTeams             Int?
   registrationDeadline DateTime?
+  prizePool            Int?
   status               String             @default("registration")
+  rules                String?            // Free-form markdown for the public Captain's Package page.
   pools                TournamentPool[]
   brackets             TournamentBracket[]
   tournamentTeams      TournamentTeam[]
@@ -260,6 +273,16 @@ model TournamentMatch {
   scheduledTime   DateTime?
   refTeamId       String?              // team on the whistle — manual override. Pool matches fall back to the canonical PDF rotation (refRotation.js) when null.
   refTeam         TournamentTeam?      @relation("TournRefTeam", fields: [refTeamId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  // stage: 'pool' (default) | 'play-in' | 'bracket'. Lets the bracket
+  // generator find pool-play standings without grabbing intermediate
+  // play-in matches, and lets the score-entry UI render the right
+  // number of sets per format.
+  stage           String               @default("pool")
+  // matchFormat: 'pool-2set-25-cap-27' | 'pool-1set-25-cap-27' |
+  //   'bo3-25-15-cap-17' | 'bo3-25-15-no-cap'. Drives computeMatchStatus
+  //   and the number of score rows in the entry form. Null = inherit from
+  //   the tournament-level poolMatchFormat/bracketMatchFormat defaults.
+  matchFormat     String?
   status          String               @default("scheduled")
   winnerId        String?              // TournamentTeam id once decided
   roundNumber     Int?                 // pool: round of round-robin; bracket: unused

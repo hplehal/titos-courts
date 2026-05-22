@@ -1,16 +1,22 @@
 'use client'
 
-// Client-side tab switcher for Gold/Silver bracket views. Syncs the selected
+// Client-side tab switcher for bracket divisions. Syncs the selected
 // division into the URL (?division=gold) so deep links share the right tab.
+// For tournaments with a single bracket (e.g. crossover-single-elim, where
+// there is only an 'Open' bracket), the caller can pass `divisions` to
+// override the default Gold/Silver list — or skip rendering the tabs
+// entirely.
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { DIVISIONS } from '@/lib/tournament/constants'
 import { cn } from '@/lib/utils'
 
-export default function DivisionTabs({ value, onChange }) {
+export default function DivisionTabs({ value, onChange, divisions = DIVISIONS }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+
+  if (divisions.length <= 1) return null
 
   const setValue = (division) => {
     onChange?.(division)
@@ -21,7 +27,7 @@ export default function DivisionTabs({ value, onChange }) {
 
   return (
     <div role="tablist" className="inline-flex gap-1 p-1 rounded-lg bg-titos-elevated border border-titos-border/30">
-      {DIVISIONS.map(d => {
+      {divisions.map(d => {
         const isActive = value === d
         return (
           <button

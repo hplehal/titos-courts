@@ -11,8 +11,20 @@ import { MapPin, UserCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import LiveIndicator from './LiveIndicator'
 import { refAssignmentForMatch } from '@/lib/tournament/refRotation'
-import { tallySetsWon, setWinnerAt } from '@/lib/tournament/computeMatchStatus'
+import { tallySetsWon, setWinnerAt, expectedSetCount } from '@/lib/tournament/computeMatchStatus'
 import { cleanTeamName } from '@/lib/tournament/displayName'
+
+// Map the match's explicit matchFormat to the internal scoring mode. Falls
+// back to the variant heuristic (pool vs bracket) when matchFormat isn't
+// set, so legacy tournaments keep their previous behaviour.
+function resolveMatchMode(match, variant) {
+  const fmt = match.matchFormat
+  if (fmt === 'pool-1set-25-cap-27' || fmt === 'pool-1set') return 'pool-1set'
+  if (fmt === 'pool-2set-25-cap-27' || fmt === 'pool') return 'pool'
+  if (fmt === 'bo3-25-15-no-cap' || fmt === 'bracket-no-cap') return 'bracket-no-cap'
+  if (fmt === 'bo3-25-15-cap-17' || fmt === 'bracket') return 'bracket'
+  return variant === 'pool' ? 'pool' : 'bracket'
+}
 
 function fmtTime(date) {
   if (!date) return null
@@ -43,8 +55,11 @@ export default function MatchCard({ match, variant = 'pool', poolTeams = null, s
 
   // Only count a set toward setsWon once it is actually COMPLETE (25 with
   // a 2-point lead, or cap 27 — or 15/cap 17 in a deciding bracket set). A
-  // mid-set lead does not earn a set win.
-  const mode = variant === 'pool' ? 'pool' : 'bracket'
+  // mid-set lead does not earn a set win. Mode comes from the explicit
+  // match.matchFormat so a pool-1set match doesn't pretend it's a 2-set game.
+  const mode = resolveMatchMode(match, variant)
+  const totalSets = expectedSetCount(mode)
+  const isSingleSet = totalSets === 1
   const { setsHome, setsAway } = tallySetsWon(sortedScores, mode)
 
   const homeWon = match.status === 'completed' && match.winnerId && match.winnerId === match.homeTeamId
@@ -56,7 +71,16 @@ export default function MatchCard({ match, variant = 'pool', poolTeams = null, s
   // Round chip only renders when caller opts in (showRound). The public
   // hub passes showRound so the single-dropdown pool view keeps R1/R2/…
   // legible without re-introducing per-round accordions.
-  const roundLabel = showRound && match.roundNumber ? `R${match.roundNumber}` : null
+  // Play-in matches show 'PI 1' / 'PI 2' so the connection to 'W PI 1' /
+  // 'W PI 2' on the QF cards is unambiguous — PI 1 = Court 1 winner,
+  // PI 2 = Court 2 winner per the captain's package.
+  let roundLabel = null
+  if (match.stage === 'play-in') {
+    const piNum = (match.bracketPosition ?? 0) + 1
+    roundLabel = `PI ${piNum}`
+  } else if (showRound && match.roundNumber) {
+    roundLabel = `R${match.roundNumber}`
+  }
   // Bracket cards deliberately omit the time — the bracket tree reads
   // round-to-round ("when" is "after the previous match finishes") and
   // the single-day playoff schedule makes per-card timestamps noise more
@@ -93,8 +117,10 @@ export default function MatchCard({ match, variant = 'pool', poolTeams = null, s
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {/* Pool-card set-column headers (S1/S2/S3) only — keeps a wide
-              pool card legible without crowding the narrower bracket one. */}
-          {variant === 'pool' && sortedScores.length > 0 && (
+              pool card legible without crowding the narrower bracket one.
+              Hidden for single-set matches where the column header would
+              just say S1 above the only score — redundant. */}
+          {variant === 'pool' && !isSingleSet && sortedScores.length > 0 && (
             <div className="flex items-center gap-1 text-[10px] text-titos-gray-500 font-medium uppercase tracking-wider">
               {sortedScores.map(s => (
                 <span key={s.setNumber} className="min-w-[1.75rem] sm:min-w-[2.5rem] text-center">
@@ -126,6 +152,7 @@ export default function MatchCard({ match, variant = 'pool', poolTeams = null, s
           showNumbers={match.status !== 'scheduled'}
           mode={mode}
           variant={variant}
+          isSingleSet={isSingleSet}
         />
         <TeamRow
           name={away}
@@ -136,6 +163,7 @@ export default function MatchCard({ match, variant = 'pool', poolTeams = null, s
           showNumbers={match.status !== 'scheduled'}
           mode={mode}
           variant={variant}
+          isSingleSet={isSingleSet}
         />
       </div>
       {/* Bracket-only per-set strip. The narrow bracket card can't fit
@@ -145,7 +173,9 @@ export default function MatchCard({ match, variant = 'pool', poolTeams = null, s
           Each set is a tiny home–away pair, with the set winner's score
           weighted bold so the rhythm of "who took which set" still reads
           at a glance. */}
-      {variant === 'bracket' && sortedScores.length > 0 && match.status !== 'scheduled' && (
+      {/* Bracket-only per-set strip. Skipped on single-set matches —
+          the one set is already shown by the inline scoreline above. */}
+      {variant === 'bracket' && !isSingleSet && sortedScores.length > 0 && match.status !== 'scheduled' && (
         <div className="px-3 py-1.5 border-t border-titos-border/30 flex items-center justify-center gap-2 text-[11px] tabular-nums">
           {sortedScores.map((s, i) => {
             const w = setWinnerAt(s, i, mode)
@@ -171,7 +201,7 @@ export default function MatchCard({ match, variant = 'pool', poolTeams = null, s
   )
 }
 
-function TeamRow({ name, winner, setsWon, perSet, opposingPerSet, showNumbers, mode, variant }) {
+function TeamRow({ name, winner, setsWon, perSet, opposingPerSet, showNumbers, mode, variant, isSingleSet = false }) {
   // Bracket cards are only ~14.5rem wide — inline per-set columns crush
   // the team name. Bracket variant shows just the sets-won pill (the
   // number that actually matters in a tree) and surfaces per-set detail
@@ -215,18 +245,24 @@ function TeamRow({ name, winner, setsWon, perSet, opposingPerSet, showNumbers, m
               </span>
             )
           })}
-          <span
-            className={cn(
-              'inline-flex items-center justify-center h-7 px-2 rounded-md text-base font-black tabular-nums',
-              isBracket ? 'min-w-[2rem]' : 'ml-1 sm:ml-1.5 min-w-[1.75rem] sm:min-w-[2rem] text-sm px-1.5',
-              winner
-                ? 'bg-titos-gold/25 text-titos-gold ring-1 ring-titos-gold/40'
-                : 'bg-titos-elevated/60 text-titos-gray-300',
-            )}
-            aria-label={`${setsWon} set${setsWon === 1 ? '' : 's'} won`}
-          >
-            {setsWon}
-          </span>
+          {/* Sets-won pill — meaningless for single-set matches where it
+              just duplicates the perSet column (1 set won = 1 point shown).
+              Bracket variant always shows it because the per-set columns
+              are pushed into the strip below the rows. */}
+          {(isBracket || !isSingleSet) && (
+            <span
+              className={cn(
+                'inline-flex items-center justify-center h-7 px-2 rounded-md text-base font-black tabular-nums',
+                isBracket ? 'min-w-[2rem]' : 'ml-1 sm:ml-1.5 min-w-[1.75rem] sm:min-w-[2rem] text-sm px-1.5',
+                winner
+                  ? 'bg-titos-gold/25 text-titos-gold ring-1 ring-titos-gold/40'
+                  : 'bg-titos-elevated/60 text-titos-gray-300',
+              )}
+              aria-label={`${setsWon} set${setsWon === 1 ? '' : 's'} won`}
+            >
+              {setsWon}
+            </span>
+          )}
         </div>
       )}
     </div>

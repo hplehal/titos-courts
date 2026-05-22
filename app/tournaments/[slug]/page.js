@@ -7,6 +7,7 @@ import { formatDate } from '@/lib/utils'
 import { getTournamentHub } from '@/lib/server/tournaments'
 import TournamentHubClient from './TournamentHubClient'
 import Countdown from '@/components/tournament/Countdown'
+import CaptainsPackage from '@/components/tournament/CaptainsPackage'
 import PhotosLink from '@/components/PhotosLink'
 import { getTournamentPhotosUrl } from '@/lib/photoLinks'
 import { TOURNAMENT_STATUS } from '@/lib/tournament/constants'
@@ -112,6 +113,12 @@ export default async function TournamentDetailPage({ params }) {
       )}
 
       <div className="mx-auto max-w-6xl px-4 mt-10">
+        {/* Captain's Package — venue/prize/format chips + rules markdown.
+            Renders above the hub so captains see the rules first thing on
+            game day. The component returns null if no rules/venue/prize
+            are configured, so older tournaments are unaffected. */}
+        <CaptainsPackage tournament={tournament} />
+
         <TournamentHubClient slug={slug} initialData={tournament} />
 
         {/* Secondary bracket CTA for completed/live tournaments (upcoming already has the sticky CTA above) */}

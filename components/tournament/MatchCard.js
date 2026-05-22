@@ -71,7 +71,16 @@ export default function MatchCard({ match, variant = 'pool', poolTeams = null, s
   // Round chip only renders when caller opts in (showRound). The public
   // hub passes showRound so the single-dropdown pool view keeps R1/R2/…
   // legible without re-introducing per-round accordions.
-  const roundLabel = showRound && match.roundNumber ? `R${match.roundNumber}` : null
+  // Play-in matches show 'PI 1' / 'PI 2' so the connection to 'W PI 1' /
+  // 'W PI 2' on the QF cards is unambiguous — PI 1 = Court 1 winner,
+  // PI 2 = Court 2 winner per the captain's package.
+  let roundLabel = null
+  if (match.stage === 'play-in') {
+    const piNum = (match.bracketPosition ?? 0) + 1
+    roundLabel = `PI ${piNum}`
+  } else if (showRound && match.roundNumber) {
+    roundLabel = `R${match.roundNumber}`
+  }
   // Bracket cards deliberately omit the time — the bracket tree reads
   // round-to-round ("when" is "after the previous match finishes") and
   // the single-day playoff schedule makes per-card timestamps noise more

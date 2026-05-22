@@ -23,7 +23,7 @@ export async function PATCH(request, { params }) {
 
     const match = await prisma.tournamentMatch.findUnique({
       where: { id: matchId },
-      select: { id: true, homeTeamId: true, awayTeamId: true, poolId: true },
+      select: { id: true, homeTeamId: true, awayTeamId: true, poolId: true, matchFormat: true, stage: true },
     })
     if (!match) return NextResponse.json({ error: 'Match not found' }, { status: 404 })
 
@@ -64,6 +64,78 @@ export async function PATCH(request, { params }) {
   } catch (error) {
     console.error('Save match scores error:', error)
     return NextResponse.json({ error: 'Failed to save scores' }, { status: 500 })
+  }
+}
+
+/**
+ * POST — force-finalize a match at the 20-minute time cap. Used when the
+ * leading team didn't reach 25 (e.g. 22-18 when the buzzer goes). Body
+ * carries the same scores payload as PATCH; we save them, then mark the
+ * match FINAL with whoever has more points across all entered sets.
+ *
+ * Refuses when the scores are tied — the captain's package says "if tied
+ * at the cap, play the next point", so admin must enter a deciding point
+ * before forcing the end.
+ *
+ * Body: { scores: [{ setNumber, homeScore, awayScore }, ...] }
+ */
+export async function POST(request, { params }) {
+  if (!checkAdminPassword(request)) return unauthorized()
+  const { slug, matchId } = await params
+  try {
+    const body = await request.json()
+    const incoming = Array.isArray(body.scores) ? body.scores : []
+
+    const match = await prisma.tournamentMatch.findUnique({
+      where: { id: matchId },
+      select: { id: true, homeTeamId: true, awayTeamId: true, matchFormat: true, stage: true },
+    })
+    if (!match) return NextResponse.json({ error: 'Match not found' }, { status: 404 })
+
+    // Save whatever scores were entered, then derive the winner from them.
+    await prisma.$transaction(async (tx) => {
+      for (const s of incoming) {
+        const setNumber = Number(s.setNumber)
+        const homeScore = Number(s.homeScore)
+        const awayScore = Number(s.awayScore)
+        if (!Number.isFinite(setNumber) || setNumber < 1) continue
+        if (!Number.isFinite(homeScore) || !Number.isFinite(awayScore)) continue
+        await tx.tournamentSetScore.upsert({
+          where: { matchId_setNumber: { matchId, setNumber } },
+          update: { homeScore, awayScore },
+          create: { matchId, setNumber, homeScore, awayScore },
+        })
+      }
+    })
+
+    const scores = await prisma.tournamentSetScore.findMany({
+      where: { matchId }, orderBy: { setNumber: 'asc' },
+    })
+
+    // Pure point comparison — ignore "win by 2" / cap rules entirely. The
+    // time cap means whoever has more raw points takes the set. Ties are
+    // illegal at this point per the captain's package; bail with 400 so the
+    // admin enters the deciding point first.
+    let homePts = 0, awayPts = 0
+    for (const s of scores) { homePts += s.homeScore; awayPts += s.awayScore }
+    if (homePts === awayPts) {
+      return NextResponse.json(
+        { error: 'Match is tied — play the deciding point before ending the match.' },
+        { status: 400 },
+      )
+    }
+    const winnerId = homePts > awayPts ? match.homeTeamId : match.awayTeamId
+
+    await prisma.tournamentMatch.update({
+      where: { id: matchId },
+      data: { status: MATCH_STATUS.FINAL, winnerId },
+    })
+
+    revalidateTournament(slug)
+    return NextResponse.json({ status: MATCH_STATUS.FINAL, winnerId, reason: 'time-cap' })
+  } catch (error) {
+    console.error('Time-cap end match error:', error)
+    return NextResponse.json({ error: 'Failed to end match' }, { status: 500 })
   }
 }
 

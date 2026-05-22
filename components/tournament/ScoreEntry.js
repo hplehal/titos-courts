@@ -26,7 +26,7 @@
 import { useState, useEffect } from 'react'
 import { Loader2, Save, Minus, Plus, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { adminPatch, adminDelete } from '@/lib/adminFetch'
+import { adminPatch, adminPost, adminDelete } from '@/lib/adminFetch'
 import { refAssignmentForMatch } from '@/lib/tournament/refRotation'
 import { tallySetsWon } from '@/lib/tournament/computeMatchStatus'
 import { cleanTeamName } from '@/lib/tournament/displayName'
@@ -129,6 +129,30 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null, 
       const data = await res.json()
       if (!res.ok) setMsg(data.error || 'Failed')
       else { setMsg('Saved'); onSaved?.(data) }
+    } catch { setMsg('Connection error') }
+    setBusy(false)
+  }
+
+  // Force-finalize the match at the 20-min time cap. Sends current scores
+  // to POST so the server saves them + flips status to FINAL with the
+  // leader as winner, ignoring the "win by 2" / cap rules. Pool play only —
+  // playoffs play to natural completion.
+  const endByTimeCap = async () => {
+    if (typeof window !== 'undefined') {
+      const ok = window.confirm(
+        'End this match at the time cap?\n\nWhoever has more points wins the set. Use this only when 20 minutes are up.',
+      )
+      if (!ok) return
+    }
+    setBusy(true); setMsg('')
+    const payload = sets
+      .filter(s => s.homeScore !== '' && s.awayScore !== '')
+      .map(s => ({ setNumber: s.setNumber, homeScore: Number(s.homeScore), awayScore: Number(s.awayScore) }))
+    try {
+      const res = await adminPost(saveUrl, { scores: payload })
+      const data = await res.json()
+      if (!res.ok) setMsg(data.error || 'Failed')
+      else { setMsg('Ended at cap'); onSaved?.(data) }
     } catch { setMsg('Connection error') }
     setBusy(false)
   }
@@ -279,18 +303,32 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null, 
               </button>
             ) : <span className="hidden sm:block" aria-hidden="true" />}
 
-            <div className="flex items-center gap-3 sm:justify-end">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 sm:justify-end">
               {msg && (
                 <span
                   className={cn(
                     'text-xs order-last sm:order-none text-center sm:text-left',
-                    (msg === 'Saved' || msg === 'Cleared') ? 'text-status-success' : 'text-titos-gray-400',
+                    (msg === 'Saved' || msg === 'Cleared' || msg === 'Ended at cap') ? 'text-status-success' : 'text-titos-gray-400',
                   )}
                   role="status"
                   aria-live="polite"
                 >
                   {msg}
                 </span>
+              )}
+              {/* Time-cap end button — only for pool matches where the 20-min
+                  hard cap rule applies. Skipped on playoffs (bo3 plays to a
+                  natural finish). Hidden once the match is already FINAL. */}
+              {match.stage === 'pool' && match.status !== 'completed' && (
+                <button
+                  type="button"
+                  onClick={endByTimeCap}
+                  disabled={busy}
+                  aria-label="End match at time cap (whoever's leading wins)"
+                  className="text-xs py-2 px-3 min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded border border-titos-gold/40 text-titos-gold hover:bg-titos-gold/10 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-titos-gold disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  End @ 20-min cap
+                </button>
               )}
               <button
                 onClick={save}

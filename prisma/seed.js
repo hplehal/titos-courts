@@ -295,8 +295,11 @@ async function main() {
       seasonNumber: 10,
       startDate: new Date('2026-04-01T12:00:00Z'),
       endDate: new Date('2026-06-10T12:00:00Z'),
+      // Tuesday COED: 9 regular-season weeks + 2 playoff weeks (W10 QFs,
+      // W11 SF + Final). See lib/utils.getDivisionInfo — divisions are
+      // 4-way (Diamond/Platinum/Gold/Silver, 6 teams each).
       totalWeeks: 11,
-      playoffWeeks: 1,
+      playoffWeeks: 2,
       status: 'active',
     },
   })

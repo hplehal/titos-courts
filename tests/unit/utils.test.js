@@ -77,11 +77,34 @@ describe('getSlotInfo()', () => {
 })
 
 describe('getDivisionInfo()', () => {
-  it('returns Diamond for rank 1 in COED', () => {
+  it('returns Diamond for ranks 1-6 in COED (24 teams)', () => {
     expect(getDivisionInfo(1, 24, 'coed').name).toBe('Diamond')
+    expect(getDivisionInfo(6, 24, 'coed').name).toBe('Diamond')
   })
-  it('returns Bronze for last in COED', () => {
-    expect(getDivisionInfo(24, 24, 'coed').name).toBe('Bronze')
+  it('returns Platinum for ranks 7-12 in COED', () => {
+    expect(getDivisionInfo(7, 24, 'coed').name).toBe('Platinum')
+    expect(getDivisionInfo(12, 24, 'coed').name).toBe('Platinum')
+  })
+  it('returns Gold for ranks 13-18 in COED', () => {
+    expect(getDivisionInfo(13, 24, 'coed').name).toBe('Gold')
+    expect(getDivisionInfo(18, 24, 'coed').name).toBe('Gold')
+  })
+  it('returns Silver for ranks 19-24 in COED (no more Bronze)', () => {
+    expect(getDivisionInfo(19, 24, 'coed').name).toBe('Silver')
+    expect(getDivisionInfo(24, 24, 'coed').name).toBe('Silver')
+  })
+  it('never surfaces Bronze on COED', () => {
+    const names = Array.from({ length: 24 }, (_, i) => getDivisionInfo(i + 1, 24, 'coed').name)
+    expect(names.every(n => n !== 'Bronze')).toBe(true)
+  })
+  it('handles non-24-team COED seasons with extras stacked into top divisions', () => {
+    // 22 teams → 6/6/5/5 (Diamond + Platinum get the extras)
+    expect(getDivisionInfo(6, 22, 'coed').name).toBe('Diamond')
+    expect(getDivisionInfo(7, 22, 'coed').name).toBe('Platinum')
+    expect(getDivisionInfo(12, 22, 'coed').name).toBe('Platinum')
+    expect(getDivisionInfo(13, 22, 'coed').name).toBe('Gold')
+    expect(getDivisionInfo(17, 22, 'coed').name).toBe('Gold')
+    expect(getDivisionInfo(18, 22, 'coed').name).toBe('Silver')
   })
   it('splits MENS evenly into Diamond and Platinum (12 teams)', () => {
     expect(getDivisionInfo(1, 12, 'mens').name).toBe('Diamond')

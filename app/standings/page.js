@@ -30,7 +30,7 @@ export default async function StandingsPage() {
   return (
     <>
       <p className="sr-only">
-        Current standings for Tito&apos;s Courts recreational volleyball leagues in Mississauga. Tracks team performance across Diamond, Platinum, Gold, Silver, and Bronze divisions for Tuesday Coed, Sunday Men&apos;s, and Thursday Rec Coed leagues at Pakmen Courts.
+        Current standings for Tito&apos;s Courts recreational volleyball leagues in Mississauga. Tracks team performance across Diamond, Platinum, Gold, and Silver divisions for Tuesday Coed, Sunday Men&apos;s, and Thursday Rec Coed leagues at Pakmen Courts.
       </p>
       <StandingsClient leagues={leagues} initialSlug={firstSlug} initialData={initialData} />
     </>

@@ -138,7 +138,7 @@ export default async function LeaguesPage() {
                 <h3 className="font-display font-bold text-titos-white">Playoff Divisions</h3>
               </div>
               <p className="text-titos-gray-300 text-sm leading-relaxed">
-                Your cumulative season points determine your playoff division. Five divisions — <strong className="text-titos-gold">Diamond, Platinum, Gold, Silver, and Bronze</strong> — each play a single-elimination bracket on playoff night. Every team competes.
+                Your cumulative season points determine your playoff division. Four divisions — <strong className="text-titos-gold">Diamond, Platinum, Gold, and Silver</strong> — each play a single-elimination bracket on playoff night. Every team competes.
               </p>
             </div>
           </div>

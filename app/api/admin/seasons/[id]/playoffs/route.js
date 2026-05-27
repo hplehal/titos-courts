@@ -99,19 +99,23 @@ export async function POST(request, { params }) {
       standings.map(s => ({ teamId: s.id, name: s.name, rank: s.rank })),
     )
 
-    // Schedule times — W10 matches play sequentially on their division court.
-    // Defaults: W10 QF1 8:00 PM, QF2 9:00 PM. W11 SF1 8:00 PM, SF2 9:30 PM,
-    // Final 11:00 PM (per captain's spec).
+    // Schedule times — Tuesday COED runs 10 PM-12 AM. W10 matches play
+    // sequentially on their division court (one QF per hour). W11 squeezes
+    // SF1, SF2, and Final into the same 2-hour window; Final tips at
+    // 11 PM-12 AM per the captain's spec.
     const scheduledFor = (weekDate, hhmm) => {
       const [h, m] = hhmm.split(':').map(Number)
       const d = new Date(weekDate)
       d.setHours(h, m, 0, 0)
       return d
     }
-    const w10Time = (gameOrder) => scheduledFor(w10.date, gameOrder === 1 ? '20:00' : '21:00')
+    const w10Time = (gameOrder) => scheduledFor(w10.date, gameOrder === 1 ? '22:00' : '23:00')
     const w11Time = (stage, gameOrder) => {
       if (stage === 'final') return scheduledFor(w11.date, '23:00')
-      return scheduledFor(w11.date, gameOrder === 1 ? '20:00' : '21:30')
+      // SF1 at 10:00 PM, SF2 at 10:30 PM (overlap acceptable when SFs run
+      // on separate courts once the extra courts for W11 are booked;
+      // admin can shift via the season scores editor if needed).
+      return scheduledFor(w11.date, gameOrder === 1 ? '22:00' : '22:30')
     }
 
     // Persist in dependency order: Finals first, then SFs (pointing at

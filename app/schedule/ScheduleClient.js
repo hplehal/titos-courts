@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
-import { Clock, ChevronDown, Shield } from 'lucide-react'
+import { Clock, ChevronDown, Shield, Trophy } from 'lucide-react'
 import LeagueSelector from '@/components/ui/LeagueSelector'
 import TeamFilter from '@/components/ui/TeamFilter'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { useMyTeam } from '@/lib/hooks/useMyTeam'
 import { cn, formatDate, getSlotInfo, getTeamAbbreviation } from '@/lib/utils'
+import PlayoffsClient from '@/app/playoffs/[slug]/PlayoffsClient'
 
 /* ─── Round-robin generator ───
    Pattern per round (3 teams A, B, C):
@@ -306,7 +307,7 @@ function SlotGroup({ slot, tiers, myTeam, isMens, leagueSlug }) {
 /* ═══════════════════════════════════════════════
    MAIN SCHEDULE CLIENT
    ═══════════════════════════════════════════════ */
-export default function ScheduleClient({ leagues, initialSlug, initialData, bracketCta = null }) {
+export default function ScheduleClient({ leagues, initialSlug, initialData, playoffData = null }) {
   const router = useRouter()
   const [selected, setSelected] = useState(initialSlug || leagues[0]?.slug || '')
   const [schedule, setSchedule] = useState(initialData || null)
@@ -362,8 +363,6 @@ export default function ScheduleClient({ leagues, initialSlug, initialData, brac
   return (
     <div className="py-10 sm:py-12 px-4">
       <div className="max-w-7xl mx-auto">
-        {bracketCta}
-
         <div className="mb-6 sm:mb-8">
           <span className="section-label">Game Nights</span>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-titos-white leading-none">SCHEDULE</h1>
@@ -476,14 +475,29 @@ export default function ScheduleClient({ leagues, initialSlug, initialData, brac
             {currentGameWeek && (
               <div className="mb-10">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
-                  <h3 className="font-display text-lg sm:text-xl font-black text-titos-white">
-                    {currentGameWeek.weekNumber === 1 ? 'Placement Week' : `Week ${currentGameWeek.weekNumber}`}
+                  <h3 className="font-display text-lg sm:text-xl font-black text-titos-white flex items-center gap-2">
+                    {currentGameWeek.isPlayoff && (
+                      <Trophy className="w-5 h-5 text-titos-gold" aria-hidden="true" />
+                    )}
+                    {currentGameWeek.weekNumber === 1
+                      ? 'Placement Week'
+                      : currentGameWeek.isPlayoff
+                        ? `Playoffs · Week ${currentGameWeek.weekNumber}`
+                        : `Week ${currentGameWeek.weekNumber}`}
                   </h3>
                   <span className="text-titos-gray-400 text-xs sm:text-sm">{formatDate(currentGameWeek.date)}</span>
                   <StatusBadge status={currentGameWeek.status} />
                 </div>
 
-                {currentGameWeek.tiers?.length > 0 ? (
+                {/* Playoff weeks (W10 / W11) replace the regular tier slot
+                    view with the full bracket. PlayoffsClient handles its
+                    own polling, jump-to-division chips, and team-aware
+                    reordering — embedding it inline means the schedule page
+                    is the single home for 'what's happening this week'
+                    whether that's pool play or the playoff tree. */}
+                {currentGameWeek.isPlayoff && playoffData?.hasPlayoffs ? (
+                  <PlayoffsClient slug={selected} initialData={playoffData} />
+                ) : currentGameWeek.tiers?.length > 0 ? (
                   <div className="space-y-8 sm:space-y-10">
                     {['early', 'late', 'single'].map(slot => {
                       const slotTiers = currentGameWeek.tiers.filter(t => t.timeSlot === slot)

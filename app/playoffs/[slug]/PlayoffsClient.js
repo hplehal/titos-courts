@@ -186,12 +186,6 @@ function DivisionBracket({ division, weeks }) {
                     {formatWeekDate(weekRow.date)}
                   </span>
                 )}
-                {col.round === 2 && (
-                  <span className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-titos-gold/8 text-titos-gold text-[9px] font-bold uppercase tracking-wider leading-none ring-1 ring-titos-gold/20">
-                    <span className="w-1 h-1 rounded-full bg-titos-gold inline-block" aria-hidden="true" />
-                    Parallel · 2 courts
-                  </span>
-                )}
               </div>
 
               <div className={cn(
@@ -256,10 +250,10 @@ function WeekLegend({ weeks }) {
             <span className="text-[10px] uppercase tracking-wider font-bold text-titos-gold bg-titos-gold/15 px-1.5 py-0.5 rounded">SFs + Final</span>
           </div>
           <p className="text-titos-gray-300 text-xs sm:text-sm mt-0.5">
-            Both SFs <span className="font-bold text-titos-gold">at 10:00 PM on two courts in parallel</span>; Final <span className="font-mono">11 PM – 12 AM</span>.
+            Both SFs <span className="font-mono">10:00 PM</span>; Final <span className="font-mono">11 PM – 12 AM</span>.
           </p>
           <p className="text-titos-gray-500 text-[11px] mt-1">
-            {w11?.date ? formatWeekDate(w11.date) : 'Date TBD'} · Extra court bookings TBD
+            {w11?.date ? formatWeekDate(w11.date) : 'Date TBD'} · Courts TBD
           </p>
         </div>
       </div>

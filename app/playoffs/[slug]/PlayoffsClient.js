@@ -66,13 +66,13 @@ function MatchCard({ match }) {
       )}
       data-status={match.status}
     >
-      <div className="px-3 py-1.5 flex items-center justify-between gap-1 border-b border-titos-border/30 bg-titos-elevated/40 text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">
+      <div className="px-3 py-2 sm:py-1.5 flex items-center justify-between gap-2 border-b border-titos-border/30 bg-titos-elevated/40 text-[11px] sm:text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">
         <span className="text-titos-gray-400 truncate">
           {time || '—'}
           {' · '}
           {match.courtNumber
-            ? `C${match.courtNumber}`
-            : <span className="text-titos-gold/80">C TBD</span>}
+            ? <>Court&nbsp;{match.courtNumber}</>
+            : <span className="text-titos-gold/80">Court&nbsp;TBD</span>}
         </span>
         <span className={cn(
           'flex-shrink-0',
@@ -99,18 +99,21 @@ function MatchCard({ match }) {
 function TeamRow({ name, setWins, winner }) {
   return (
     <div className={cn(
-      'flex items-center justify-between gap-2 px-3 py-2',
+      'flex items-center justify-between gap-2 px-3 sm:px-3 py-2.5 sm:py-2 min-h-[44px]',
       winner ? 'bg-titos-gold/10' : '',
     )}>
       <span className={cn(
-        'text-sm font-semibold truncate flex items-center gap-1.5',
+        // Mobile: wrap long names to 2 lines so 'Tacos & Timbits' / 'Ball
+        // Me Maybe' don't get clipped. sm+: keep single-line + truncate so
+        // the bracket tree stays compact.
+        'text-sm sm:text-sm font-semibold flex items-start gap-1.5 min-w-0 leading-tight sm:truncate',
         winner ? 'text-titos-gold' : 'text-titos-white',
       )}>
-        {winner && <Crown className="w-3 h-3 text-titos-gold flex-shrink-0" aria-hidden="true" />}
-        {name}
+        {winner && <Crown className="w-3 h-3 text-titos-gold flex-shrink-0 mt-1 sm:mt-0" aria-hidden="true" />}
+        <span className="break-words sm:truncate">{name}</span>
       </span>
       <span className={cn(
-        'font-display text-base font-black tabular-nums',
+        'font-display text-lg sm:text-base font-black tabular-nums flex-shrink-0',
         winner ? 'text-titos-gold' : 'text-titos-gray-400',
       )}>
         {setWins}
@@ -144,11 +147,16 @@ function DivisionBracket({ division, weeks }) {
         </span>
       </header>
 
-      {/* The bracket grid. We wrap the W11 columns in a shaded band so the
-          'Week 10 → Week 11' transition is visually obvious — the QF
-          column sits in the base background, SF + Final sit in a slightly
-          tinted band with a left border. */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 relative">
+      {/* Layout:
+          • Mobile (< sm): single-column stacked timeline. Each round
+            gets a sticky-looking week header, the cards sit at full
+            width so team names never truncate, and W11 sits on a
+            tinted band with a gold top-rule so the W10 → W11 break
+            is obvious in the vertical flow.
+          • sm+: original 3-column bracket tree. W11 columns share a
+            tinted band with a left border — same visual story but
+            horizontal. */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-3 relative">
         {ROUND_COLUMNS.map((col, idx) => {
           const isW11Start = col.week === 11 && ROUND_COLUMNS[idx - 1]?.week !== 11
           const weekRow = weeks?.[col.week]
@@ -157,19 +165,21 @@ function DivisionBracket({ division, weeks }) {
               key={col.round}
               className={cn(
                 'min-w-0 rounded-lg',
-                col.week === 11 && 'bg-titos-elevated/20 -mx-1 px-2 sm:px-2.5 pt-1 pb-2',
-                isW11Start && 'border-l-2 border-titos-gold/30 sm:border-l-2',
+                // W11 background band — applied on both mobile and desktop.
+                col.week === 11 && 'bg-titos-elevated/20 -mx-1 px-2 sm:px-2.5 pt-2 pb-2',
+                // Mobile: gold TOP rule between W10 and W11. Desktop:
+                // gold LEFT rule between QF and SF.
+                isW11Start && 'border-t-2 sm:border-t-0 sm:border-l-2 border-titos-gold/30 mt-1 sm:mt-0',
               )}
             >
               {/* Column header: explicit week badge + round name + date.
-                  SF column adds a 'Parallel · 2 courts' note so visitors
-                  see that SF1 and SF2 run AT THE SAME TIME on different
-                  courts (not back-to-back on one court). */}
-              <div className="mb-2">
-                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  Larger on mobile because the column is now full-width and
+                  there's room for a real headline rather than a tiny chip. */}
+              <div className="mb-3 sm:mb-2">
+                <div className="flex items-baseline gap-2 flex-wrap">
                   <span
                     className={cn(
-                      'inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider leading-none',
+                      'inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-[9px] font-black uppercase tracking-wider leading-none',
                       col.week === 10
                         ? 'bg-titos-gold/20 text-titos-gold'
                         : 'bg-titos-gold/35 text-titos-gold ring-1 ring-titos-gold/40',
@@ -177,12 +187,12 @@ function DivisionBracket({ division, weeks }) {
                   >
                     Week {col.week}
                   </span>
-                  <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold text-titos-gray-300 truncate">
+                  <span className="text-xs sm:text-[11px] uppercase tracking-wider font-bold text-titos-gray-300">
                     {col.label}
                   </span>
                 </div>
                 {weekRow?.date && (
-                  <span className="block text-[9px] sm:text-[10px] text-titos-gray-500 mt-0.5 truncate">
+                  <span className="block text-[11px] sm:text-[10px] text-titos-gray-500 mt-0.5">
                     {formatWeekDate(weekRow.date)}
                   </span>
                 )}
@@ -190,10 +200,10 @@ function DivisionBracket({ division, weeks }) {
 
               <div className={cn(
                 'flex flex-col gap-3',
-                // Center the SF column vertically so the bracket has the
-                // tournament 'feeder lines' feel without drawing SVG lines.
-                col.round === 2 && 'justify-around min-h-[200px]',
-                col.round === 3 && 'justify-center min-h-[200px]',
+                // Tournament 'feeder lines' look — only on desktop, where the
+                // tree is horizontal. Mobile is a vertical timeline already.
+                col.round === 2 && 'sm:justify-around sm:min-h-[200px]',
+                col.round === 3 && 'sm:justify-center sm:min-h-[200px]',
               )}>
                 {byRound[col.round]?.length > 0 ? byRound[col.round].map(m => (
                   <MatchCard key={m.id} match={m} />

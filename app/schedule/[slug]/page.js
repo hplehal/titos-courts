@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import ScheduleClient from '../ScheduleClient'
 import { getActiveLeagues, getLeagueSchedule } from '@/lib/server/leagues'
+import PlayoffBracketCTA from '@/components/PlayoffBracketCTA'
 
 export const revalidate = 300
 
@@ -55,7 +56,12 @@ export default async function ScheduleLeaguePage({ params }) {
       <p className="sr-only">
         {`Weekly game schedule for the ${label} recreational volleyball league at Tito's Courts in Mississauga. Includes tier assignments, court numbers, opponents, and match times for every week of the season.`}
       </p>
-      <ScheduleClient leagues={leagues} initialSlug={slug} initialData={initialData} />
+      <ScheduleClient
+        leagues={leagues}
+        initialSlug={slug}
+        initialData={initialData}
+        bracketCta={<PlayoffBracketCTA slug={slug} />}
+      />
     </>
   )
 }

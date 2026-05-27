@@ -306,7 +306,7 @@ function SlotGroup({ slot, tiers, myTeam, isMens, leagueSlug }) {
 /* ═══════════════════════════════════════════════
    MAIN SCHEDULE CLIENT
    ═══════════════════════════════════════════════ */
-export default function ScheduleClient({ leagues, initialSlug, initialData }) {
+export default function ScheduleClient({ leagues, initialSlug, initialData, bracketCta = null }) {
   const router = useRouter()
   const [selected, setSelected] = useState(initialSlug || leagues[0]?.slug || '')
   const [schedule, setSchedule] = useState(initialData || null)
@@ -362,6 +362,8 @@ export default function ScheduleClient({ leagues, initialSlug, initialData }) {
   return (
     <div className="py-10 sm:py-12 px-4">
       <div className="max-w-7xl mx-auto">
+        {bracketCta}
+
         <div className="mb-6 sm:mb-8">
           <span className="section-label">Game Nights</span>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-titos-white leading-none">SCHEDULE</h1>

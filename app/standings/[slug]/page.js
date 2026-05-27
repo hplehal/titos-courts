@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import StandingsClient from '../StandingsClient'
 import { getActiveLeagues, getLeagueStandings } from '@/lib/server/leagues'
+import PlayoffBracketCTA from '@/components/PlayoffBracketCTA'
 
 // ISR — revalidate every 5 min. Admin score updates bust the cache via tag.
 export const revalidate = 300
@@ -59,7 +60,12 @@ export default async function StandingsLeaguePage({ params }) {
       <p className="sr-only">
         {`Current standings for the ${label} recreational volleyball league at Tito's Courts in Mississauga. Tracks team performance across Diamond, Platinum, Gold, and Silver divisions at Pakmen Courts and Michael Power High School.`}
       </p>
-      <StandingsClient leagues={leagues} initialSlug={slug} initialData={initialData} />
+      <StandingsClient
+        leagues={leagues}
+        initialSlug={slug}
+        initialData={initialData}
+        bracketCta={<PlayoffBracketCTA slug={slug} />}
+      />
     </>
   )
 }

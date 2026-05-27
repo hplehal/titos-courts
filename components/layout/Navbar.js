@@ -19,6 +19,7 @@ const navLinks = [
   { href: '/tournaments', label: 'Tournaments' },
   { href: '/standings', label: 'Standings' },
   { href: '/schedule', label: 'Schedule' },
+  { href: '/playoffs', label: 'Playoffs' },
   { href: '/results', label: 'Results' },
   { href: '/stats', label: 'Stats' },
   { href: '/rules', label: 'Rules & Info' },

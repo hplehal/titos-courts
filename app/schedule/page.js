@@ -1,5 +1,6 @@
 import ScheduleClient from './ScheduleClient'
 import { getActiveLeagues, getLeagueSchedule } from '@/lib/server/leagues'
+import PlayoffBracketCTA from '@/components/PlayoffBracketCTA'
 
 export const metadata = {
   title: "Volleyball Schedule — Mississauga Indoor League | Tito's Courts",
@@ -30,7 +31,12 @@ export default async function SchedulePage() {
       <p className="sr-only">
         Weekly volleyball schedule for Tito&apos;s Courts recreational leagues in Mississauga. Shows tier assignments, court numbers, opponents, and match times for Tuesday Coed, Sunday Men&apos;s, and Thursday Rec Coed leagues at Pakmen Courts and Michael Power High School.
       </p>
-      <ScheduleClient leagues={leagues} initialSlug={firstSlug} initialData={initialData} />
+      <ScheduleClient
+        leagues={leagues}
+        initialSlug={firstSlug}
+        initialData={initialData}
+        bracketCta={firstSlug ? <PlayoffBracketCTA slug={firstSlug} /> : null}
+      />
     </>
   )
 }

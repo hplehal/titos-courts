@@ -110,12 +110,12 @@ export async function POST(request, { params }) {
       return d
     }
     const w10Time = (gameOrder) => scheduledFor(w10.date, gameOrder === 1 ? '22:00' : '23:00')
-    const w11Time = (stage, gameOrder) => {
+    const w11Time = (stage, _gameOrder) => {
+      // W11 schedule: BOTH SFs tip at 10:00 PM on separate courts so they
+      // can both finish before the Final at 11:00 PM. Admin assigns the
+      // SF2 court once the extra W11 booking is confirmed.
       if (stage === 'final') return scheduledFor(w11.date, '23:00')
-      // SF1 at 10:00 PM, SF2 at 10:30 PM (overlap acceptable when SFs run
-      // on separate courts once the extra courts for W11 are booked;
-      // admin can shift via the season scores editor if needed).
-      return scheduledFor(w11.date, gameOrder === 1 ? '22:00' : '22:30')
+      return scheduledFor(w11.date, '22:00')
     }
 
     // Persist in dependency order: Finals first, then SFs (pointing at

@@ -68,8 +68,11 @@ function MatchCard({ match }) {
     >
       <div className="px-3 py-1.5 flex items-center justify-between gap-1 border-b border-titos-border/30 bg-titos-elevated/40 text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">
         <span className="text-titos-gray-400 truncate">
-          {time ? time : '—'}
-          {match.courtNumber ? ` · C${match.courtNumber}` : ''}
+          {time || '—'}
+          {' · '}
+          {match.courtNumber
+            ? `C${match.courtNumber}`
+            : <span className="text-titos-gold/80">C TBD</span>}
         </span>
         <span className={cn(
           'flex-shrink-0',
@@ -158,7 +161,10 @@ function DivisionBracket({ division, weeks }) {
                 isW11Start && 'border-l-2 border-titos-gold/30 sm:border-l-2',
               )}
             >
-              {/* Column header: explicit week badge + round name + date */}
+              {/* Column header: explicit week badge + round name + date.
+                  SF column adds a 'Parallel · 2 courts' note so visitors
+                  see that SF1 and SF2 run AT THE SAME TIME on different
+                  courts (not back-to-back on one court). */}
               <div className="mb-2">
                 <div className="flex items-baseline gap-1.5 flex-wrap">
                   <span
@@ -178,6 +184,12 @@ function DivisionBracket({ division, weeks }) {
                 {weekRow?.date && (
                   <span className="block text-[9px] sm:text-[10px] text-titos-gray-500 mt-0.5 truncate">
                     {formatWeekDate(weekRow.date)}
+                  </span>
+                )}
+                {col.round === 2 && (
+                  <span className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-titos-gold/8 text-titos-gold text-[9px] font-bold uppercase tracking-wider leading-none ring-1 ring-titos-gold/20">
+                    <span className="w-1 h-1 rounded-full bg-titos-gold inline-block" aria-hidden="true" />
+                    Parallel · 2 courts
                   </span>
                 )}
               </div>
@@ -244,10 +256,10 @@ function WeekLegend({ weeks }) {
             <span className="text-[10px] uppercase tracking-wider font-bold text-titos-gold bg-titos-gold/15 px-1.5 py-0.5 rounded">SFs + Final</span>
           </div>
           <p className="text-titos-gray-300 text-xs sm:text-sm mt-0.5">
-            Top-2 reseed · Championship <span className="font-mono">11 PM – 12 AM</span>
+            Both SFs <span className="font-bold text-titos-gold">at 10:00 PM on two courts in parallel</span>; Final <span className="font-mono">11 PM – 12 AM</span>.
           </p>
           <p className="text-titos-gray-500 text-[11px] mt-1">
-            {w11?.date ? formatWeekDate(w11.date) : 'Date TBD'} · SFs 10:00 / 10:30 PM
+            {w11?.date ? formatWeekDate(w11.date) : 'Date TBD'} · Extra court bookings TBD
           </p>
         </div>
       </div>

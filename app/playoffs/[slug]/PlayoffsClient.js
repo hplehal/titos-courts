@@ -5,9 +5,10 @@
 // the data layer every 30s while the page is open so live score updates
 // surface without a manual refresh.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Crown, Trophy, Calendar } from 'lucide-react'
+import { useMyTeam } from '@/lib/hooks/useMyTeam'
 
 // Round → week mapping. Drives both the legend strip and per-column
 // 'WEEK N' badges. Keep aligned with the playoff generator (W10 = QFs,
@@ -122,7 +123,7 @@ function TeamRow({ name, setWins, winner }) {
   )
 }
 
-function DivisionBracket({ division, weeks }) {
+function DivisionBracket({ division, weeks, isMyDivision }) {
   const accent = DIVISION_ACCENT[division.name] || DIVISION_ACCENT.Diamond
   const byRound = {
     1: division.matches.filter(m => m.roundNumber === 1).sort((a, b) => a.gameOrder - b.gameOrder),
@@ -132,16 +133,29 @@ function DivisionBracket({ division, weeks }) {
 
   return (
     <section
+      id={`division-${division.name.toLowerCase()}`}
       aria-labelledby={`div-${division.tier}-heading`}
-      className={cn('rounded-2xl ring-1 p-4 sm:p-5 mb-8', accent.ring, accent.bg)}
+      className={cn(
+        'rounded-2xl ring-1 p-4 sm:p-5 mb-8 scroll-mt-20',
+        accent.ring,
+        accent.bg,
+        isMyDivision && 'ring-2 ring-titos-gold shadow-lg shadow-titos-gold/10',
+      )}
     >
       <header className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-        <h2
-          id={`div-${division.tier}-heading`}
-          className={cn('font-display text-2xl sm:text-3xl font-black tracking-tight', accent.color)}
-        >
-          {division.name}
-        </h2>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <h2
+            id={`div-${division.tier}-heading`}
+            className={cn('font-display text-2xl sm:text-3xl font-black tracking-tight', accent.color)}
+          >
+            {division.name}
+          </h2>
+          {isMyDivision && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-titos-gold/15 text-titos-gold text-[10px] font-black uppercase tracking-wider ring-1 ring-titos-gold/30">
+              Your division
+            </span>
+          )}
+        </div>
         <span className="text-xs uppercase tracking-wider font-bold text-titos-gray-400 flex items-center gap-1.5">
           {division.court && `Court ${division.court}`}
         </span>
@@ -271,8 +285,145 @@ function WeekLegend({ weeks }) {
   )
 }
 
+function scrollToDivision(divisionName) {
+  if (typeof document === 'undefined') return
+  const el = document.getElementById(`division-${divisionName.toLowerCase()}`)
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+function JumpToDivision({ divisions, myDivisionName, onPickTeam }) {
+  // Compact jump bar — sticky-ish chips so players in Silver don't have
+  // to scroll past three brackets to find theirs. Highlights the user's
+  // own division in gold when known. Includes a 'Pick team' shortcut
+  // that surfaces the team filter (handy when the user hasn't already
+  // told us who they are).
+  return (
+    <nav
+      aria-label="Jump to division"
+      className="flex items-center gap-1.5 sm:gap-2 flex-wrap mb-6 sticky top-2 z-30"
+    >
+      <span className="text-[10px] uppercase tracking-wider font-bold text-titos-gray-500 mr-1">
+        Jump to
+      </span>
+      {divisions.map(d => {
+        const isMine = myDivisionName && d.name === myDivisionName
+        return (
+          <button
+            key={d.tier}
+            type="button"
+            onClick={() => scrollToDivision(d.name)}
+            aria-label={`Scroll to ${d.name} bracket${isMine ? ' (your division)' : ''}`}
+            className={cn(
+              'inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-titos-gold',
+              isMine
+                ? 'bg-titos-gold text-titos-black hover:bg-titos-gold/90 shadow-md shadow-titos-gold/20'
+                : 'bg-titos-card text-titos-gray-300 ring-1 ring-titos-border hover:ring-titos-border-light hover:text-titos-white',
+            )}
+          >
+            {d.name}
+            {isMine && <span className="text-[9px] font-black opacity-80">YOU</span>}
+          </button>
+        )
+      })}
+      {!myDivisionName && (
+        <button
+          type="button"
+          onClick={onPickTeam}
+          className="ml-auto text-[11px] text-titos-gold hover:underline font-semibold cursor-pointer"
+        >
+          Pick your team →
+        </button>
+      )}
+    </nav>
+  )
+}
+
+function TeamPickerModal({ open, onClose, divisions, onPick }) {
+  if (!open) return null
+  const allTeams = []
+  for (const div of divisions) {
+    for (const m of div.matches) {
+      for (const t of [m.homeTeam, m.awayTeam]) {
+        if (t?.name && !allTeams.some(x => x.id === t.id)) {
+          allTeams.push({ id: t.id, name: t.name, division: div.name })
+        }
+      }
+    }
+  }
+  allTeams.sort((a, b) => a.name.localeCompare(b.name))
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="team-picker-heading"
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
+      onClick={onClose}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        className="bg-titos-card border border-titos-border rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col"
+      >
+        <header className="px-5 py-4 border-b border-titos-border/40 flex items-center justify-between">
+          <h2 id="team-picker-heading" className="font-display text-lg font-black text-titos-white">
+            Pick your team
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-titos-gray-400 hover:text-titos-white text-xs cursor-pointer"
+            aria-label="Close"
+          >
+            Close
+          </button>
+        </header>
+        <div className="overflow-y-auto p-2">
+          {allTeams.map(t => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => { onPick(t.name); onClose() }}
+              className="w-full text-left px-3 py-3 rounded-lg hover:bg-titos-elevated/50 transition-colors cursor-pointer flex items-center justify-between gap-3 min-h-[44px]"
+            >
+              <span className="text-titos-white text-sm font-semibold">{t.name}</span>
+              <span className="text-titos-gray-500 text-xs uppercase tracking-wider">{t.division}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function PlayoffsClient({ slug, initialData }) {
   const [data, setData] = useState(initialData)
+  const [myTeam, setMyTeam] = useMyTeam(slug)
+  const [pickerOpen, setPickerOpen] = useState(false)
+
+  // Resolve which division contains the user's team so we can highlight
+  // it AND float it to the top of the stack — Silver players shouldn't
+  // have to scroll past 3 brackets to find theirs.
+  const myDivisionName = useMemo(() => {
+    if (!myTeam) return null
+    for (const div of data.divisions || []) {
+      for (const m of div.matches) {
+        if (m.homeTeam?.name === myTeam || m.awayTeam?.name === myTeam) {
+          return div.name
+        }
+      }
+    }
+    return null
+  }, [myTeam, data.divisions])
+
+  // Reorder: user's division first, then the natural Diamond → Silver order
+  // for everything else. Stable for spectators (no team picked).
+  const orderedDivisions = useMemo(() => {
+    if (!myDivisionName) return data.divisions || []
+    const mine = data.divisions.find(d => d.name === myDivisionName)
+    const others = data.divisions.filter(d => d.name !== myDivisionName)
+    return mine ? [mine, ...others] : data.divisions
+  }, [data.divisions, myDivisionName])
 
   // Soft poll every 30s for live score updates. Stop when the tab is hidden.
   useEffect(() => {
@@ -293,9 +444,25 @@ export default function PlayoffsClient({ slug, initialData }) {
   return (
     <div>
       <WeekLegend weeks={data.weeks} />
-      {data.divisions.map(d => (
-        <DivisionBracket key={d.tier} division={d} weeks={data.weeks} />
+      <JumpToDivision
+        divisions={data.divisions}
+        myDivisionName={myDivisionName}
+        onPickTeam={() => setPickerOpen(true)}
+      />
+      {orderedDivisions.map(d => (
+        <DivisionBracket
+          key={d.tier}
+          division={d}
+          weeks={data.weeks}
+          isMyDivision={myDivisionName === d.name}
+        />
       ))}
+      <TeamPickerModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        divisions={data.divisions}
+        onPick={setMyTeam}
+      />
     </div>
   )
 }

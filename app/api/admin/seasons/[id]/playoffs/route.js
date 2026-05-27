@@ -53,14 +53,27 @@ export async function POST(request, { params }) {
       )
     }
 
-    // Refuse to regenerate
-    const w10 = season.weeks.find(w => w.weekNumber === 10)
-    const w11 = season.weeks.find(w => w.weekNumber === 11)
-    if (!w10 || !w11) {
-      return NextResponse.json(
-        { error: 'Weeks 10 and 11 must exist before generating playoffs. Create them via the season admin first.' },
-        { status: 400 },
-      )
+    // Auto-create W10 and W11 if missing. Both are flagged isPlayoff=true
+    // and dated one week apart starting from W9's date. Admin can edit
+    // the dates afterwards via the seasons editor if those defaults don't
+    // line up with the actual booking calendar.
+    const w9 = season.weeks.find(w => w.weekNumber === 9)
+    const baseDate = w9?.date ? new Date(w9.date) : new Date()
+    let w10 = season.weeks.find(w => w.weekNumber === 10)
+    if (!w10) {
+      const d = new Date(baseDate)
+      d.setDate(d.getDate() + 7)
+      w10 = await prisma.week.create({
+        data: { seasonId: season.id, weekNumber: 10, date: d, isPlayoff: true, status: 'upcoming' },
+      })
+    }
+    let w11 = season.weeks.find(w => w.weekNumber === 11)
+    if (!w11) {
+      const d = new Date(baseDate)
+      d.setDate(d.getDate() + 14)
+      w11 = await prisma.week.create({
+        data: { seasonId: season.id, weekNumber: 11, date: d, isPlayoff: true, status: 'upcoming' },
+      })
     }
     const existing = await prisma.match.count({
       where: { weekId: { in: [w10.id, w11.id] } },

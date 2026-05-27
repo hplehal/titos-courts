@@ -56,17 +56,18 @@ function MatchCard({ match }) {
       )}
       data-status={match.status}
     >
-      <div className="px-3 py-1.5 flex items-center justify-between gap-2 border-b border-titos-border/30 bg-titos-elevated/40 text-[10px] uppercase tracking-wider font-bold">
-        <span className="text-titos-gray-400">
-          {time || '—'}
-          {match.courtNumber ? ` · Court ${match.courtNumber}` : ''}
+      <div className="px-3 py-1.5 flex items-center justify-between gap-1 border-b border-titos-border/30 bg-titos-elevated/40 text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">
+        <span className="text-titos-gray-400 truncate">
+          {time ? time : '—'}
+          {match.courtNumber ? ` · C${match.courtNumber}` : ''}
         </span>
         <span className={cn(
+          'flex-shrink-0',
           match.status === 'live' && 'text-status-live',
           match.status === 'completed' && 'text-status-success',
           match.status === 'scheduled' && 'text-titos-gray-500',
         )}>
-          {match.status === 'completed' ? 'Final' : match.status}
+          {match.status === 'completed' ? 'Final' : match.status === 'scheduled' ? 'Up next' : match.status}
         </span>
       </div>
       <div className="divide-y divide-titos-border/20">

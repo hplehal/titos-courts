@@ -142,6 +142,11 @@ model Match {
   winnerId    String?
   winnerTeam  Team?        @relation("MatchWinner", fields: [winnerId], references: [id])
   courtNumber Int
+  // Per-match start time. Used by playoff matches where the QFs run
+  // sequentially on one court (8 PM / 9 PM) and W11 has SFs at 8 / 9:30
+  // and Final at 11 PM. Regular-season matches leave this null and
+  // inherit the week's start time from the schedule defaults.
+  scheduledTime DateTime?
   // tierNumber doubles as "division index" (1=Diamond, 2=Platinum,
   // 3=Gold, 4=Silver) for playoff matches. Keeps regular-season tier
   // semantics for non-playoff weeks.

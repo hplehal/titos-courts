@@ -1,5 +1,6 @@
 import StandingsClient from './StandingsClient'
 import { getActiveLeagues, getLeagueStandings } from '@/lib/server/leagues'
+import PlayoffBracketCTA from '@/components/PlayoffBracketCTA'
 
 export const metadata = {
   title: "Volleyball League Standings — Mississauga | Tito's Courts",
@@ -32,7 +33,12 @@ export default async function StandingsPage() {
       <p className="sr-only">
         Current standings for Tito&apos;s Courts recreational volleyball leagues in Mississauga. Tracks team performance across Diamond, Platinum, Gold, and Silver divisions for Tuesday Coed, Sunday Men&apos;s, and Thursday Rec Coed leagues at Pakmen Courts.
       </p>
-      <StandingsClient leagues={leagues} initialSlug={firstSlug} initialData={initialData} />
+      <StandingsClient
+        leagues={leagues}
+        initialSlug={firstSlug}
+        initialData={initialData}
+        bracketCta={firstSlug ? <PlayoffBracketCTA slug={firstSlug} /> : null}
+      />
     </>
   )
 }

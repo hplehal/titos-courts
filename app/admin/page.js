@@ -761,6 +761,7 @@ export default function AdminPage() {
             { label: 'Waivers', href: '/admin/waivers', icon: FileText },
             { label: 'Tournaments', href: '/admin/tournaments', icon: Trophy },
             { label: 'Player Stats', href: '/admin/stats', icon: BarChart3 },
+            { label: 'Playoffs', href: '/admin/playoffs', icon: Trophy },
           ].map(l => (
             <Link key={l.label} href={l.href} className="flex items-center gap-1.5 text-titos-gray-500 hover:text-titos-gold transition-colors">
               <l.icon className="w-3.5 h-3.5" />{l.label}

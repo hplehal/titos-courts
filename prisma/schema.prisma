@@ -58,6 +58,7 @@ model Team {
   homeMatches    Match[]         @relation("HomeTeam")
   awayMatches    Match[]         @relation("AwayTeam")
   refMatches     Match[]         @relation("RefTeam")
+  wonMatches     Match[]         @relation("MatchWinner")
   createdAt      DateTime        @default(now())
 
   @@unique([seasonId, slug])
@@ -123,17 +124,48 @@ model Match {
   id          String       @id @default(cuid())
   weekId      String
   week        Week         @relation(fields: [weekId], references: [id])
-  homeTeamId  String
-  homeTeam    Team         @relation("HomeTeam", fields: [homeTeamId], references: [id])
-  awayTeamId  String
-  awayTeam    Team         @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  // homeTeamId / awayTeamId are nullable so playoff bracket shells can be
+  // created before their teams are known (SF and Final feeders wait for
+  // upstream QFs to finalize). Regular-season seeder still always sets
+  // both — null here means "team to be determined."
+  homeTeamId  String?
+  homeTeam    Team?        @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeamId  String?
+  awayTeam    Team?        @relation("AwayTeam", fields: [awayTeamId], references: [id])
   refTeamId   String?
   refTeam     Team?        @relation("RefTeam", fields: [refTeamId], references: [id])
-  courtNumber Int
+  // Display labels for empty slots, e.g. '1 Seed' / 'W QF1'. Rendered when
+  // the corresponding team is still null. Set by the playoff generator.
+  homeSeedLabel String?
+  awaySeedLabel String?
+  // Winner team — set when status flips to FINAL. Drives advancement.
+  winnerId    String?
+  winnerTeam  Team?        @relation("MatchWinner", fields: [winnerId], references: [id])
+  // Nullable so playoff shells can be created with court TBD — admin
+  // assigns the actual court once the extra W11 bookings are confirmed.
+  // Regular-season matches always set a court at seed time.
+  courtNumber Int?
+  // Per-match start time. Used by playoff matches where the QFs run
+  // sequentially on one court (10 PM / 11 PM) and W11 SFs run in
+  // parallel at 10 PM with Final at 11 PM. Regular-season matches leave
+  // this null and inherit the week's start time from schedule defaults.
+  scheduledTime DateTime?
+  // tierNumber doubles as "division index" (1=Diamond, 2=Platinum,
+  // 3=Gold, 4=Silver) for playoff matches. Keeps regular-season tier
+  // semantics for non-playoff weeks.
   tierNumber  Int
+  // roundNumber doubles as "playoff round" for playoff weeks
+  // (1=QF, 2=SF, 3=Final). Regular-season meaning unchanged.
   roundNumber Int
   gameOrder   Int
   status      String       @default("scheduled")
+  // Bracket advancement: winner of THIS match goes into nextMatch.
+  // Populated when the playoff bracket is generated; null for regular
+  // season matches. The empty slot (home vs away) is resolved by
+  // advanceLeaguePlayoffWinner based on reseeding rules.
+  nextMatchId String?
+  nextMatch   Match?       @relation("MatchAdvance", fields: [nextMatchId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  feeders     Match[]      @relation("MatchAdvance")
   scores      SetScore[]
   playerStats PlayerStat[]
   createdAt   DateTime     @default(now())
@@ -142,6 +174,7 @@ model Match {
   @@index([homeTeamId])
   @@index([awayTeamId])
   @@index([refTeamId])
+  @@index([nextMatchId])
   @@index([weekId, tierNumber, gameOrder])
 }
 

@@ -230,7 +230,7 @@ function SlotDivider({ label, color }) {
 
 /* ─── Main Component ─── */
 
-export default function StandingsClient({ leagues, initialSlug, initialData }) {
+export default function StandingsClient({ leagues, initialSlug, initialData, bracketCta = null }) {
   const router = useRouter()
   const initialForSelected = initialData && initialSlug === (initialSlug || leagues[0]?.slug || '')
   const [selected, setSelected] = useState(initialSlug || leagues[0]?.slug || '')
@@ -267,6 +267,12 @@ export default function StandingsClient({ leagues, initialSlug, initialData }) {
   return (
     <div className="py-12 px-4">
       <div className="max-w-6xl mx-auto">
+        {/* Server-rendered playoff bracket CTA — only renders when the
+            current league has a generated bracket. Sits above the
+            heading so it's the first thing people see when they show
+            up looking for their seeding. */}
+        {bracketCta}
+
         <SectionHeading label="RANKINGS" title="Season Standings" description="Overall league standings and current tier placements." />
 
         <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">

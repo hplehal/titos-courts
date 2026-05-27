@@ -87,9 +87,35 @@ export async function POST(request) {
     try {
       const match = await prisma.match.findUnique({
         where: { id: matchId },
-        select: { weekId: true },
+        select: { weekId: true, nextMatchId: true, homeTeamId: true, awayTeamId: true, status: true },
       })
       if (match?.weekId) await revalidateLeagueByWeek(match.weekId)
+
+      // Playoff advancement: when a match with a nextMatchId goes FINAL, we
+      // need to derive winnerId from the saved scores, persist it, then
+      // drop the winner into the next match's empty slot (reseeding via
+      // advancePlayoffWinner). Regular-season matches have nextMatchId
+      // null so this branch is skipped.
+      if (match?.nextMatchId && (status === 'completed' || match.status === 'completed')) {
+        const allScores = await prisma.setScore.findMany({
+          where: { matchId },
+          orderBy: { setNumber: 'asc' },
+        })
+        let setsHome = 0, setsAway = 0
+        for (const s of allScores) {
+          if (!Number.isFinite(s.homeScore) || !Number.isFinite(s.awayScore)) continue
+          if (s.homeScore > s.awayScore) setsHome++
+          else if (s.awayScore > s.homeScore) setsAway++
+        }
+        let winnerId = null
+        if (setsHome > setsAway) winnerId = match.homeTeamId
+        else if (setsAway > setsHome) winnerId = match.awayTeamId
+        if (winnerId) {
+          await prisma.match.update({ where: { id: matchId }, data: { winnerId } })
+          const { advancePlayoffWinner } = await import('@/lib/league/advancePlayoffWinner')
+          await advancePlayoffWinner(matchId)
+        }
+      }
     } catch (_e) {/* non-fatal */}
 
     return NextResponse.json({ success: true })

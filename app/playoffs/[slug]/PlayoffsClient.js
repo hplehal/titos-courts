@@ -7,13 +7,23 @@
 
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Crown, Trophy } from 'lucide-react'
+import { Crown, Trophy, Calendar } from 'lucide-react'
 
+// Round → week mapping. Drives both the legend strip and per-column
+// 'WEEK N' badges. Keep aligned with the playoff generator (W10 = QFs,
+// W11 = SFs + Final).
 const ROUND_COLUMNS = [
-  { round: 1, label: 'Quarterfinals', slots: 2 },
-  { round: 2, label: 'Semifinals',    slots: 2 },
-  { round: 3, label: 'Final',          slots: 1 },
+  { round: 1, label: 'Quarterfinals', short: 'QF', slots: 2, week: 10 },
+  { round: 2, label: 'Semifinals',    short: 'SF', slots: 2, week: 11 },
+  { round: 3, label: 'Final',         short: 'F',  slots: 1, week: 11 },
 ]
+
+function formatWeekDate(iso) {
+  if (!iso) return null
+  try {
+    return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  } catch { return null }
+}
 
 const DIVISION_ACCENT = {
   Diamond:  { color: 'text-div-diamond',  ring: 'ring-div-diamond/30',  bg: 'bg-div-diamond/[0.04]' },
@@ -106,7 +116,7 @@ function TeamRow({ name, setWins, winner }) {
   )
 }
 
-function DivisionBracket({ division }) {
+function DivisionBracket({ division, weeks }) {
   const accent = DIVISION_ACCENT[division.name] || DIVISION_ACCENT.Diamond
   const byRound = {
     1: division.matches.filter(m => m.roundNumber === 1).sort((a, b) => a.gameOrder - b.gameOrder),
@@ -131,30 +141,117 @@ function DivisionBracket({ division }) {
         </span>
       </header>
 
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        {ROUND_COLUMNS.map(col => (
-          <div key={col.round} className="min-w-0">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-titos-gray-500 block mb-2">
-              {col.label}
-            </span>
-            <div className={cn(
-              'flex flex-col gap-3',
-              // Center the SF column visually so the bracket has a tournament feel
-              col.round === 2 && 'justify-around min-h-[200px]',
-              col.round === 3 && 'justify-center min-h-[200px]',
-            )}>
-              {byRound[col.round]?.length > 0 ? byRound[col.round].map(m => (
-                <MatchCard key={m.id} match={m} />
-              )) : Array.from({ length: col.slots }).map((_, i) => (
-                <article key={i} className="rounded-lg bg-titos-elevated/30 ring-1 ring-titos-border/20 px-3 py-4 text-center text-xs text-titos-gray-500">
-                  TBD
-                </article>
-              ))}
+      {/* The bracket grid. We wrap the W11 columns in a shaded band so the
+          'Week 10 → Week 11' transition is visually obvious — the QF
+          column sits in the base background, SF + Final sit in a slightly
+          tinted band with a left border. */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 relative">
+        {ROUND_COLUMNS.map((col, idx) => {
+          const isW11Start = col.week === 11 && ROUND_COLUMNS[idx - 1]?.week !== 11
+          const weekRow = weeks?.[col.week]
+          return (
+            <div
+              key={col.round}
+              className={cn(
+                'min-w-0 rounded-lg',
+                col.week === 11 && 'bg-titos-elevated/20 -mx-1 px-2 sm:px-2.5 pt-1 pb-2',
+                isW11Start && 'border-l-2 border-titos-gold/30 sm:border-l-2',
+              )}
+            >
+              {/* Column header: explicit week badge + round name + date */}
+              <div className="mb-2">
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <span
+                    className={cn(
+                      'inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider leading-none',
+                      col.week === 10
+                        ? 'bg-titos-gold/20 text-titos-gold'
+                        : 'bg-titos-gold/35 text-titos-gold ring-1 ring-titos-gold/40',
+                    )}
+                  >
+                    Week {col.week}
+                  </span>
+                  <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold text-titos-gray-300 truncate">
+                    {col.label}
+                  </span>
+                </div>
+                {weekRow?.date && (
+                  <span className="block text-[9px] sm:text-[10px] text-titos-gray-500 mt-0.5 truncate">
+                    {formatWeekDate(weekRow.date)}
+                  </span>
+                )}
+              </div>
+
+              <div className={cn(
+                'flex flex-col gap-3',
+                // Center the SF column vertically so the bracket has the
+                // tournament 'feeder lines' feel without drawing SVG lines.
+                col.round === 2 && 'justify-around min-h-[200px]',
+                col.round === 3 && 'justify-center min-h-[200px]',
+              )}>
+                {byRound[col.round]?.length > 0 ? byRound[col.round].map(m => (
+                  <MatchCard key={m.id} match={m} />
+                )) : Array.from({ length: col.slots }).map((_, i) => (
+                  <article key={i} className="rounded-lg bg-titos-elevated/30 ring-1 ring-titos-border/20 px-3 py-4 text-center text-xs text-titos-gray-500">
+                    TBD
+                  </article>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </section>
+  )
+}
+
+function WeekLegend({ weeks }) {
+  // Mini "what happens when" strip. Names each week explicitly and pairs
+  // it with the rounds it hosts, so even a brand-new visitor can answer
+  // 'which matches are tomorrow night?' without scrolling each bracket.
+  const w10 = weeks?.[10]
+  const w11 = weeks?.[11]
+  return (
+    <div
+      role="group"
+      aria-label="Playoff schedule legend"
+      className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6"
+    >
+      <div className="rounded-xl bg-titos-card ring-1 ring-titos-border/40 p-4 flex items-start gap-3">
+        <div className="w-9 h-9 rounded-lg bg-titos-gold/15 text-titos-gold flex items-center justify-center flex-shrink-0">
+          <Calendar className="w-4 h-4" aria-hidden="true" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="font-display text-base font-black text-titos-white">Week 10</span>
+            <span className="text-[10px] uppercase tracking-wider font-bold text-titos-gold bg-titos-gold/15 px-1.5 py-0.5 rounded">QFs</span>
+          </div>
+          <p className="text-titos-gray-300 text-xs sm:text-sm mt-0.5">
+            <span className="font-mono">3 vs 6</span> · <span className="font-mono">4 vs 5</span> per division
+          </p>
+          <p className="text-titos-gray-500 text-[11px] mt-1">
+            {w10?.date ? formatWeekDate(w10.date) : 'Date TBD'} · 10:00 PM / 11:00 PM
+          </p>
+        </div>
+      </div>
+      <div className="rounded-xl bg-titos-card ring-1 ring-titos-gold/30 p-4 flex items-start gap-3">
+        <div className="w-9 h-9 rounded-lg bg-titos-gold/25 text-titos-gold flex items-center justify-center flex-shrink-0">
+          <Trophy className="w-4 h-4" aria-hidden="true" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="font-display text-base font-black text-titos-white">Week 11</span>
+            <span className="text-[10px] uppercase tracking-wider font-bold text-titos-gold bg-titos-gold/15 px-1.5 py-0.5 rounded">SFs + Final</span>
+          </div>
+          <p className="text-titos-gray-300 text-xs sm:text-sm mt-0.5">
+            Top-2 reseed · Championship <span className="font-mono">11 PM – 12 AM</span>
+          </p>
+          <p className="text-titos-gray-500 text-[11px] mt-1">
+            {w11?.date ? formatWeekDate(w11.date) : 'Date TBD'} · SFs 10:00 / 10:30 PM
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -179,8 +276,9 @@ export default function PlayoffsClient({ slug, initialData }) {
 
   return (
     <div>
+      <WeekLegend weeks={data.weeks} />
       {data.divisions.map(d => (
-        <DivisionBracket key={d.tier} division={d} />
+        <DivisionBracket key={d.tier} division={d} weeks={data.weeks} />
       ))}
     </div>
   )

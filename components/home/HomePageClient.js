@@ -83,7 +83,7 @@ const steps = [
   { num: '01', title: 'REGISTER', desc: 'Sign up with 6+ players. Pick your league night. Pay via e-transfer.', icon: Users },
   { num: '02', title: 'GET PLACED', desc: 'Week 1 placement matches seed your team into a tier of 3 based on skill.', icon: Target },
   { num: '03', title: 'COMPETE', desc: 'Play weekly. Win = move up a tier. Lose = drop down. Every game counts.', icon: Zap },
-  { num: '04', title: 'PLAYOFFS', desc: '5 divisions from Diamond to Bronze. Season-end championship brackets.', icon: Trophy },
+  { num: '04', title: 'PLAYOFFS', desc: '4 divisions from Diamond to Silver. Season-end championship brackets.', icon: Trophy },
 ]
 
 const stats = [

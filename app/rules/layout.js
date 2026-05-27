@@ -45,7 +45,7 @@ const faqJsonLd = {
       name: 'What happens in the playoffs?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: "End-of-season standings determine your playoff division: Diamond, Platinum, Gold, Silver, or Bronze. Each division plays its own single-elimination bracket.",
+        text: "End-of-season standings determine your playoff division: Diamond, Platinum, Gold, or Silver. Each division plays its own single-elimination bracket — top-2 byes, 3v6 + 4v5 quarterfinals, then SF + Final.",
       },
     },
     {

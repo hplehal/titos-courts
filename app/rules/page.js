@@ -59,10 +59,10 @@ const sections = [
     icon: Trophy, title: 'Playoff Format',
     items: [
       'Final overall standings determine playoff division placement',
-      '5 divisions: Diamond, Platinum, Gold, Silver, Bronze — cutoffs scale with total teams per league',
+      '4 divisions: Diamond, Platinum, Gold, Silver — 6 teams per division on a 24-team COED season',
       'Division cutoffs scale with the total number of teams that season',
-      'Single-elimination brackets within each division',
-      'Week 11 is playoff week — every team competes for their division championship',
+      'Single-elimination brackets within each division: top-2 byes, 3v6 + 4v5 in the QFs, SF + Final reseeded',
+      'Weeks 10 + 11 are playoff weeks (W10 = QFs, W11 = SF + Final, championship at 11 PM)',
     ],
   },
   {

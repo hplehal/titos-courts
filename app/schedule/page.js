@@ -1,6 +1,6 @@
 import ScheduleClient from './ScheduleClient'
 import { getActiveLeagues, getLeagueSchedule } from '@/lib/server/leagues'
-import PlayoffBracketCTA from '@/components/PlayoffBracketCTA'
+import { getLeaguePlayoffs } from '@/lib/server/playoffs'
 
 export const metadata = {
   title: "Volleyball Schedule — Mississauga Indoor League | Tito's Courts",
@@ -25,7 +25,12 @@ export const revalidate = 300
 export default async function SchedulePage() {
   const leagues = await getActiveLeagues()
   const firstSlug = leagues[0]?.slug
-  const initialData = firstSlug ? await getLeagueSchedule(firstSlug) : null
+  const [initialData, playoffData] = firstSlug
+    ? await Promise.all([
+        getLeagueSchedule(firstSlug),
+        getLeaguePlayoffs(firstSlug).catch(() => null),
+      ])
+    : [null, null]
   return (
     <>
       <p className="sr-only">
@@ -35,7 +40,7 @@ export default async function SchedulePage() {
         leagues={leagues}
         initialSlug={firstSlug}
         initialData={initialData}
-        bracketCta={firstSlug ? <PlayoffBracketCTA slug={firstSlug} /> : null}
+        playoffData={playoffData}
       />
     </>
   )

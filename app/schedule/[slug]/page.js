@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import ScheduleClient from '../ScheduleClient'
 import { getActiveLeagues, getLeagueSchedule } from '@/lib/server/leagues'
-import PlayoffBracketCTA from '@/components/PlayoffBracketCTA'
+import { getLeaguePlayoffs } from '@/lib/server/playoffs'
 
 export const revalidate = 300
 
@@ -43,9 +43,10 @@ export async function generateMetadata({ params }) {
 
 export default async function ScheduleLeaguePage({ params }) {
   const { slug } = await params
-  const [leagues, initialData] = await Promise.all([
+  const [leagues, initialData, playoffData] = await Promise.all([
     getActiveLeagues(),
     getLeagueSchedule(slug),
+    getLeaguePlayoffs(slug).catch(() => null),
   ])
 
   if (!leagues.some(l => l.slug === slug)) notFound()
@@ -60,7 +61,7 @@ export default async function ScheduleLeaguePage({ params }) {
         leagues={leagues}
         initialSlug={slug}
         initialData={initialData}
-        bracketCta={<PlayoffBracketCTA slug={slug} />}
+        playoffData={playoffData}
       />
     </>
   )

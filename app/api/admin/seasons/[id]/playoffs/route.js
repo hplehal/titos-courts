@@ -255,8 +255,12 @@ async function computeEndOfSeasonStandings(seasonId) {
       tiers: { orderBy: { tierNumber: 'asc' } },
       weeks: {
         where: {
+          // Defense in depth: weekNumber filter is the authoritative bound,
+          // but isPlayoff:false guards against any future week-renumbering
+          // that might let a playoff week slip into the standings input.
           weekNumber: { lte: REGULAR_SEASON_WEEKS },
           status: 'completed',
+          isPlayoff: false,
         },
         include: {
           matches: {

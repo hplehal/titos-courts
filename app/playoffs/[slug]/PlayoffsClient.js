@@ -60,9 +60,20 @@ function setWinsTally(scores) {
   return { h, a }
 }
 
+// Pull a numeric seed out of a seed label like "Diamond 3" → 3. Returns
+// null for non-seed placeholders ("Lower QF Winner", "W SF1", etc.).
+function seedFromLabel(label) {
+  const m = (label || '').match(/\b(\d+)\s*$/)
+  return m ? Number(m[1]) : null
+}
+
 function MatchCard({ match }) {
   const home = match.homeTeam?.name || match.homeSeedLabel || 'TBD'
   const away = match.awayTeam?.name || match.awaySeedLabel || 'TBD'
+  // Seed/rank — shown as a badge so the ranking stays visible even after
+  // the real team name replaces the seed label.
+  const homeSeed = seedFromLabel(match.homeSeedLabel)
+  const awaySeed = seedFromLabel(match.awaySeedLabel)
   const homeWon = match.status === 'completed' && match.winnerId && match.winnerId === match.homeTeamId
   const awayWon = match.status === 'completed' && match.winnerId && match.winnerId === match.awayTeamId
   const { h, a } = setWinsTally(match.scores)
@@ -98,8 +109,8 @@ function MatchCard({ match }) {
         </span>
       </div>
       <div className="divide-y divide-titos-border/20">
-        <TeamRow name={home} setWins={h} winner={homeWon} />
-        <TeamRow name={away} setWins={a} winner={awayWon} />
+        <TeamRow name={home} seed={homeSeed} setWins={h} winner={homeWon} />
+        <TeamRow name={away} seed={awaySeed} setWins={a} winner={awayWon} />
       </div>
       {(setLine || match.refTeam?.name || match.refSeedLabel) && (
         <div className="px-3 py-1 flex items-center justify-between gap-2 text-[10px] text-titos-gray-500 border-t border-titos-border/20">
@@ -117,7 +128,7 @@ function MatchCard({ match }) {
   )
 }
 
-function TeamRow({ name, setWins, winner }) {
+function TeamRow({ name, seed, setWins, winner }) {
   return (
     <div className={cn(
       'flex items-center justify-between gap-2 px-3 sm:px-3 py-2.5 sm:py-2 min-h-[44px]',
@@ -131,6 +142,17 @@ function TeamRow({ name, setWins, winner }) {
         winner ? 'text-titos-gold' : 'text-titos-white',
       )}>
         {winner && <Crown className="w-3 h-3 text-titos-gold flex-shrink-0 mt-1 sm:mt-0" aria-hidden="true" />}
+        {/* Seed/rank badge — keeps the division ranking visible next to the
+            team name. Hidden for placeholder slots that have no seed. */}
+        {seed != null && (
+          <span
+            className="flex-shrink-0 mt-0.5 sm:mt-0 inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 rounded bg-titos-elevated text-[10px] font-black text-titos-gray-300 tabular-nums leading-none"
+            aria-label={`Seed ${seed}`}
+            title={`Seed ${seed}`}
+          >
+            {seed}
+          </span>
+        )}
         <span className="break-words sm:truncate">{name}</span>
       </span>
       <span className={cn(

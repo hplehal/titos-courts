@@ -117,21 +117,28 @@ for (const tier of [1, 2]) {
     weekId: w11.id, tierNumber: tier, status: 'scheduled', ...data,
   } })
 
+  // Final ref = loser of the SF on the Final's court. The Final sits on
+  // sf1Court in both divisions, so that's the loser of SF1.
   const final = await mk({
     roundNumber: PLAYOFF_ROUND.FINAL, gameOrder: 1, courtNumber: L.finalCourt, scheduledTime: F_TIME,
     homeTeamId: null, awayTeamId: null, homeSeedLabel: 'W SF1', awaySeedLabel: 'W SF2',
+    refSeedLabel: L.finalCourt === L.sf1Court ? 'Loser of SF1' : 'Loser of SF2',
   })
+  // Ref placeholder for each SF = loser of the QF played on that SF's court
+  // ("loser refs the next game on this court"). 3v6 = QF1, 4v5 = QF2.
+  const sfRefLabel = (sfCourt) => (sfCourt === L.qf1Court ? 'Loser of 3v6' : 'Loser of 4v5')
+
   // SF1: seed 1 (home) v lower-ranked QF winner (away). Court = sf1Court.
   const sf1 = await mk({
     roundNumber: PLAYOFF_ROUND.SF, gameOrder: 1, courtNumber: L.sf1Court, scheduledTime: SF_TIME,
     homeTeamId: s1.id, awayTeamId: null, homeSeedLabel: `${L.name} 1`, awaySeedLabel: 'Lower QF Winner',
-    nextMatchId: final.id,
+    refSeedLabel: sfRefLabel(L.sf1Court), nextMatchId: final.id,
   })
   // SF2: seed 2 (home) v higher-ranked QF winner (away). Court = sf2Court.
   const sf2 = await mk({
     roundNumber: PLAYOFF_ROUND.SF, gameOrder: 2, courtNumber: L.sf2Court, scheduledTime: SF_TIME,
     homeTeamId: s2.id, awayTeamId: null, homeSeedLabel: `${L.name} 2`, awaySeedLabel: 'Higher QF Winner',
-    nextMatchId: final.id,
+    refSeedLabel: sfRefLabel(L.sf2Court), nextMatchId: final.id,
   })
   // QF1: 3 v 6, ref = seed 2. Court = qf1Court. Feeds SF1 (reseed corrects).
   await mk({

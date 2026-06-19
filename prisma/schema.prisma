@@ -138,6 +138,10 @@ model Match {
   // the corresponding team is still null. Set by the playoff generator.
   homeSeedLabel String?
   awaySeedLabel String?
+  // Placeholder for the ref before it's known, e.g. 'Loser of 4v5'. The
+  // playoff ref rotation ("loser refs the next game on this court") fills
+  // refTeamId once the feeding match finalizes; until then this label shows.
+  refSeedLabel  String?
   // Winner team — set when status flips to FINAL. Drives advancement.
   winnerId    String?
   winnerTeam  Team?        @relation("MatchWinner", fields: [winnerId], references: [id])

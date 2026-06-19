@@ -101,10 +101,14 @@ function MatchCard({ match }) {
         <TeamRow name={home} setWins={h} winner={homeWon} />
         <TeamRow name={away} setWins={a} winner={awayWon} />
       </div>
-      {(setLine || match.refTeam?.name) && (
+      {(setLine || match.refTeam?.name || match.refSeedLabel) && (
         <div className="px-3 py-1 flex items-center justify-between gap-2 text-[10px] text-titos-gray-500 border-t border-titos-border/20">
-          {match.refTeam?.name
-            ? <span className="truncate">Ref: <span className="text-titos-gray-400">{match.refTeam.name}</span></span>
+          {(match.refTeam?.name || match.refSeedLabel)
+            ? <span className="truncate">Ref:{' '}
+                <span className={match.refTeam?.name ? 'text-titos-gray-400' : 'text-titos-gray-500 italic'}>
+                  {match.refTeam?.name || match.refSeedLabel}
+                </span>
+              </span>
             : <span aria-hidden="true" />}
           {setLine && <span className="font-mono flex-shrink-0">{setLine}</span>}
         </div>

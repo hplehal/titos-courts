@@ -106,19 +106,49 @@ describe('advancePlayoffWinner — QF→SF reseed', () => {
 })
 
 describe('advancePlayoffWinner — SF→Final', () => {
-  it('SF1 winner is home, SF2 winner is away in the Final', async () => {
+  // SF1 on Court 6 feeds the Final on Court 6; SF2 on Court 8 feeds the
+  // same Final. The Final's ref should be the SF1 loser (same court), not
+  // the SF2 loser (different court).
+  function finalFixture() {
     const weeks = { w11: { id: 'w11', seasonId: 's1' } }
     const matches = [
-      { id: 'sf1', weekId: 'w11', tierNumber: 1, roundNumber: 2, gameOrder: 1,
+      { id: 'sf1', weekId: 'w11', tierNumber: 1, roundNumber: 2, gameOrder: 1, courtNumber: 6,
         status: 'completed', winnerId: 't1', homeTeamId: 't1', awayTeamId: 't4',
         homeSeedLabel: 'Diamond 1', awaySeedLabel: 'Lower QF Winner', nextMatchId: 'final' },
-      { id: 'final', weekId: 'w11', tierNumber: 1, roundNumber: 3, gameOrder: 1,
-        status: 'scheduled', winnerId: null, homeTeamId: null, awayTeamId: null,
+      { id: 'sf2', weekId: 'w11', tierNumber: 1, roundNumber: 2, gameOrder: 2, courtNumber: 8,
+        status: 'completed', winnerId: 't2', homeTeamId: 't2', awayTeamId: 't3',
+        homeSeedLabel: 'Diamond 2', awaySeedLabel: 'Higher QF Winner', nextMatchId: 'final' },
+      { id: 'final', weekId: 'w11', tierNumber: 1, roundNumber: 3, gameOrder: 1, courtNumber: 6,
+        status: 'scheduled', winnerId: null, homeTeamId: null, awayTeamId: null, refTeamId: null,
         homeSeedLabel: 'W SF1', awaySeedLabel: 'W SF2', nextMatchId: null },
     ]
-    const prisma = makePrisma({ weeks, matches })
+    return { weeks, matches }
+  }
+
+  it('SF1 winner is home, SF2 winner is away in the Final', async () => {
+    const fx = finalFixture()
+    const prisma = makePrisma(fx)
+    await advancePlayoffWinner('sf1', prisma)
+    await advancePlayoffWinner('sf2', prisma)
+    const final = fx.matches.find(m => m.id === 'final')
+    expect(final.homeTeamId).toBe('t1')
+    expect(final.awayTeamId).toBe('t2')
+  })
+
+  it('the SF loser on the Final court refs the Final', async () => {
+    const fx = finalFixture()
+    const prisma = makePrisma(fx)
     const res = await advancePlayoffWinner('sf1', prisma)
-    expect(res.advanced).toBe(true)
-    expect(matches.find(m => m.id === 'final').homeTeamId).toBe('t1')
+    expect(res.refAssigned).toBe(true)
+    // SF1 (Court 6) loser = t4 → refs the Final (Court 6).
+    expect(fx.matches.find(m => m.id === 'final').refTeamId).toBe('t4')
+  })
+
+  it('the SF on a DIFFERENT court than the Final does NOT set the ref', async () => {
+    const fx = finalFixture()
+    const prisma = makePrisma(fx)
+    const res = await advancePlayoffWinner('sf2', prisma) // Court 8 ≠ Final Court 6
+    expect(res.refAssigned).toBe(false)
+    expect(fx.matches.find(m => m.id === 'final').refTeamId).toBe(null)
   })
 })

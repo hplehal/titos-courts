@@ -1,0 +1,196 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import {
+  Shield, LayoutDashboard, Calendar, Users, FileText, Trophy,
+  ExternalLink, LogOut, Menu, X, Loader2,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+const NAV_ITEMS = [
+  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+  { href: '/admin/seasons', label: 'Seasons & Teams', icon: Calendar },
+  { href: '/admin/registrations', label: 'Registrations', icon: Users },
+  { href: '/admin/waivers', label: 'Waivers', icon: FileText },
+  { href: '/admin/tournaments', label: 'Tournaments', icon: Trophy },
+]
+
+function AuthGate({ onAuth }) {
+  const [pw, setPw] = useState('')
+  const [err, setErr] = useState('')
+  const [checking, setChecking] = useState(false)
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setChecking(true)
+    setErr('')
+    try {
+      const res = await fetch('/api/admin/auth', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw }),
+      })
+      if (res.ok) { sessionStorage.setItem('admin_auth', 'true'); onAuth() }
+      else setErr('Invalid password')
+    } catch { setErr('Connection error') }
+    setChecking(false)
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 bg-titos-surface">
+      <div className="w-full max-w-sm">
+        <div className="card-flat rounded-2xl p-8">
+          <div className="text-center mb-6">
+            <div className="w-12 h-12 rounded-xl bg-titos-gold/15 border border-titos-gold/30 flex items-center justify-center mx-auto mb-4">
+              <Shield className="w-6 h-6 text-titos-gold" />
+            </div>
+            <h1 className="font-display text-xl font-black text-titos-white">Tito&apos;s Courts Admin</h1>
+            <p className="text-titos-gray-400 text-sm mt-1">Sign in to manage leagues</p>
+          </div>
+          <form onSubmit={submit} className="space-y-4">
+            <input
+              type="password" value={pw} onChange={e => setPw(e.target.value)}
+              placeholder="Password" autoFocus
+              className="w-full px-4 py-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-white placeholder-titos-gray-500 focus:outline-none focus:border-titos-gold/50"
+            />
+            {err && <p className="text-status-live text-sm text-center">{err}</p>}
+            <button type="submit" disabled={checking} className="w-full btn-primary justify-center disabled:opacity-60">
+              {checking ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {checking ? 'Checking...' : 'Sign In'}
+            </button>
+          </form>
+        </div>
+        <p className="text-center text-titos-gray-500 text-xs mt-4">
+          <Link href="/" className="hover:text-titos-gray-300 transition-colors">← Back to titoscourts.com</Link>
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function NavLinks({ pathname, onNavigate }) {
+  return (
+    <nav className="flex-1 px-3 py-4 space-y-1">
+      {NAV_ITEMS.map(item => {
+        const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
+        return (
+          <Link
+            key={item.href} href={item.href} onClick={onNavigate}
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors',
+              active
+                ? 'bg-titos-gold/10 text-titos-gold'
+                : 'text-titos-gray-400 hover:text-titos-white hover:bg-titos-white/[0.04]'
+            )}
+          >
+            <item.icon className="w-4 h-4 flex-shrink-0" />
+            {item.label}
+            {active && <span className="ml-auto w-1 h-4 rounded-full bg-titos-gold" />}
+          </Link>
+        )
+      })}
+    </nav>
+  )
+}
+
+function SidebarFooter({ onSignOut }) {
+  return (
+    <div className="px-3 py-4 border-t border-titos-border/40 space-y-1">
+      <a
+        href="/" target="_blank" rel="noopener noreferrer"
+        className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-titos-gray-400 hover:text-titos-white hover:bg-titos-white/[0.04] transition-colors"
+      >
+        <ExternalLink className="w-4 h-4" /> View Site
+      </a>
+      <button
+        onClick={onSignOut}
+        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-titos-gray-400 hover:text-status-live hover:bg-status-live/[0.06] transition-colors"
+      >
+        <LogOut className="w-4 h-4" /> Sign Out
+      </button>
+    </div>
+  )
+}
+
+function Brand() {
+  return (
+    <div className="flex items-center gap-3 px-5 h-16 border-b border-titos-border/40">
+      <div className="w-8 h-8 rounded-lg bg-titos-gold/15 border border-titos-gold/30 flex items-center justify-center flex-shrink-0">
+        <Shield className="w-4 h-4 text-titos-gold" />
+      </div>
+      <div className="leading-tight">
+        <p className="font-display text-sm font-black text-titos-white">Tito&apos;s Courts</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-titos-gray-500">Admin Panel</p>
+      </div>
+    </div>
+  )
+}
+
+export default function AdminShell({ children }) {
+  const [authed, setAuthed] = useState(false)
+  const [checked, setChecked] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const pathname = usePathname()
+
+  useEffect(() => {
+    if (sessionStorage.getItem('admin_auth') === 'true') setAuthed(true)
+    setChecked(true)
+  }, [])
+
+  useEffect(() => { setMobileOpen(false) }, [pathname])
+
+  const signOut = () => {
+    sessionStorage.removeItem('admin_auth')
+    setAuthed(false)
+  }
+
+  if (!checked) return <div className="min-h-screen bg-titos-surface" />
+  if (!authed) return <AuthGate onAuth={() => setAuthed(true)} />
+
+  return (
+    <div className="min-h-screen bg-titos-surface">
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-60 flex-col bg-titos-elevated border-r border-titos-border/40 z-40">
+        <Brand />
+        <NavLinks pathname={pathname} />
+        <SidebarFooter onSignOut={signOut} />
+      </aside>
+
+      {/* Mobile top bar */}
+      <header className="lg:hidden sticky top-0 z-40 flex items-center justify-between h-14 px-4 bg-titos-elevated/95 backdrop-blur border-b border-titos-border/40">
+        <div className="flex items-center gap-2.5">
+          <Shield className="w-5 h-5 text-titos-gold" />
+          <span className="font-display text-sm font-black text-titos-white">Admin Panel</span>
+        </div>
+        <button onClick={() => setMobileOpen(o => !o)} className="p-2 -mr-2 text-titos-gray-300 hover:text-titos-white" aria-label="Toggle menu">
+          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </header>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
+          <div className="absolute inset-y-0 left-0 w-64 bg-titos-elevated border-r border-titos-border/40 flex flex-col">
+            <div className="flex items-center justify-between pr-3">
+              <Brand />
+              <button onClick={() => setMobileOpen(false)} className="p-2 text-titos-gray-400 hover:text-titos-white" aria-label="Close menu">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <NavLinks pathname={pathname} onNavigate={() => setMobileOpen(false)} />
+            <SidebarFooter onSignOut={signOut} />
+          </div>
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="lg:pl-60">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}

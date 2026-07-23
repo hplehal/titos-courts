@@ -1,7 +1,5 @@
 import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
-import Navbar from '@/components/layout/Navbar'
-import Footer from '@/components/layout/Footer'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
@@ -104,11 +102,7 @@ export default function RootLayout({ children }) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </head>
       <body className="min-h-screen flex flex-col bg-titos-surface text-titos-gray-200 antialiased">
-        <Navbar />
-        <main className="flex-1 pt-16 lg:pt-20">
-          {children}
-        </main>
-        <Footer />
+        {children}
         <Analytics />
         <SpeedInsights />
       </body>

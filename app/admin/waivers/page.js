@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { ArrowLeft, Shield, Loader2, Search, Check, X } from 'lucide-react'
+import { Shield, Loader2, Search, Check, X } from 'lucide-react'
+import AdminPageHeader from '@/components/admin/AdminPageHeader'
 import { cn, formatDate } from '@/lib/utils'
 
 export default function WaiversPage() {
@@ -26,18 +26,13 @@ export default function WaiversPage() {
     : waivers
 
   return (
-    <div className="py-8 px-4">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Link href="/admin" className="text-titos-gray-400 hover:text-titos-gold transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
-            <h1 className="font-display text-2xl font-black text-titos-white">Signed Waivers</h1>
-            <span className="text-titos-gray-500 text-sm">({waivers.length})</span>
-          </div>
+    <div>
+      <div className="max-w-5xl">
+        <AdminPageHeader title="Waivers" description={`${waivers.length} signed player waivers.`}>
           <a href="/waiver" target="_blank" className="text-titos-gold text-xs font-bold uppercase tracking-wider hover:text-titos-gold-light transition-colors">
             Waiver Form →
           </a>
-        </div>
+        </AdminPageHeader>
 
         {/* Search */}
         <div className="relative mb-6">

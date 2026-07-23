@@ -16,6 +16,7 @@ export async function POST(request) {
         emergencyName: body.emergencyName || null,
         emergencyPhone: body.emergencyPhone || null,
         leagueDay: body.leagueDay || null,
+        tournamentName: body.tournamentName || null,
         teamName: body.teamName || null,
         agreedToTerms: body.agreedToTerms || false,
         agreedToLiability: body.agreedToLiability || false,

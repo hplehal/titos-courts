@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Shield, Check, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -35,13 +35,35 @@ export default function WaiverPage() {
   const [form, setForm] = useState({
     fullName: '', email: '', phone: '', dateOfBirth: '',
     emergencyName: '', emergencyPhone: '',
-    leagueDay: '', teamName: '',
+    leagueDay: '', tournamentName: '', teamName: '',
     agreedToTerms: false, agreedToLiability: false, agreedToMedia: false,
     signatureName: '',
   })
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  // Active/upcoming tournaments for the dropdown. Fetched once on mount from
+  // the public /api/tournaments endpoint. Quietly falls back to empty on
+  // failure — the field becomes a freeform text input as a graceful degrade.
+  const [tournaments, setTournaments] = useState([])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/tournaments')
+      .then(r => r.ok ? r.json() : [])
+      .then(list => {
+        if (cancelled) return
+        // Show tournaments that are not yet completed, most recent first —
+        // someone signing a waiver is almost always registering for an
+        // upcoming or in-progress event, not a past one.
+        const relevant = (Array.isArray(list) ? list : [])
+          .filter(t => t.status !== 'completed')
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
+        setTournaments(relevant)
+      })
+      .catch(() => { /* endpoint down — leave list empty, UI handles it */ })
+    return () => { cancelled = true }
+  }, [])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -76,7 +98,7 @@ export default function WaiverPage() {
   if (submitted) {
     return (
       <div className="py-20 px-4 min-h-screen flex items-center justify-center">
-        <div className="card rounded-2xl p-10 text-center max-w-md mx-auto">
+        <div className="card rounded-xl p-10 text-center max-w-md mx-auto">
           <div className="w-16 h-16 rounded-full bg-status-success/15 flex items-center justify-center mx-auto mb-6">
             <Check className="w-8 h-8 text-status-success" />
           </div>
@@ -109,7 +131,7 @@ export default function WaiverPage() {
 
         <form onSubmit={handleSubmit}>
           {/* Player Info */}
-          <div className="card-flat rounded-2xl p-6 mb-6">
+          <div className="card-flat rounded-xl p-6 mb-6">
             <h2 className="font-display text-lg font-black text-titos-white mb-4">Player Information</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
@@ -160,10 +182,41 @@ export default function WaiverPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-titos-gray-400 uppercase tracking-wider mb-1">Team Name</label>
-                <input type="text" name="teamName" value={form.teamName} onChange={handleChange} placeholder="If known"
-                  className="w-full px-4 py-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-white text-sm placeholder-titos-gray-600 focus:outline-none focus:border-titos-gold/50" />
+                <label className="block text-xs font-bold text-titos-gray-400 uppercase tracking-wider mb-1">
+                  Tournament <span className="text-titos-gray-500 font-medium normal-case tracking-normal">(if applicable)</span>
+                </label>
+                {tournaments.length > 0 ? (
+                  <select
+                    name="tournamentName"
+                    value={form.tournamentName}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-white text-sm focus:outline-none focus:border-titos-gold/50"
+                  >
+                    <option value="">None — league only</option>
+                    {tournaments.map(t => (
+                      <option key={t.id} value={t.name}>{t.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  // Fallback: /api/tournaments failed or no active tournaments.
+                  // Freeform text keeps the field usable — admin can still
+                  // capture which event someone signed up for.
+                  <input
+                    type="text"
+                    name="tournamentName"
+                    value={form.tournamentName}
+                    onChange={handleChange}
+                    placeholder="Tournament name (if any)"
+                    className="w-full px-4 py-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-white text-sm placeholder-titos-gray-600 focus:outline-none focus:border-titos-gold/50"
+                  />
+                )}
               </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-xs font-bold text-titos-gray-400 uppercase tracking-wider mb-1">Team Name</label>
+              <input type="text" name="teamName" value={form.teamName} onChange={handleChange} placeholder="If known"
+                className="w-full px-4 py-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-white text-sm placeholder-titos-gray-600 focus:outline-none focus:border-titos-gold/50" />
             </div>
           </div>
 
@@ -180,7 +233,7 @@ export default function WaiverPage() {
           </div>
 
           {/* Agreements */}
-          <div className="card-flat rounded-2xl p-6 mb-6 space-y-4">
+          <div className="card-flat rounded-xl p-6 mb-6 space-y-4">
             <h2 className="font-display text-lg font-black text-titos-white mb-2">Agreement</h2>
 
             <label className="flex items-start gap-3 cursor-pointer group">
@@ -209,7 +262,7 @@ export default function WaiverPage() {
           </div>
 
           {/* Signature */}
-          <div className="card-flat rounded-2xl p-6 mb-6">
+          <div className="card-flat rounded-xl p-6 mb-6">
             <h2 className="font-display text-lg font-black text-titos-white mb-4">Electronic Signature</h2>
             <p className="text-titos-gray-400 text-xs mb-4">
               By typing your full legal name below, you acknowledge that this constitutes your electronic signature
@@ -227,7 +280,7 @@ export default function WaiverPage() {
                 className="w-full px-4 py-4 bg-titos-elevated border-2 border-titos-border rounded-lg text-titos-white text-lg font-display italic focus:outline-none focus:border-titos-gold/50"
               />
             </div>
-            <p className="text-titos-gray-500 text-[10px] mt-2">
+            <p className="text-titos-gray-500 text-[11px] mt-2">
               Date: {new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>

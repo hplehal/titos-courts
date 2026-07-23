@@ -92,26 +92,34 @@ export default function TiersView({ weekId, weeks, onReloadMatches }) {
 
   return (
     <div>
+      {/* Swap prompt — fixed toast so it doesn't push content (no CLS) */}
       {swap && (
-        <div className="mb-4 p-3 rounded-xl bg-titos-gold/10 border border-titos-gold/30 flex items-center justify-between">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 max-w-md w-[calc(100%-2rem)] p-3 rounded-xl bg-titos-gold/15 border border-titos-gold/40 backdrop-blur-md shadow-lg flex items-center justify-between gap-3">
           <span className="text-titos-gold text-sm font-bold">Swap {swap.teamName} (T{swap.tierNumber}) → click a team in another tier to swap</span>
-          <button onClick={() => setSwap(null)} className="text-titos-gray-400 hover:text-titos-white"><X className="w-4 h-4" /></button>
+          <button onClick={() => setSwap(null)} className="text-titos-gray-400 hover:text-titos-white flex-shrink-0"><X className="w-4 h-4" /></button>
         </div>
       )}
 
-      {!applied && (
-        <div className="flex justify-end mb-4">
+      {/* Apply movements button — reserve 56px even when 'applied' toast is showing */}
+      <div className="flex justify-end mb-4 min-h-[40px]">
+        {!applied && (
           <button onClick={applyMovements} disabled={applying || !preview?.tiers} className="btn-primary text-xs py-2 disabled:opacity-50">
             {applying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
             Apply Movements
           </button>
+        )}
+      </div>
+
+      {/* Applied confirmation — fixed toast so it doesn't push content */}
+      {applied && (
+        <div className="fixed bottom-6 right-6 z-40 max-w-sm p-3 rounded-xl bg-status-success/15 border border-status-success/40 backdrop-blur-md shadow-lg text-status-success text-sm font-bold flex items-center gap-2">
+          <Check className="w-4 h-4 flex-shrink-0" />Movements applied. You can still swap teams below.
         </div>
       )}
-      {applied && <div className="mb-4 p-3 rounded-xl bg-status-success/10 border border-status-success/30 text-status-success text-sm font-bold flex items-center gap-2"><Check className="w-4 h-4" />Movements applied. You can still swap teams below.</div>}
 
       <div className="space-y-4">
         {preview?.tiers?.map(tier => (
-          <div key={tier.tierNumber} className="card-flat rounded-2xl overflow-hidden">
+          <div key={tier.tierNumber} className="card-flat rounded-xl overflow-hidden">
             <div className="px-5 py-3 bg-titos-elevated border-b border-titos-border/30">
               <span className="font-display text-base font-black text-titos-white">Tier {tier.tierNumber}</span>
             </div>

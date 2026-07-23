@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { revalidateLeagueByWeek } from '@/lib/server/leagues'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,6 +41,7 @@ export async function PATCH(request) {
     await prisma.tierPlacement.update({ where: { id: placementA.id }, data: { tierId: placementB.tierId } })
     await prisma.tierPlacement.update({ where: { id: placementB.id }, data: { tierId: placementA.tierId } })
 
+    await revalidateLeagueByWeek(weekId)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Tier swap error:', error)
@@ -119,6 +121,7 @@ export async function POST(request) {
       }
     }
 
+    await revalidateLeagueByWeek(weekId)
     return NextResponse.json({ success: true, count })
   } catch (error) {
     console.error('Tier placements error:', error)

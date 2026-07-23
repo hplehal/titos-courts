@@ -51,7 +51,7 @@ function ChampionCard({ champ, index, featured = false }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
         {/* Season badge */}
-        <div className={`absolute top-2 left-2 px-2 py-0.5 rounded font-display font-black uppercase text-[10px] tracking-wider ${
+        <div className={`absolute top-2 left-2 px-2 py-0.5 rounded font-display font-black uppercase text-[11px] tracking-wider ${
           isLatest ? 'bg-titos-gold text-black' : 'bg-black/60 text-titos-gold'
         }`}>
           Season {champ.season}
@@ -59,7 +59,7 @@ function ChampionCard({ champ, index, featured = false }) {
 
         {/* Defending champ badge */}
         {isLatest && (
-          <div className="absolute top-2 right-2 px-2 py-0.5 bg-titos-gold/20 border border-titos-gold/40 rounded text-titos-gold text-[8px] font-black uppercase tracking-wider">
+          <div className="absolute top-2 right-2 px-2 py-0.5 bg-titos-gold/20 border border-titos-gold/40 rounded text-titos-gold text-[11px] font-black uppercase tracking-wider">
             Defending
           </div>
         )}
@@ -69,7 +69,7 @@ function ChampionCard({ champ, index, featured = false }) {
           <h3 className={`font-display font-black text-titos-white leading-tight ${featured ? 'text-lg' : 'text-sm'}`}>
             {champ.team}
           </h3>
-          {champ.year && <span className="text-titos-gray-300 text-[10px]">{champ.year}</span>}
+          {champ.year && <span className="text-titos-gray-300 text-[11px]">{champ.year}</span>}
         </div>
       </div>
     </div>

@@ -40,7 +40,7 @@ export default function NextWeekView({ season, weeks, currentWeek, onReload }) {
 
   return (
     <div className="space-y-4">
-      <div className="card-flat rounded-2xl p-6 text-center space-y-4">
+      <div className="card-flat rounded-xl p-6 text-center space-y-4">
         <h3 className="font-display text-lg font-black text-titos-white">Week {nextWeekNum}</h3>
 
         {!nextWeek && (

@@ -109,9 +109,6 @@ const sundayMENSTeams = [
   { name: 'Vertical Limit', captain: 'Sean Murphy', email: 'sean.murphy@email.com' },
   { name: 'Slam Dunk VB', captain: 'Tony Russo', email: 'tony.russo@email.com' },
   { name: 'Full Send', captain: 'Liam Fletcher', email: 'liam.fletcher@email.com' },
-  { name: 'Zero Gravity', captain: 'Ravi Sharma', email: 'ravi.sharma@email.com' },
-  { name: 'Side Out Kings', captain: 'James O\'Brien', email: 'james.obrien@email.com' },
-  { name: 'Service Aces', captain: 'Miles Henderson', email: 'miles.henderson@email.com' },
 ]
 
 // Tuesday COED: 8 tiers, early slot 8PM-10PM, late slot 10PM-12AM
@@ -126,13 +123,12 @@ const tuesdayTierDefs = [
   { tierNumber: 8, courtNumber: 10, timeSlot: 'late' },
 ]
 
-// Sunday MENS: 5 tiers, 5 courts, single time slot 9PM-12AM
+// Sunday MENS: 4 tiers, 4 courts, single time slot 9PM-12AM
 const sundayTierDefs = [
-  { tierNumber: 1, courtNumber: 7, timeSlot: 'single' },
-  { tierNumber: 2, courtNumber: 6, timeSlot: 'single' },
-  { tierNumber: 3, courtNumber: 8, timeSlot: 'single' },
-  { tierNumber: 4, courtNumber: 9, timeSlot: 'single' },
-  { tierNumber: 5, courtNumber: 10, timeSlot: 'single' },
+  { tierNumber: 1, courtNumber: 6, timeSlot: 'single' },
+  { tierNumber: 2, courtNumber: 8, timeSlot: 'single' },
+  { tierNumber: 3, courtNumber: 9, timeSlot: 'single' },
+  { tierNumber: 4, courtNumber: 10, timeSlot: 'single' },
 ]
 
 // ─── MATCH & TIER SIMULATION ENGINE ───
@@ -299,8 +295,11 @@ async function main() {
       seasonNumber: 10,
       startDate: new Date('2026-04-01T12:00:00Z'),
       endDate: new Date('2026-06-10T12:00:00Z'),
+      // Tuesday COED: 9 regular-season weeks + 2 playoff weeks (W10 QFs,
+      // W11 SF + Final). See lib/utils.getDivisionInfo — divisions are
+      // 4-way (Diamond/Platinum/Gold/Silver, 6 teams each).
       totalWeeks: 11,
-      playoffWeeks: 1,
+      playoffWeeks: 2,
       status: 'active',
     },
   })
@@ -440,7 +439,7 @@ async function main() {
   console.log('Simulating Tuesday COED season...')
 
   const totalTueTiers = 8
-  const totalSunTiers = 5
+  const totalSunTiers = 4
 
   // Week 1: Random placement (completed)
   console.log('  Week 1 (Placement — completed)...')
@@ -650,6 +649,10 @@ async function seedTournaments() {
       name: 'Spring Showdown',
       slug: 'spring-showdown',
       date: new Date('2026-03-22T12:00:00Z'),
+      endDate: new Date('2026-03-22T22:00:00Z'),
+      venue: "Tito's Courts — Mississauga",
+      poolSize: 4,
+      poolCount: 4,
       description: 'Our annual spring volleyball tournament featuring 16 teams competing across 4 pools for gold and silver brackets.',
       format: '4 pools of 4, Gold/Silver bracket',
       registrationFee: 200,
@@ -984,6 +987,10 @@ async function seedTournaments() {
       name: 'Easter Classic',
       slug: 'easter-classic',
       date: new Date('2026-04-18T12:00:00Z'),
+      endDate: new Date('2026-04-18T22:00:00Z'),
+      venue: "Tito's Courts — Mississauga",
+      poolSize: 4,
+      poolCount: 3,
       description: 'A fun Easter-themed volleyball tournament. Open to all skill levels!',
       format: '3 pools of 4, single elimination bracket',
       registrationFee: 200,
@@ -999,6 +1006,10 @@ async function seedTournaments() {
       name: 'May Madness',
       slug: 'may-madness',
       date: new Date('2026-05-09T12:00:00Z'),
+      endDate: new Date('2026-05-09T22:00:00Z'),
+      venue: "Tito's Courts — Mississauga",
+      poolSize: 4,
+      poolCount: 4,
       description: 'Spring is in full swing! Join us for an exciting day of competitive volleyball.',
       format: '4 pools of 4, Gold/Silver bracket',
       registrationFee: 200,
@@ -1022,6 +1033,111 @@ async function seedTournaments() {
       status: 'registration',
     },
   })
+
+  // 5. Titos GTACE Tournament (upcoming — real roster + full schedule)
+  // Uses the April 25 Captains Package as the source of truth: 4 pools of 4,
+  // 4 parallel courts, 30-min rounds, kickoff 10:00 AM local (14:00 UTC EDT).
+  console.log('  Creating Titos GTACE Tournament (upcoming, full schedule)...')
+  const gtaceKickoff = new Date('2026-04-25T14:00:00Z') // 10 AM EDT = 14:00 UTC
+  const gtace = await prisma.tournament.create({
+    data: {
+      name: "Tito's GTACE Tournament",
+      slug: 'titos-gtace-tournament',
+      date: gtaceKickoff,
+      endDate: new Date('2026-04-25T22:00:00Z'),
+      venue: 'Vaughan Sportsplex, 8301 Keele St, Concord, ON L4K 1Z6',
+      poolSize: 4,
+      poolCount: 4,
+      description:
+        "The GTACE spring tournament — 16 teams, 4 pools of 4, Gold and Silver single-elimination brackets. Pool play is 2 sets to 25 (cap 27), starting score 4-4. Brackets are best-of-3. Round 1 fires at 10:00 AM; each subsequent round is +30 min on the same court.",
+      format: '4 pools of 4 · Gold/Silver brackets · 4 parallel courts',
+      registrationFee: 200,
+      maxTeams: 16,
+      registrationDeadline: new Date('2026-04-18T12:00:00Z'),
+      status: 'registration',
+    },
+  })
+
+  // Real pool assignments from the captains package (seed order matches PDF).
+  const gtaceRoster = {
+    A: [
+      { name: 'Set Me Daddy', seed: 1 },
+      { name: 'Big Juicy Biceps', seed: 2 },
+      { name: 'Tacos and Timbits', seed: 3 },
+      { name: 'Block Obama', seed: 4 },
+    ],
+    B: [
+      { name: "Block It Like It's Hot", seed: 1 },
+      { name: "Lib'idos", seed: 2 },
+      { name: 'Dark Soy Sauce', seed: 3 },
+      { name: 'Linglit', seed: 4 },
+    ],
+    C: [
+      { name: 'Hakuna Matata', seed: 1 },
+      { name: 'Outlaws', seed: 2 },
+      { name: "OLLIEB's Fan Club", seed: 3 },
+      { name: 'Spike Wazowski', seed: 4 },
+    ],
+    D: [
+      { name: 'Block Choy', seed: 1 },
+      { name: 'OTeddies', seed: 2 },
+      { name: 'Block Block', seed: 3 },
+      { name: "Vito's League", seed: 4 },
+    ],
+  }
+
+  // Canonical 4-team round ordering (matches generateRoundRobin + PDF):
+  // Round 1: s1 v s3, R2: s2 v s4, R3: s1 v s4, R4: s2 v s3, R5: s3 v s4, R6: s1 v s2
+  const fourTeamRoundOrder = [
+    [0, 2], [1, 3], [0, 3], [1, 2], [2, 3], [0, 1],
+  ]
+
+  const poolLetters = ['A', 'B', 'C', 'D']
+  for (let p = 0; p < poolLetters.length; p++) {
+    const letter = poolLetters[p]
+    const pool = await prisma.tournamentPool.create({
+      data: { tournamentId: gtace.id, name: `Pool ${letter}` },
+    })
+
+    // Create teams in seed order.
+    const teamRecords = []
+    for (const entry of gtaceRoster[letter]) {
+      const team = await prisma.tournamentTeam.create({
+        data: {
+          tournamentId: gtace.id,
+          name: entry.name,
+          captainName: '',
+          poolId: pool.id,
+          seed: entry.seed,
+        },
+      })
+      teamRecords.push(team)
+    }
+
+    // Stamp every pool match with its scheduledTime (kickoff + 30*round) and
+    // court (pool index 0-3 = courts 1-4, in parallel). Status stays
+    // "scheduled" so the whole tournament reads as upcoming until match day.
+    for (let i = 0; i < fourTeamRoundOrder.length; i++) {
+      const [a, b] = fourTeamRoundOrder[i]
+      const roundNumber = i + 1
+      const scheduledTime = new Date(
+        gtaceKickoff.getTime() + (roundNumber - 1) * 30 * 60 * 1000,
+      )
+      await prisma.tournamentMatch.create({
+        data: {
+          poolId: pool.id,
+          homeTeamId: teamRecords[a].id,
+          awayTeamId: teamRecords[b].id,
+          courtNumber: p + 1,
+          roundNumber,
+          gameOrder: i + 1,
+          scheduledTime,
+          status: 'scheduled',
+        },
+      })
+    }
+  }
+  console.log('  Titos GTACE Tournament complete.')
 }
 
 main()

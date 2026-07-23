@@ -21,7 +21,8 @@ export default function WaiversPage() {
     ? waivers.filter(w =>
         w.fullName.toLowerCase().includes(search.toLowerCase()) ||
         w.email.toLowerCase().includes(search.toLowerCase()) ||
-        w.teamName?.toLowerCase().includes(search.toLowerCase())
+        w.teamName?.toLowerCase().includes(search.toLowerCase()) ||
+        w.tournamentName?.toLowerCase().includes(search.toLowerCase())
       )
     : waivers
 
@@ -50,7 +51,7 @@ export default function WaiversPage() {
           <div className="text-center py-20"><Loader2 className="w-8 h-8 text-titos-gold mx-auto animate-spin" /></div>
         ) : filtered.length === 0 ? (
           <div className="card rounded-xl p-8 text-center">
-            <Shield className="w-10 h-10 text-titos-gray-600 mx-auto mb-3" />
+            <Shield className="w-10 h-10 text-titos-gray-500 mx-auto mb-3" />
             <p className="text-titos-gray-400">{search ? 'No waivers match your search.' : 'No waivers signed yet.'}</p>
           </div>
         ) : (
@@ -65,6 +66,7 @@ export default function WaiversPage() {
                     </div>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-titos-gray-400">
                       {w.leagueDay && <span className="px-2 py-0.5 bg-titos-card rounded border border-titos-border/30">{w.leagueDay}</span>}
+                      {w.tournamentName && <span className="px-2 py-0.5 bg-titos-gold/10 text-titos-gold rounded border border-titos-gold/30">{w.tournamentName}</span>}
                       {w.teamName && <span>{w.teamName}</span>}
                       {w.phone && <span>{w.phone}</span>}
                       <span>{formatDate(w.signedAt)}</span>
@@ -80,11 +82,11 @@ export default function WaiversPage() {
                         <span className="w-5 h-5 rounded-full bg-titos-charcoal flex items-center justify-center"><X className="w-3 h-3 text-titos-gray-500" /></span>
                       )}
                     </div>
-                    <span className="text-status-success text-[9px] font-bold uppercase tracking-wider">Signed</span>
+                    <span className="text-status-success text-[11px] font-bold uppercase tracking-wider">Signed</span>
                   </div>
                 </div>
                 {(w.emergencyName || w.emergencyPhone) && (
-                  <div className="mt-2 text-titos-gray-500 text-[10px]">
+                  <div className="mt-2 text-titos-gray-500 text-[11px]">
                     Emergency: {w.emergencyName} {w.emergencyPhone ? `· ${w.emergencyPhone}` : ''}
                   </div>
                 )}

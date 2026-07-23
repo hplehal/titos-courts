@@ -6,10 +6,24 @@ import StatusBadge from '@/components/ui/StatusBadge'
 import { getLeagueTimeDisplay } from '@/lib/utils'
 
 export const metadata = {
-  title: 'Leagues',
-  description: 'Three weekly recreational volleyball leagues in Mississauga and Toronto. Tuesday COED, Sunday MENS, and Thursday REC COED at Pakmen Courts.',
+  title: "Volleyball Leagues Mississauga | Tito's Courts",
+  description: 'Three weekly recreational volleyball leagues in Mississauga and Toronto. Tuesday Coed, Sunday Men\'s, and Thursday Rec Coed at Pakmen Courts and Michael Power High School. Tier-based competition, playoffs, and 150+ players.',
+  alternates: { canonical: 'https://titoscourts.com/leagues' },
+  openGraph: {
+    title: "Volleyball Leagues in Mississauga — Tito's Courts",
+    description: 'Three weekly recreational volleyball leagues with tier-based competition. Register your team today.',
+    url: 'https://titoscourts.com/leagues',
+    type: 'website',
+    images: ['/images/titosHero.jpg'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Volleyball Leagues in Mississauga",
+    description: 'Three weekly rec volleyball leagues at Tito\'s Courts.',
+    images: ['/images/titosHero.jpg'],
+  },
 }
-export const dynamic = 'force-dynamic'
+export const revalidate = 600
 
 async function getLeagues() {
   const leagues = await prisma.league.findMany({
@@ -124,7 +138,7 @@ export default async function LeaguesPage() {
                 <h3 className="font-display font-bold text-titos-white">Playoff Divisions</h3>
               </div>
               <p className="text-titos-gray-300 text-sm leading-relaxed">
-                Your cumulative season points determine your playoff division. Five divisions — <strong className="text-titos-gold">Diamond, Platinum, Gold, Silver, and Bronze</strong> — each play a single-elimination bracket on playoff night. Every team competes.
+                Your cumulative season points determine your playoff division. Four divisions — <strong className="text-titos-gold">Diamond, Platinum, Gold, and Silver</strong> — each play a single-elimination bracket on playoff night. Every team competes.
               </p>
             </div>
           </div>

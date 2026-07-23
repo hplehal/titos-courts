@@ -1,87 +1,67 @@
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { checkAdminPassword, unauthorized } from '@/lib/server/adminAuth'
+import { revalidateTournament } from '@/lib/server/tournaments'
+import { TOURNAMENT_STATUS } from '@/lib/tournament/constants'
 import { slugify } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
-// POST: create a tournament
+/** GET /api/admin/tournaments — list all tournaments (admin-only). */
+export async function GET(request) {
+  if (!checkAdminPassword(request)) return unauthorized()
+  const tournaments = await prisma.tournament.findMany({
+    orderBy: { date: 'desc' },
+    select: {
+      id: true, slug: true, name: true, date: true, endDate: true, venue: true,
+      status: true, poolSize: true, poolCount: true,
+      _count: { select: { tournamentTeams: true, pools: true, brackets: true } },
+    },
+  })
+  return NextResponse.json({ tournaments })
+}
+
+/** POST /api/admin/tournaments — create a new tournament. */
 export async function POST(request) {
+  if (!checkAdminPassword(request)) return unauthorized()
   try {
     const body = await request.json()
-    const { name, date, description, format, registrationFee, maxTeams, registrationDeadline } = body
+    const {
+      name, slug, date, endDate, venue, poolSize, poolCount,
+      description, format, registrationFee, maxTeams, registrationDeadline,
+    } = body
+
     if (!name || !date) {
-      return NextResponse.json({ error: 'Name and date are required' }, { status: 400 })
+      return NextResponse.json({ error: 'name and date required' }, { status: 400 })
     }
 
-    // Ensure slug uniqueness by suffixing if taken
-    let slug = slugify(name)
-    const existing = await prisma.tournament.findUnique({ where: { slug } })
-    if (existing) slug = `${slug}-${Date.now().toString(36)}`
+    const finalSlug = slug?.trim() || slugify(name)
+    const existing = await prisma.tournament.findUnique({ where: { slug: finalSlug } })
+    if (existing) {
+      return NextResponse.json({ error: `Slug "${finalSlug}" already in use` }, { status: 409 })
+    }
 
     const tournament = await prisma.tournament.create({
       data: {
         name,
-        slug,
-        date: new Date(date + 'T12:00:00Z'),
+        slug: finalSlug,
+        date: new Date(date),
+        endDate: endDate ? new Date(endDate) : null,
+        venue: venue || null,
+        poolSize: poolSize ? Number(poolSize) : null,
+        poolCount: poolCount ? Number(poolCount) : null,
         description: description || null,
         format: format || null,
-        registrationFee: registrationFee ? parseInt(registrationFee) : null,
-        maxTeams: maxTeams ? parseInt(maxTeams) : null,
-        registrationDeadline: registrationDeadline ? new Date(registrationDeadline + 'T12:00:00Z') : null,
-        status: 'registration',
+        registrationFee: registrationFee ? Number(registrationFee) : null,
+        maxTeams: maxTeams ? Number(maxTeams) : null,
+        registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : null,
+        status: TOURNAMENT_STATUS.REGISTRATION,
       },
     })
-    return NextResponse.json({ success: true, tournament })
+    revalidateTournament(tournament.slug)
+    return NextResponse.json({ tournament }, { status: 201 })
   } catch (error) {
-    console.error('Tournaments POST error:', error)
+    console.error('Create tournament error:', error)
     return NextResponse.json({ error: 'Failed to create tournament' }, { status: 500 })
-  }
-}
-
-// PATCH: update tournament status or details
-export async function PATCH(request) {
-  try {
-    const body = await request.json()
-    const { tournamentId, status, name, date } = body
-    if (!tournamentId) {
-      return NextResponse.json({ error: 'tournamentId required' }, { status: 400 })
-    }
-    const data = {}
-    if (status) data.status = status
-    if (name) data.name = name
-    if (date) data.date = new Date(date + 'T12:00:00Z')
-
-    const tournament = await prisma.tournament.update({ where: { id: tournamentId }, data })
-    return NextResponse.json({ success: true, tournament })
-  } catch (error) {
-    console.error('Tournaments PATCH error:', error)
-    return NextResponse.json({ error: 'Failed to update tournament' }, { status: 500 })
-  }
-}
-
-// DELETE: remove a tournament and all its data
-export async function DELETE(request) {
-  try {
-    const { tournamentId } = await request.json()
-    if (!tournamentId) {
-      return NextResponse.json({ error: 'tournamentId required' }, { status: 400 })
-    }
-    // Clear dependents first (set scores cascade from matches)
-    await prisma.tournamentMatch.deleteMany({
-      where: {
-        OR: [
-          { pool: { tournamentId } },
-          { bracket: { tournamentId } },
-        ],
-      },
-    })
-    await prisma.tournamentTeam.deleteMany({ where: { tournamentId } })
-    await prisma.tournamentPool.deleteMany({ where: { tournamentId } })
-    await prisma.tournamentBracket.deleteMany({ where: { tournamentId } })
-    await prisma.tournament.delete({ where: { id: tournamentId } })
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Tournaments DELETE error:', error)
-    return NextResponse.json({ error: 'Failed to delete tournament' }, { status: 500 })
   }
 }

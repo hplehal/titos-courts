@@ -1,14 +1,57 @@
 import prisma from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import LeagueDetailClient from './LeagueDetailClient'
+import { getActiveLeagues } from '@/lib/server/leagues'
 
-export const dynamic = 'force-dynamic'
+// ISR — 5 minute revalidation. Admin mutations bust the cache via revalidateTag.
+export const revalidate = 300
+
+const LEAGUE_META = {
+  'tuesday-coed': {
+    label: 'Tuesday Coed',
+    blurb: "Our flagship recreational coed volleyball league in Mississauga. 8 tiers, 24 teams, weekly Tuesday matches at Pakmen Courts.",
+  },
+  'sunday-mens': {
+    label: "Sunday Men's",
+    blurb: "Competitive men's volleyball league in Mississauga. Tier-based competition with 15 teams playing every Sunday at Pakmen Courts.",
+  },
+  'thursday-rec-coed': {
+    label: 'Thursday Rec Coed',
+    blurb: "Thursday recreational coed volleyball at Michael Power High School in Etobicoke. Beginner and intermediate friendly.",
+  },
+}
+
+export async function generateStaticParams() {
+  const leagues = await getActiveLeagues()
+  return leagues.map(l => ({ slug: l.slug }))
+}
 
 export async function generateMetadata({ params }) {
   const { slug } = await params
-  const league = await prisma.league.findUnique({ where: { slug } })
+  const league = await prisma.league.findUnique({ where: { slug }, select: { name: true } })
   if (!league) return { title: 'League Not Found' }
-  return { title: league.name }
+  const meta = LEAGUE_META[slug]
+  const label = meta?.label || league.name
+  const title = `${label} Volleyball League Mississauga | Tito's Courts`
+  const description = meta?.blurb || `${league.name} at Tito's Courts — recreational volleyball league in Mississauga with tier-based competition, weekly matches, and playoff championships.`
+  return {
+    title,
+    description,
+    alternates: { canonical: `https://titoscourts.com/leagues/${slug}` },
+    openGraph: {
+      title,
+      description,
+      url: `https://titoscourts.com/leagues/${slug}`,
+      type: 'website',
+      images: ['/images/titosHero.jpg'],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/images/titosHero.jpg'],
+    },
+  }
 }
 
 async function getLeagueData(slug) {

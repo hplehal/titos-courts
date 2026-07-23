@@ -7,8 +7,8 @@ const scoreEntered = (v) => v !== '' && v !== null && v !== undefined
 
 // Score entry table for a single tier — keyboard-first:
 // Tab/Enter moves to the next field, and typing 2 digits auto-advances.
-export default function TierScoreBlock({ tierNum, tierMatches, inputRefs, onScoreChange, allInputKeys }) {
-  const slot = getSlotInfo(parseInt(tierNum), tierMatches[0]?.timeSlot)
+export default function TierScoreBlock({ tierNum, tierMatches, inputRefs, onScoreChange, allInputKeys, leagueSlug }) {
+  const slot = getSlotInfo(parseInt(tierNum), tierMatches[0]?.timeSlot, leagueSlug)
   const slotVar = parseInt(tierNum) <= 4 ? 'slot-early' : parseInt(tierNum) <= 8 ? 'slot-late' : 'slot-single'
 
   const focusNext = (matchId, field) => {
@@ -47,7 +47,7 @@ export default function TierScoreBlock({ tierNum, tierMatches, inputRefs, onScor
   )
 
   return (
-    <div className="card-flat rounded-2xl overflow-hidden">
+    <div className="card-flat rounded-xl overflow-hidden">
       <div className={cn('px-4 py-2.5 flex items-center justify-between', slot.bg)} style={{ borderLeft: `3px solid var(--color-${slotVar})` }}>
         <div className="flex items-center gap-2">
           <span className={cn('font-display text-base font-black', slot.color)}>T{tierNum}</span>

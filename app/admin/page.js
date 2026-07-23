@@ -202,7 +202,28 @@ export default function AdminPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-20"><Loader2 className="w-8 h-8 text-titos-gold mx-auto animate-spin" /></div>
+          <div className="min-h-[2000px]">
+            {/* Week pills placeholder (44px) */}
+            <div className="flex items-center gap-1.5 mb-5">
+              {Array.from({ length: 11 }).map((_, i) => (
+                <div key={i} className="w-9 h-9 rounded-full bg-titos-charcoal animate-pulse" />
+              ))}
+            </div>
+            {/* Meta line (20px) */}
+            <div className="h-4 bg-titos-charcoal rounded w-48 mb-4 animate-pulse" />
+            {/* Tabs bar (44px) */}
+            <div className="flex gap-4 mb-5 border-b border-titos-border/30">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-10 bg-titos-charcoal rounded w-20 animate-pulse" />
+              ))}
+            </div>
+            {/* Tier blocks (8 × 280px) */}
+            <div className="space-y-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="card-flat rounded-xl min-h-[200px] animate-pulse" />
+              ))}
+            </div>
+          </div>
         ) : !season ? (
           <div className="card rounded-xl p-8 text-center"><p className="text-titos-gray-400">No season found for this league.</p></div>
         ) : (
@@ -250,21 +271,25 @@ export default function AdminPage() {
 
             {/* ─── Tab Content ─── */}
             {loadingMatches ? (
-              <div className="text-center py-12"><Loader2 className="w-6 h-6 text-titos-gold mx-auto animate-spin" /></div>
+              <div className="min-h-[1600px] space-y-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="card-flat rounded-xl min-h-[180px] animate-pulse" />
+                ))}
+              </div>
             ) : (
               <>
                 {/* SCORES TAB */}
                 {activeTab === 'Scores' && (
                   <div>
                     {saveMsg && (
-                      <div className="mb-4 p-3 rounded-xl bg-status-success/5 border border-status-success/20 text-status-success font-semibold text-sm flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4" />{saveMsg}
+                      <div className="fixed bottom-6 right-6 z-40 max-w-sm p-3 rounded-xl bg-status-success/15 border border-status-success/40 backdrop-blur-md shadow-lg text-status-success font-semibold text-sm flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 flex-shrink-0" />{saveMsg}
                       </div>
                     )}
                     <div className="space-y-4">
                       {Object.entries(matchesByTier).sort(([a], [b]) => a - b).map(([tierNum, tierMatches]) => (
                         <TierScoreBlock key={tierNum} tierNum={tierNum} tierMatches={tierMatches} inputRefs={inputRefs}
-                          onScoreChange={updateMatchScore} allInputKeys={allInputKeys} />
+                          onScoreChange={updateMatchScore} allInputKeys={allInputKeys} leagueSlug={activeLeague?.slug} />
                       ))}
                     </div>
                     {matches.length === 0 && <p className="text-titos-gray-400 text-center py-8">No matches for this week.</p>}
@@ -304,7 +329,7 @@ export default function AdminPage() {
                 )}
 
                 {/* RESULTS TAB */}
-                {activeTab === 'Results' && <ResultsView matches={matches} />}
+                {activeTab === 'Results' && <ResultsView matches={matches} leagueSlug={activeLeague?.slug} />}
 
                 {/* TIERS TAB */}
                 {activeTab === 'Tiers' && selectedWeek && <TiersView weekId={selectedWeek.id} weeks={weeks} onReloadMatches={loadMatches} />}

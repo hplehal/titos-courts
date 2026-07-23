@@ -24,9 +24,40 @@ function CreateTournamentForm({ onCreated }) {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const [form, setForm] = useState({
-    name: '', slug: '', date: '', endDate: '', venue: '',
-    poolSize: 4, poolCount: 4,
+    name: '', date: '', endDate: '', venue: '',
+    poolSize: 4, poolCount: 4, courtCount: 4,
   })
+  const [image, setImage] = useState(null) // { dataUrl, type, name }
+  const [imgErr, setImgErr] = useState('')
+
+  // Downscale the chosen poster in the browser (max 1600px, JPEG q0.85) so
+  // uploads stay small enough to store in-DB without any blob-store setup.
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0]
+    setImgErr('')
+    if (!file) { setImage(null); return }
+    if (!file.type.startsWith('image/')) { setImgErr('Pick an image file'); return }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new Image()
+      img.onload = () => {
+        const MAX = 1600
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height))
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.round(img.width * scale)
+        canvas.height = Math.round(img.height * scale)
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+        if (dataUrl.length > 2.6 * 1024 * 1024) { setImgErr('Image still too large — try a smaller one'); return }
+        setImage({ dataUrl, type: 'image/jpeg', name: file.name })
+      }
+      img.onerror = () => setImgErr('Could not read that image')
+      img.src = reader.result
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const applyPreset = (preset) => setForm(f => ({ ...f, ...preset }))
 
   const submit = async (e) => {
     e.preventDefault()
@@ -38,13 +69,16 @@ function CreateTournamentForm({ onCreated }) {
         ...form,
         date: localInputToISO(form.date),
         endDate: form.endDate ? localInputToISO(form.endDate) : null,
+        imageBase64: image?.dataUrl || null,
+        imageType: image?.type || null,
       }
       const res = await adminPost('/api/admin/tournaments', payload)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create')
       onCreated()
       setOpen(false)
-      setForm({ name: '', slug: '', date: '', endDate: '', venue: '', poolSize: 4, poolCount: 4 })
+      setForm({ name: '', date: '', endDate: '', venue: '', poolSize: 4, poolCount: 4, courtCount: 4 })
+      setImage(null)
     } catch (e) {
       setErr(e.message)
     }
@@ -64,12 +98,34 @@ function CreateTournamentForm({ onCreated }) {
 
   return (
     <form onSubmit={submit} className="card-flat rounded-xl p-5 space-y-3 w-full">
+      {/* Format presets — one click fills pools/courts */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { label: 'Beach · 12 teams · 3 pools of 4 · 4 courts', preset: { poolCount: 3, poolSize: 4, courtCount: 4 } },
+          { label: 'Classic · 16 teams · 4 pools of 4 · 4 courts', preset: { poolCount: 4, poolSize: 4, courtCount: 4 } },
+          { label: 'Crossover · 2 pools · 4 courts', preset: { poolCount: 2, poolSize: 6, courtCount: 4 } },
+        ].map(p => (
+          <button key={p.label} type="button" onClick={() => applyPreset(p.preset)}
+            className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-titos-elevated text-titos-gray-300 border border-titos-border hover:text-titos-gold hover:border-titos-gold/40 transition-colors">
+            {p.label}
+          </button>
+        ))}
+      </div>
       <div className="grid md:grid-cols-2 gap-3">
-        <label className="block"><span className="text-xs text-titos-gray-400">Name *</span>
+        <label className="block"><span className="text-xs text-titos-gray-400">Name * <span className="text-titos-gray-500">(URL is auto-generated)</span></span>
           <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputCls} />
         </label>
-        <label className="block"><span className="text-xs text-titos-gray-400">Slug (auto from name)</span>
-          <input value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value })} className={inputCls} />
+        <label className="block"><span className="text-xs text-titos-gray-400">Poster image (optional)</span>
+          <input type="file" accept="image/*" onChange={handleImageChange}
+            className="w-full mt-1 text-sm text-titos-gray-300 file:mr-3 file:px-3 file:py-2 file:rounded-md file:border-0 file:bg-titos-gold/15 file:text-titos-gold file:text-xs file:font-bold file:cursor-pointer bg-titos-elevated border border-titos-border rounded-md min-h-[44px] py-1.5 px-2" />
+          {image && (
+            <span className="mt-2 flex items-center gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={image.dataUrl} alt="Poster preview" className="h-12 w-20 object-cover rounded border border-titos-border" />
+              <span className="text-[11px] text-status-success font-semibold">{image.name} ready</span>
+            </span>
+          )}
+          {imgErr && <span className="mt-1 block text-[11px] text-status-live">{imgErr}</span>}
         </label>
         <label className="block"><span className="text-xs text-titos-gray-400">Kickoff (first match) *</span>
           <input required type="datetime-local" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className={inputCls} />
@@ -88,6 +144,10 @@ function CreateTournamentForm({ onCreated }) {
         </label>
         <label className="block"><span className="text-xs text-titos-gray-400">Pool Count</span>
           <input type="number" inputMode="numeric" min="2" max="12" value={form.poolCount} onChange={e => setForm({ ...form, poolCount: e.target.value })} className={inputCls} />
+        </label>
+        <label className="block"><span className="text-xs text-titos-gray-400">Courts available</span>
+          <input type="number" inputMode="numeric" min="1" max="12" value={form.courtCount} onChange={e => setForm({ ...form, courtCount: e.target.value })} className={inputCls} />
+          <span className="mt-1 block text-[11px] text-titos-gray-500">How many courts you have booked for the day.</span>
         </label>
       </div>
       {err && <p className="text-status-live text-sm" role="alert">{err}</p>}
@@ -153,15 +213,22 @@ function Inner() {
           <div className="space-y-3">
             {tournaments.map(t => (
               <div key={t.id} className="card-flat rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1 flex-wrap">
-                    <h3 className="font-display text-lg font-bold text-titos-white">{t.name}</h3>
-                    <StatusBadge status={t.status} />
+                <div className="flex-1 flex items-center gap-4 min-w-0">
+                  {t.imageType && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={`/api/tournaments/${t.slug}/image`} alt="" className="hidden sm:block h-14 w-24 object-cover rounded-lg border border-titos-border flex-shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-3 mb-1 flex-wrap">
+                      <h3 className="font-display text-lg font-bold text-titos-white">{t.name}</h3>
+                      <StatusBadge status={t.status} />
+                    </div>
+                    <p className="text-titos-gray-400 text-sm">
+                      {formatDate(t.date)} · {t._count?.tournamentTeams || 0} teams · {t._count?.pools || 0} pools
+                      {t.courtCount && <> · {t.courtCount} courts</>}
+                      {t.venue && <> · {t.venue}</>}
+                    </p>
                   </div>
-                  <p className="text-titos-gray-400 text-sm">
-                    {formatDate(t.date)} · {t._count?.tournamentTeams || 0} teams · {t._count?.pools || 0} pools
-                    {t.venue && <> · {t.venue}</>}
-                  </p>
                 </div>
                 <div className="flex gap-2 items-center">
                   <Link href={`/admin/tournaments/${t.slug}`} className="btn-primary text-xs py-2">

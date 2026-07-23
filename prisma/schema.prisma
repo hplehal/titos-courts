@@ -246,6 +246,15 @@ model Tournament {
   maxTeams             Int?
   registrationDeadline DateTime?
   prizePool            Int?
+  // Number of courts available on the day — drives how many matches can run
+  // in parallel and is surfaced on the captain's package.
+  courtCount           Int?
+  // Poster image uploaded through the admin UI. Stored in-DB (no external
+  // blob store required) and served via /api/tournaments/[slug]/image.
+  // Tournaments without one fall back to the legacy slug-named file in
+  // public/images/tournaments/.
+  imageData            Bytes?
+  imageType            String?
   status               String             @default("registration")
   rules                String?            // Free-form markdown for the public Captain's Package page.
   pools                TournamentPool[]

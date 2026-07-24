@@ -149,6 +149,8 @@ function Inner({ slug }) {
   }
   if (!tournament) return <p className="p-8 text-titos-gray-400">Tournament not found.</p>
 
+  const allPoolDone = rounds.length > 0 && rounds.every(r => r.allFinal)
+  const hasBrackets = (tournament?.brackets?.length ?? 0) > 0
   const currentRoundObj = rounds.find(r => r.roundNumber === currentRound)
   const currentTime = currentRoundObj?.firstScheduled
 
@@ -192,8 +194,21 @@ function Inner({ slug }) {
           </button>
         </div>
 
+        {/* Pool play complete → hand off to playoffs instead of pointing
+            back at round 1. */}
+        {allPoolDone && (
+          <div className="mb-6 rounded-xl border border-status-success/40 bg-status-success/5 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" role="status">
+            <p className="text-status-success text-base font-semibold">
+              Pool play complete — all rounds final.
+            </p>
+            <Link href={`/admin/tournaments/${slug}${hasBrackets ? '/bracket' : ''}`} className="btn-primary text-xs py-2 shrink-0">
+              {hasBrackets ? 'Open Playoff Bracket' : 'Generate Playoffs'}
+            </Link>
+          </div>
+        )}
+
         {/* Now banner — at-a-glance "which round am I scoring right now?" */}
-        {rounds.length > 0 && currentRoundObj && (
+        {!allPoolDone && rounds.length > 0 && currentRoundObj && (
           <div
             className="mb-6 rounded-xl border border-titos-gold/40 bg-titos-gold/5 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
             role="status"

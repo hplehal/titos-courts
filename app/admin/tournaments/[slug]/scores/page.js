@@ -122,6 +122,14 @@ function Inner({ slug }) {
     return () => clearInterval(id)
   }, [])
 
+  // Multi-admin sync: silently refetch every 15s so scores saved from other
+  // devices appear here. ScoreEntry protects unsaved local edits (dirty
+  // cards ignore background refreshes), so this never clobbers typing.
+  useEffect(() => {
+    const id = setInterval(() => load({ silent: true }), 15_000)
+    return () => clearInterval(id)
+  }, [load])
+
   const { rounds, poolTeamsById } = useMemo(() => buildRounds(tournament), [tournament])
   const currentRound = useMemo(() => pickCurrentRound(rounds, now), [rounds, now])
 

@@ -17,6 +17,9 @@ import { cn } from '@/lib/utils'
 import { refAssignmentForMatch } from '@/lib/tournament/refRotation'
 import { tallySetsWon } from '@/lib/tournament/computeMatchStatus'
 import { cleanTeamName } from '@/lib/tournament/displayName'
+import { computeStandingsFromMatches } from '@/lib/tournament/calculateStandings'
+
+const ORDINALS = ['1st', '2nd', '3rd', '4th', '5th', '6th']
 
 function fmtTime(date) {
   if (!date) return '—'
@@ -97,6 +100,16 @@ export default function TeamSchedule({ team, pool }) {
   const myMatches = allMatches.filter(
     (m) => m.homeTeamId === teamId || m.awayTeamId === teamId,
   )
+
+  // Live pool standing for this team — recomputed from match data with the
+  // same tie-breaker chain the official standings use, so what a captain
+  // sees here always matches the pool table below.
+  const standingsRows = computeStandingsFromMatches(poolTeams, allMatches)
+  const myStandingIdx = standingsRows.findIndex((r) => r.teamId === teamId)
+  const hasAnyResult = allMatches.some((m) => m.status === 'completed')
+  const myStanding = hasAnyResult && myStandingIdx >= 0
+    ? { ...standingsRows[myStandingIdx], rank: myStandingIdx + 1 }
+    : null
   // Prefer the manually-assigned refTeam (set per-match by the seeder or
   // admin). Falls back to the canonical 4-team rotation algorithm so
   // legacy gold/silver tournaments without explicit ref assignments still
@@ -153,6 +166,22 @@ export default function TeamSchedule({ team, pool }) {
               <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
               Court {nextMatch.courtNumber ?? '—'}
             </span>
+          </div>
+        </div>
+      )}
+
+      {myStanding && (
+        <div className="px-5 py-3 border-b border-titos-border/30 bg-titos-gold/[0.04]">
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-titos-gray-400 mb-1.5">Your standing</h3>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+            <span className="text-titos-white font-bold text-base">{ORDINALS[myStanding.rank - 1] || `#${myStanding.rank}`} in {pool.name}</span>
+            <span className="text-titos-gray-300">{myStanding.sw}–{myStanding.sl} sets</span>
+            <span className={cn('font-semibold', myStanding.diff > 0 ? 'text-status-success' : myStanding.diff < 0 ? 'text-status-live' : 'text-titos-gray-400')}>
+              {myStanding.diff > 0 ? '+' : ''}{myStanding.diff} pts
+            </span>
+            {myStanding.qualifies === 'gold' && <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-titos-gold/15 text-titos-gold">Gold track</span>}
+            {myStanding.qualifies === 'silver' && <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-titos-gray-400/15 text-titos-gray-300">Silver track</span>}
+            {myStanding.qualifies === 'playin' && <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-status-info/15 text-status-info">Play-in</span>}
           </div>
         </div>
       )}

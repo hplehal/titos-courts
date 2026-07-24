@@ -140,7 +140,7 @@ function HubBody({ slug, tournament }) {
           (how did we get here). Each division is its own collapsible card so
           players scan straight to their draw. */}
       {(tournament?.brackets || []).length > 0 && (
-        <BracketsSection brackets={tournament.brackets} />
+        <BracketsSection brackets={tournament.brackets} hasRefs={tournament?.hasRefs !== false} />
       )}
 
       {/* Pool play */}
@@ -285,7 +285,7 @@ const ROUND_LABEL = {
   [BRACKET_ROUND.FINAL]: 'Final',
 }
 
-function BracketsSection({ brackets }) {
+function BracketsSection({ brackets, hasRefs = true }) {
   const gold = brackets.find(b => b.division === DIVISION_GOLD)
   const silver = brackets.find(b => b.division === DIVISION_SILVER)
   const ordered = [gold, silver].filter(Boolean)
@@ -355,7 +355,7 @@ function BracketsSection({ brackets }) {
 
         {/* Tree body */}
         <div className="p-3 sm:p-4 border-t border-titos-border/30">
-          <BracketTree matches={active.matches} />
+          <BracketTree matches={active.matches} showRef={hasRefs} />
         </div>
       </div>
     </section>

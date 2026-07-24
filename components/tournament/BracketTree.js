@@ -33,7 +33,7 @@ const LABELS = {
   [BRACKET_ROUND.FINAL]: 'Final',
 }
 
-export default function BracketTree({ matches }) {
+export default function BracketTree({ matches, showRef = true }) {
   // Group matches by round. Play-in matches (stage='play-in', bracketRound
   // null) become column 0 so the tree reads left-to-right as PI → QF → SF
   // → F. Legacy bracket matches without a stage field fall through to the
@@ -92,7 +92,7 @@ export default function BracketTree({ matches }) {
                       <div key={gi} className="flex flex-col gap-2 sm:gap-3">
                         {group.map((m) => (
                           <div key={m.id} className="w-[14.5rem] sm:w-60 md:w-64">
-                            <MatchCard match={m} variant="bracket" />
+                            <MatchCard match={m} variant="bracket" showRef={showRef} />
                           </div>
                         ))}
                       </div>
@@ -107,7 +107,7 @@ export default function BracketTree({ matches }) {
                   >
                     {list.map((m) => (
                       <div key={m.id} className="w-[14.5rem] sm:w-60 md:w-64">
-                        <MatchCard match={m} variant="bracket" />
+                        <MatchCard match={m} variant="bracket" showRef={showRef} />
                       </div>
                     ))}
                   </div>

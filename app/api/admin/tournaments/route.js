@@ -14,7 +14,7 @@ export async function GET(request) {
     orderBy: { date: 'desc' },
     select: {
       id: true, slug: true, name: true, date: true, endDate: true, venue: true,
-      status: true, poolSize: true, poolCount: true,
+      status: true, poolSize: true, poolCount: true, courtCount: true, imageType: true,
       _count: { select: { tournamentTeams: true, pools: true, brackets: true } },
     },
   })
@@ -27,9 +27,21 @@ export async function POST(request) {
   try {
     const body = await request.json()
     const {
-      name, slug, date, endDate, venue, poolSize, poolCount,
-      description, format, registrationFee, maxTeams, registrationDeadline,
+      name, slug, date, endDate, venue, poolSize, poolCount, courtCount,
+      description, format, bracketFormat, registrationFee, maxTeams, registrationDeadline,
+      imageBase64, imageType, hasRefs,
     } = body
+
+    // Poster upload arrives as a base64 data payload (client downscales to
+    // keep it small). Guard against oversized uploads: ~2MB decoded.
+    let imageData = null
+    if (imageBase64) {
+      const b64 = imageBase64.replace(/^data:[^;]+;base64,/, '')
+      imageData = Buffer.from(b64, 'base64')
+      if (imageData.length > 2 * 1024 * 1024) {
+        return NextResponse.json({ error: 'Image too large after compression (max 2MB)' }, { status: 400 })
+      }
+    }
 
     if (!name || !date) {
       return NextResponse.json({ error: 'name and date required' }, { status: 400 })
@@ -50,8 +62,13 @@ export async function POST(request) {
         venue: venue || null,
         poolSize: poolSize ? Number(poolSize) : null,
         poolCount: poolCount ? Number(poolCount) : null,
+        courtCount: courtCount ? Number(courtCount) : null,
+        hasRefs: hasRefs !== false,
+        imageData,
+        imageType: imageData ? (imageType || 'image/jpeg') : null,
         description: description || null,
         format: format || null,
+        ...(bracketFormat ? { bracketFormat } : {}),
         registrationFee: registrationFee ? Number(registrationFee) : null,
         maxTeams: maxTeams ? Number(maxTeams) : null,
         registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : null,

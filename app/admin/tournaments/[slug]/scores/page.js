@@ -122,6 +122,14 @@ function Inner({ slug }) {
     return () => clearInterval(id)
   }, [])
 
+  // Multi-admin sync: silently refetch every 15s so scores saved from other
+  // devices appear here. ScoreEntry protects unsaved local edits (dirty
+  // cards ignore background refreshes), so this never clobbers typing.
+  useEffect(() => {
+    const id = setInterval(() => load({ silent: true }), 15_000)
+    return () => clearInterval(id)
+  }, [load])
+
   const { rounds, poolTeamsById } = useMemo(() => buildRounds(tournament), [tournament])
   const currentRound = useMemo(() => pickCurrentRound(rounds, now), [rounds, now])
 
@@ -141,6 +149,8 @@ function Inner({ slug }) {
   }
   if (!tournament) return <p className="p-8 text-titos-gray-400">Tournament not found.</p>
 
+  const allPoolDone = rounds.length > 0 && rounds.every(r => r.allFinal)
+  const hasBrackets = (tournament?.brackets?.length ?? 0) > 0
   const currentRoundObj = rounds.find(r => r.roundNumber === currentRound)
   const currentTime = currentRoundObj?.firstScheduled
 
@@ -184,8 +194,21 @@ function Inner({ slug }) {
           </button>
         </div>
 
+        {/* Pool play complete → hand off to playoffs instead of pointing
+            back at round 1. */}
+        {allPoolDone && (
+          <div className="mb-6 rounded-xl border border-status-success/40 bg-status-success/5 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" role="status">
+            <p className="text-status-success text-base font-semibold">
+              Pool play complete — all rounds final.
+            </p>
+            <Link href={`/admin/tournaments/${slug}${hasBrackets ? '/bracket' : ''}`} className="btn-primary text-xs py-2 shrink-0">
+              {hasBrackets ? 'Open Playoff Bracket' : 'Generate Playoffs'}
+            </Link>
+          </div>
+        )}
+
         {/* Now banner — at-a-glance "which round am I scoring right now?" */}
-        {rounds.length > 0 && currentRoundObj && (
+        {!allPoolDone && rounds.length > 0 && currentRoundObj && (
           <div
             className="mb-6 rounded-xl border border-titos-gold/40 bg-titos-gold/5 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
             role="status"
@@ -232,7 +255,10 @@ function Inner({ slug }) {
 
         <div id="scoresheet" className="space-y-5">
           {rounds.map((r) => {
-            const isCurrent = r.roundNumber === currentRound
+            // Once the whole round robin is final there is no "current"
+            // round anymore — highlighting one (round 1 by fallback) reads
+            // as if play went backwards. Drop all round accents instead.
+            const isCurrent = !allPoolDone && r.roundNumber === currentRound
             const defaultOpen = !r.allFinal || isCurrent
             return (
               <RoundSection

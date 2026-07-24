@@ -35,15 +35,15 @@ function fmtTime(date) {
   }
 }
 
-export default function MatchCard({ match, variant = 'pool', poolTeams = null, showRound = false }) {
+export default function MatchCard({ match, variant = 'pool', poolTeams = null, showRound = false, showRef = true }) {
   const home = cleanTeamName(match.homeTeam?.name) || match.homeSeedLabel || 'TBD'
   const away = cleanTeamName(match.awayTeam?.name) || match.awaySeedLabel || 'TBD'
 
   // Ref assignment: prefer the manually-assigned `refTeam` (works for both
   // pool overrides and bracket matches); otherwise derive from the PDF
   // rotation when we have a pool roster. Falls back to null (no ref line).
-  let refName = cleanTeamName(match.refTeam?.name) ?? null
-  if (!refName && variant === 'pool' && poolTeams) {
+  let refName = showRef ? (cleanTeamName(match.refTeam?.name) ?? null) : null
+  if (showRef && !refName && variant === 'pool' && poolTeams) {
     const derived = refAssignmentForMatch(match, poolTeams)
     refName = cleanTeamName(derived?.ref?.name) ?? null
   }

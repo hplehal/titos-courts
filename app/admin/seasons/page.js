@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, Plus, Archive, Loader2, Check, Users, Calendar, ChevronDown, ChevronRight, Pencil, Save, X, Trash2, ListOrdered } from 'lucide-react'
-import Link from 'next/link'
+import { Plus, Archive, Loader2, Check, Users, Calendar, ChevronDown, ChevronRight, Pencil, Save, X, Trash2, ListOrdered } from 'lucide-react'
+import AdminPageHeader from '@/components/admin/AdminPageHeader'
 import { cn, getTierColor } from '@/lib/utils'
 
 export default function SeasonsPage() {
@@ -70,6 +70,25 @@ export default function SeasonsPage() {
 
   const toggleTeams = (seasonId) => {
     setExpandedTeams(prev => ({ ...prev, [seasonId]: !prev[seasonId] }))
+  }
+
+  // Auto-fill season defaults when a league is picked: next season number,
+  // matching name, start today, end 11 weeks out. Everything stays editable.
+  const applyLeagueDefaults = (leagueId) => {
+    if (!leagueId) { setNewSeason(p => ({ ...p, leagueId })); return }
+    const league = leagues.find(l => l.id === leagueId)
+    const leagueSeasons = seasons.filter(s => s.league?.slug === league?.slug)
+    const nextNumber = leagueSeasons.length ? Math.max(...leagueSeasons.map(s => s.seasonNumber)) + 1 : 1
+    const start = new Date()
+    const end = new Date(start.getTime() + 11 * 7 * 24 * 60 * 60 * 1000)
+    const iso = (d) => d.toISOString().slice(0, 10)
+    setNewSeason({
+      leagueId,
+      name: `Season ${nextNumber}`,
+      seasonNumber: String(nextNumber),
+      startDate: iso(start),
+      endDate: iso(end),
+    })
   }
 
   // ─── Season Actions ───
@@ -172,17 +191,13 @@ export default function SeasonsPage() {
   }
 
   return (
-    <div className="py-12 px-4">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <Link href="/admin" className="text-titos-gray-400 hover:text-titos-gold transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
-            <h1 className="font-display text-2xl font-black text-titos-white">Season Management</h1>
-          </div>
+    <div>
+      <div className="max-w-5xl">
+        <AdminPageHeader title="Seasons & Teams" description="Create seasons, manage weeks, and edit team rosters.">
           <button onClick={() => setShowNewForm(!showNewForm)} className="btn-primary text-sm">
             <Plus className="w-4 h-4" /> New Season
           </button>
-        </div>
+        </AdminPageHeader>
 
         {/* Message — fixed toast so it doesn't push season list */}
         {message && (
@@ -195,9 +210,10 @@ export default function SeasonsPage() {
         {/* New Season Form */}
         {showNewForm && (
           <div className="card rounded-xl p-6 mb-8">
-            <h3 className="font-display text-lg font-bold text-titos-white mb-4">Create New Season</h3>
+            <h3 className="font-display text-lg font-bold text-titos-white mb-1">Create New Season</h3>
+            <p className="text-titos-gray-400 text-xs mb-4">Pick a league and everything auto-fills — next season number, name, and an 11-week schedule. Adjust anything before creating.</p>
             <form onSubmit={handleNewSeason} className="grid sm:grid-cols-2 gap-4">
-              <select value={newSeason.leagueId} onChange={(e) => setNewSeason(p => ({ ...p, leagueId: e.target.value }))} required
+              <select value={newSeason.leagueId} onChange={(e) => applyLeagueDefaults(e.target.value)} required
                 className="px-4 py-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-white focus:outline-none focus:border-titos-gold/50">
                 <option value="">Select league...</option>
                 {leagues.map(l => <option key={l.id || l.slug} value={l.id}>{l.name}</option>)}
@@ -843,14 +859,32 @@ function InlineAddTeam({ seasonId, onAdded }) {
     </form>
   )
 
+  // Live parse so you can see exactly what will be created before submitting
+  const parsed = bulk.trim() ? bulk.trim().split('\n').filter(Boolean).map(line => {
+    const parts = line.split(',').map(p => p.trim())
+    return { name: parts[0], captainName: parts[1] || 'TBD', captainEmail: parts[2] || '' }
+  }).filter(t => t.name) : []
+
   return (
     <form onSubmit={handleAddBulk} className="space-y-2">
-      <textarea value={bulk} onChange={(e) => setBulk(e.target.value)} rows={4} required placeholder="Block Party, Jessica Chen, jessica@email.com\nNet Worth, Amanda Patel"
+      <textarea value={bulk} onChange={(e) => setBulk(e.target.value)} rows={4} required placeholder={'Block Party, Jessica Chen, jessica@email.com\nNet Worth, Amanda Patel'}
         className="w-full px-3 py-2 bg-titos-elevated border border-titos-border rounded-lg text-titos-white text-sm placeholder-titos-gray-500 focus:outline-none focus:border-titos-gold/50 font-mono" />
-      <p className="text-titos-gray-500 text-[11px]">One per line: Team Name, Captain, Email</p>
+      <p className="text-titos-gray-500 text-[11px]">One per line: Team Name, Captain, Email (captain and email optional)</p>
+      {parsed.length > 0 && (
+        <div className="p-2.5 rounded-lg bg-titos-surface border border-titos-border/50">
+          <p className="text-titos-gold text-[11px] font-bold uppercase tracking-wider mb-1.5">{parsed.length} team{parsed.length === 1 ? '' : 's'} ready</p>
+          <div className="flex flex-wrap gap-1.5">
+            {parsed.map((t, i) => (
+              <span key={i} className="px-2 py-0.5 rounded bg-titos-elevated text-titos-gray-200 text-xs font-medium">
+                {t.name}{t.captainName !== 'TBD' && <span className="text-titos-gray-500"> · {t.captainName}</span>}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex items-center gap-2">
-        <button type="submit" disabled={saving} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-titos-gold/15 text-titos-gold border border-titos-gold/30 flex items-center gap-1">
-          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Add All
+        <button type="submit" disabled={saving || parsed.length === 0} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-titos-gold/15 text-titos-gold border border-titos-gold/30 flex items-center gap-1 disabled:opacity-50">
+          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Add {parsed.length > 0 ? `${parsed.length} Team${parsed.length === 1 ? '' : 's'}` : 'All'}
         </button>
         <button type="button" onClick={() => { setMode(null); setMsg('') }} className="px-3 py-1.5 text-xs text-titos-gray-400 hover:text-titos-white">Cancel</button>
         {msg && <span className="text-status-success text-xs font-semibold">{msg}</span>}

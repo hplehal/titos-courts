@@ -67,11 +67,14 @@ export async function POST(request, { params }) {
     })
 
     const kickoff = t.date ? new Date(t.date) : null
+    // Round spacing: ranked-split (beach) plays 40-minute games + 5-minute
+    // changeover = 45-minute slots; other formats keep the classic 30.
+    const intervalMinutes = t.bracketFormat === 'ranked-split' ? 45 : ROUND_INTERVAL_MINUTES
     // Convenience: compute the scheduled time for a given round number.
     const slotFor = (roundNumber) => {
       if (!kickoff) return null
       const d = new Date(kickoff)
-      d.setMinutes(d.getMinutes() + (roundNumber - 1) * ROUND_INTERVAL_MINUTES)
+      d.setMinutes(d.getMinutes() + (roundNumber - 1) * intervalMinutes)
       return d
     }
 

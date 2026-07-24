@@ -8,7 +8,7 @@ import TeamFilter from '@/components/ui/TeamFilter'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { useMyTeam } from '@/lib/hooks/useMyTeam'
 import { cn, formatDate, getSlotInfo, getTeamAbbreviation } from '@/lib/utils'
-import PlayoffsClient from '@/app/playoffs/[slug]/PlayoffsClient'
+import PlayoffsClient from '@/app/(site)/playoffs/[slug]/PlayoffsClient'
 
 /* ─── Round-robin generator ───
    Pattern per round (3 teams A, B, C):

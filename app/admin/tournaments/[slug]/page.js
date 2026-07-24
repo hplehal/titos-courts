@@ -10,17 +10,30 @@ import AuthGate from '@/components/admin/AuthGate'
 import { adminFetch, adminPost, adminPatch, adminDelete } from '@/lib/adminFetch'
 import { TOURNAMENT_STATUS } from '@/lib/tournament/constants'
 
-function Panel({ title, children, action }) {
+function Panel({ title, children, action, collapsible = false, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen)
+  const bodyHidden = collapsible && !open
   return (
     <section className="card-flat rounded-xl overflow-hidden">
-      <header className="px-4 sm:px-5 py-3 border-b border-titos-border/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h2 className="font-display font-bold text-titos-white">{title}</h2>
-        {action && <div className="flex flex-wrap gap-2">{action}</div>}
+      <header
+        className={cnPanel('px-4 sm:px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3', !bodyHidden && 'border-b border-titos-border/30', collapsible && 'cursor-pointer select-none hover:bg-titos-white/[0.02]')}
+        onClick={collapsible ? () => setOpen(o => !o) : undefined}
+      >
+        <h2 className="font-display font-bold text-titos-white flex items-center gap-2">
+          {title}
+          {collapsible && (
+            <svg className={cnPanel('w-4 h-4 text-titos-gray-400 transition-transform', open && 'rotate-180')} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          )}
+        </h2>
+        {action && <div className="flex flex-wrap gap-2" onClick={e => e.stopPropagation()}>{action}</div>}
       </header>
-      <div className="p-4 sm:p-5">{children}</div>
+      {!bodyHidden && <div className="p-4 sm:p-5">{children}</div>}
     </section>
   )
 }
+
+// Tiny local class combiner so Panel doesn't need the full cn import chain.
+function cnPanel(...parts) { return parts.filter(Boolean).join(' ') }
 
 // Convert a UTC ISO string to a local-time string suitable for
 // <input type="datetime-local">. Native datetime-local expects "YYYY-MM-DDTHH:mm"
@@ -60,6 +73,7 @@ function ConfigForm({ tournament, onSaved }) {
     endDate: toLocalInput(tournament.endDate),
     poolSize: tournament.poolSize || 4,
     poolCount: tournament.poolCount || 4,
+    bracketMatchFormat: tournament.bracketMatchFormat || 'bo3-25-15-cap-17',
     status: tournament.status,
     description: tournament.description || '',
   })
@@ -122,6 +136,12 @@ function ConfigForm({ tournament, onSaved }) {
         </label>
         <label className="block"><span className="text-xs text-titos-gray-400">Pool Count</span>
           <input type="number" inputMode="numeric" min="2" max="12" value={form.poolCount} onChange={e => setForm({ ...form, poolCount: e.target.value })} className={inputCls} />
+        </label>
+        <label className="block md:col-span-2"><span className="text-xs text-titos-gray-400">Playoff match format</span>
+          <select value={form.bracketMatchFormat} onChange={e => setForm({ ...form, bracketMatchFormat: e.target.value })} className={inputCls}>
+            <option value="bo3-25-15-cap-17">Best of 3 — sets to 25/15, cap 27/17</option>
+            <option value="bo3-25-15-no-cap">Best of 3 — no cap (win by 2)</option>
+          </select>
         </label>
         <label className="block md:col-span-2"><span className="text-xs text-titos-gray-400">Status</span>
           <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className={inputCls}>
@@ -709,10 +729,20 @@ function BracketPanel({ tournament, onChange }) {
   const [busy, setBusy] = useState('')
   const [err, setErr] = useState('')
   const [pending, setPending] = useState([])
+  const [bracketStart, setBracketStart] = useState('')
 
   const generateBrackets = async () => {
     setBusy('generate'); setErr(''); setPending([])
-    const res = await adminPost(`/api/admin/tournaments/${tournament.slug}/brackets`, {})
+    // Time-only input: combine with the tournament's (local) date, then
+    // convert to UTC ISO like the create form does.
+    let startISO = null
+    if (bracketStart) {
+      const d = new Date(tournament.date)
+      const [h, m] = bracketStart.split(':').map(Number)
+      d.setHours(h, m, 0, 0)
+      startISO = d.toISOString()
+    }
+    const res = await adminPost(`/api/admin/tournaments/${tournament.slug}/brackets`, startISO ? { bracketStart: startISO } : {})
     if (!res.ok) {
       const d = await res.json().catch(() => ({}))
       setErr(d.error || 'Failed')
@@ -741,10 +771,18 @@ function BracketPanel({ tournament, onChange }) {
       action={
         <div className="flex flex-wrap gap-2">
           {tournament.brackets.length === 0 ? (
+            <>
+            <label className="flex items-center gap-1.5 text-[11px] text-titos-gray-400">
+              Playoffs start
+              <input type="time" value={bracketStart} onChange={e => setBracketStart(e.target.value)}
+                className="px-2 py-1.5 bg-titos-elevated border border-titos-border rounded text-titos-white text-xs focus:outline-none focus:border-titos-gold/50 [color-scheme:dark]"
+                title="Optional — leave blank to auto-schedule from the last pool round" />
+            </label>
             <button onClick={generateBrackets} disabled={busy === 'generate'} className="btn-primary text-xs py-2">
               {busy === 'generate' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trophy className="w-3.5 h-3.5" />}
               Generate Brackets
             </button>
+            </>
           ) : (
             <>
               <Link href={`/admin/tournaments/${tournament.slug}/bracket`} className="btn-primary text-xs py-2">
@@ -775,6 +813,8 @@ function BracketPanel({ tournament, onChange }) {
         <p className="text-titos-gray-500 text-sm">
           {tournament.bracketFormat === 'crossover-single-elim'
             ? <>Bracket appears once all pool matches are FINAL. Click <span className="text-titos-white font-medium">Generate Brackets</span> to seed the play-in matches + 8-team crossover single-elimination bracket.</>
+            : tournament.bracketFormat === 'ranked-split'
+            ? <>Brackets appear once all pool matches are FINAL. Click <span className="text-titos-white font-medium">Generate Brackets</span> to rank all teams — top 2 per pool go Gold, bottom 2 Silver; seeds #1–#2 get semifinal byes, and each division gets a Final + 3rd-place match.</>
             : <>Brackets appear once all pool matches are FINAL. Click Generate Brackets to seed Gold + Silver.</>}
         </p>
       ) : (
@@ -835,7 +875,7 @@ function Inner({ slug }) {
           </div>
         </div>
 
-        <Panel title="Config">
+        <Panel title="Config" collapsible defaultOpen={false}>
           <ConfigForm tournament={tournament} onSaved={load} />
         </Panel>
 

@@ -6,7 +6,7 @@
 // raw tournament structure; we re-compute standings client-side via the same
 // pure function that powers the server render for consistency.
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Trophy, Medal, Crown, MapPin, UserCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import LivePoller from '@/components/tournament/LivePoller'
@@ -51,6 +51,18 @@ function scrollToPool(poolId) {
 
 function HubBody({ slug, tournament }) {
   const [selectedTeamId, setSelectedTeamId] = useState('')
+
+  // Remember "who am I" per tournament so returning visitors land straight
+  // on their team view instead of re-picking every visit.
+  useEffect(() => {
+    const saved = localStorage.getItem(`tournament-team:${slug}`)
+    if (saved) setSelectedTeamId(saved)
+  }, [slug])
+  const pickTeam = (id) => {
+    setSelectedTeamId(id)
+    if (id) localStorage.setItem(`tournament-team:${slug}`, id)
+    else localStorage.removeItem(`tournament-team:${slug}`)
+  }
 
   // Resolve selection → { team, pool } once so TeamSchedule and the picker
   // stay in sync as data refreshes.
@@ -97,11 +109,11 @@ function HubBody({ slug, tournament }) {
         slug={slug}
         pools={tournament?.pools || []}
         value={selectedTeamId}
-        onChange={setSelectedTeamId}
+        onChange={pickTeam}
       />
 
       {mySelection && (
-        <TeamSchedule team={mySelection.team} pool={mySelection.pool} />
+        <TeamSchedule team={mySelection.team} pool={mySelection.pool} hasRefs={tournament?.hasRefs !== false} />
       )}
 
       {/* Live spotlight — shows every currently-live match across pools +
@@ -128,7 +140,7 @@ function HubBody({ slug, tournament }) {
           (how did we get here). Each division is its own collapsible card so
           players scan straight to their draw. */}
       {(tournament?.brackets || []).length > 0 && (
-        <BracketsSection brackets={tournament.brackets} />
+        <BracketsSection brackets={tournament.brackets} hasRefs={tournament?.hasRefs !== false} />
       )}
 
       {/* Pool play */}
@@ -273,7 +285,7 @@ const ROUND_LABEL = {
   [BRACKET_ROUND.FINAL]: 'Final',
 }
 
-function BracketsSection({ brackets }) {
+function BracketsSection({ brackets, hasRefs = true }) {
   const gold = brackets.find(b => b.division === DIVISION_GOLD)
   const silver = brackets.find(b => b.division === DIVISION_SILVER)
   const ordered = [gold, silver].filter(Boolean)
@@ -343,7 +355,7 @@ function BracketsSection({ brackets }) {
 
         {/* Tree body */}
         <div className="p-3 sm:p-4 border-t border-titos-border/30">
-          <BracketTree matches={active.matches} />
+          <BracketTree matches={active.matches} showRef={hasRefs} />
         </div>
       </div>
     </section>

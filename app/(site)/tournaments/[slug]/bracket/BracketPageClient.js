@@ -30,7 +30,7 @@ function Body({ tournament, division, onDivisionChange }) {
       </div>
 
       {bracket ? (
-        <BracketTree matches={bracket.matches} />
+        <BracketTree matches={bracket.matches} showRef={tournament?.hasRefs !== false} />
       ) : (
         <p className="text-titos-gray-500 text-sm">No bracket yet.</p>
       )}

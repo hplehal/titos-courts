@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { checkAdminPassword, unauthorized } from '@/lib/server/adminAuth'
 import { revalidateTournament } from '@/lib/server/tournaments'
+import { compressTournamentSchedule } from '@/lib/tournament/compressSchedule'
 import { computeMatchStatus } from '@/lib/tournament/computeMatchStatus'
 import { advanceBracketWinner } from '@/lib/tournament/advanceBracketWinner'
 import { findNextOnSameCourt } from '@/lib/tournament/canonicalBracketSchedule'
@@ -64,6 +65,13 @@ export async function PATCH(request, { params }) {
       advanceResult = await advanceBracketWinner(matchId, prisma)
     }
 
+    
+    // Dynamic day-of pacing: if this save completed the whole current round
+    // early, pull the remaining schedule forward (ranked-split only).
+    try {
+      const tt = await prisma.tournament.findUnique({ where: { slug }, select: { id: true, bracketFormat: true } })
+      if (tt?.bracketFormat === 'ranked-split') await compressTournamentSchedule(tt.id)
+    } catch { /* pacing is best-effort — never block a score save */ }
     revalidateTournament(slug)
     return NextResponse.json({ status, winnerId, advance: advanceResult })
   } catch (error) {
@@ -157,6 +165,13 @@ export async function DELETE(request, { params }) {
       }
     })
 
+    
+    // Dynamic day-of pacing: if this save completed the whole current round
+    // early, pull the remaining schedule forward (ranked-split only).
+    try {
+      const tt = await prisma.tournament.findUnique({ where: { slug }, select: { id: true, bracketFormat: true } })
+      if (tt?.bracketFormat === 'ranked-split') await compressTournamentSchedule(tt.id)
+    } catch { /* pacing is best-effort — never block a score save */ }
     revalidateTournament(slug)
     return NextResponse.json({ cleared: true })
   } catch (error) {

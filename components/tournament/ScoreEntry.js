@@ -81,25 +81,37 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null, 
   const [sets, setSets] = useState(buildInitial)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
+  // True while this admin has unsaved local edits. Server refreshes (polling
+  // or another admin's save) must NOT overwrite in-progress typing — but a
+  // clean card should always track the latest saved values.
+  const [dirty, setDirty] = useState(false)
   // Default collapsed except for LIVE matches — bracket admin pages render
   // 14 matches (4 QF + 2 SF + 1 F per division) and expanding them all by
   // default made the page scroll ~8000px. LIVE stays open because that's
   // the one the admin is actively editing; everything else opens on click.
   const [expanded, setExpanded] = useState(match.status === 'live')
 
+  // Signature of the server-side scores — changes whenever ANY value
+  // changes, not just the set count, so a concurrent admin's save is
+  // picked up on the next refresh.
+  const scoresSig = JSON.stringify((match.scores ?? []).map(s => [s.setNumber, s.homeScore, s.awayScore]))
+
   useEffect(() => {
-    setSets(buildInitial())
+    // Never clobber unsaved local edits with a background refresh.
+    if (!dirty) setSets(buildInitial())
     // Re-sync when the match status flips. LIVE auto-expands, everything
     // else collapses back unless the admin already opened it — we only
     // force state on real transitions, never mid-edit.
     setExpanded(match.status === 'live')
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [match.id, match.scores?.length, match.status, setCount])
+  }, [match.id, scoresSig, match.status, setCount])
 
   const setField = (i, field, val) => {
+    setDirty(true)
     setSets(prev => prev.map((s, idx) => idx === i ? { ...s, [field]: val === '' ? '' : clampScore(val) } : s))
   }
   const bump = (i, field, delta) => {
+    setDirty(true)
     setSets(prev => prev.map((s, idx) => {
       if (idx !== i) return s
       const base = s[field] === '' ? 0 : Number(s[field])
@@ -110,6 +122,7 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null, 
     // One-tap set a clean 25-to-something result. If the other side is blank,
     // default it to 15 (typical losing score) so the row is immediately
     // savable. Admin can always adjust the loser number afterwards.
+    setDirty(true)
     setSets(prev => prev.map((s, idx) => {
       if (idx !== i) return s
       if (winner === 'home') {
@@ -128,7 +141,7 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null, 
       const res = await adminPatch(saveUrl, { scores: payload })
       const data = await res.json()
       if (!res.ok) setMsg(data.error || 'Failed')
-      else { setMsg('Saved'); onSaved?.(data) }
+      else { setMsg('Saved'); setDirty(false); onSaved?.(data) }
     } catch { setMsg('Connection error') }
     setBusy(false)
   }
@@ -152,7 +165,7 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null, 
       const res = await adminPost(saveUrl, { scores: payload })
       const data = await res.json()
       if (!res.ok) setMsg(data.error || 'Failed')
-      else { setMsg('Ended at cap'); onSaved?.(data) }
+      else { setMsg('Ended at cap'); setDirty(false); onSaved?.(data) }
     } catch { setMsg('Connection error') }
     setBusy(false)
   }
@@ -182,6 +195,7 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null, 
           setNumber: i + 1, homeScore: '', awayScore: '',
         })))
         setMsg('Cleared')
+        setDirty(false)
         onSaved?.(data)
       }
     } catch { setMsg('Connection error') }
@@ -286,7 +300,7 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null, 
             />
           ))}
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 pt-1">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 sm:gap-3 pt-1 min-w-0">
             {/* Clear button lives on the left — visually separated from the
                 primary Save CTA so it's never confused with it. Only shown
                 once the match has saved scores to clear. */}
@@ -303,7 +317,7 @@ export default function ScoreEntry({ match, saveUrl, onSaved, poolTeams = null, 
               </button>
             ) : <span className="hidden sm:block" aria-hidden="true" />}
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 sm:justify-end">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 sm:justify-end min-w-0 flex-1">
               {msg && (
                 <span
                   className={cn(

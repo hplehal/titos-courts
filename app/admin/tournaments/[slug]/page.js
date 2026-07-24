@@ -74,6 +74,7 @@ function ConfigForm({ tournament, onSaved }) {
     poolSize: tournament.poolSize || 4,
     poolCount: tournament.poolCount || 4,
     bracketMatchFormat: tournament.bracketMatchFormat || 'bo3-25-15-cap-17',
+    hasRefs: tournament.hasRefs !== false,
     status: tournament.status,
     description: tournament.description || '',
   })
@@ -136,6 +137,10 @@ function ConfigForm({ tournament, onSaved }) {
         </label>
         <label className="block"><span className="text-xs text-titos-gray-400">Pool Count</span>
           <input type="number" inputMode="numeric" min="2" max="12" value={form.poolCount} onChange={e => setForm({ ...form, poolCount: e.target.value })} className={inputCls} />
+        </label>
+        <label className="flex items-center gap-2 md:col-span-2 text-sm text-titos-gray-300 cursor-pointer">
+          <input type="checkbox" checked={form.hasRefs} onChange={e => setForm({ ...form, hasRefs: e.target.checked })} className="w-4 h-4 accent-[#F2A527]" />
+          Teams ref each other&apos;s matches (show ref duties + rotation)
         </label>
         <label className="block md:col-span-2"><span className="text-xs text-titos-gray-400">Playoff match format</span>
           <select value={form.bracketMatchFormat} onChange={e => setForm({ ...form, bracketMatchFormat: e.target.value })} className={inputCls}>

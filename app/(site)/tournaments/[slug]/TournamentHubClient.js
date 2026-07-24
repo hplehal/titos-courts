@@ -6,7 +6,7 @@
 // raw tournament structure; we re-compute standings client-side via the same
 // pure function that powers the server render for consistency.
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Trophy, Medal, Crown, MapPin, UserCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import LivePoller from '@/components/tournament/LivePoller'
@@ -51,6 +51,18 @@ function scrollToPool(poolId) {
 
 function HubBody({ slug, tournament }) {
   const [selectedTeamId, setSelectedTeamId] = useState('')
+
+  // Remember "who am I" per tournament so returning visitors land straight
+  // on their team view instead of re-picking every visit.
+  useEffect(() => {
+    const saved = localStorage.getItem(`tournament-team:${slug}`)
+    if (saved) setSelectedTeamId(saved)
+  }, [slug])
+  const pickTeam = (id) => {
+    setSelectedTeamId(id)
+    if (id) localStorage.setItem(`tournament-team:${slug}`, id)
+    else localStorage.removeItem(`tournament-team:${slug}`)
+  }
 
   // Resolve selection → { team, pool } once so TeamSchedule and the picker
   // stay in sync as data refreshes.
@@ -97,7 +109,7 @@ function HubBody({ slug, tournament }) {
         slug={slug}
         pools={tournament?.pools || []}
         value={selectedTeamId}
-        onChange={setSelectedTeamId}
+        onChange={pickTeam}
       />
 
       {mySelection && (

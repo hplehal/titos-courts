@@ -113,13 +113,14 @@ export default async function TournamentDetailPage({ params }) {
       )}
 
       <div className="mx-auto max-w-6xl px-4 mt-10">
-        {/* Captain's Package — venue/prize/format chips + rules markdown.
-            Renders above the hub so captains see the rules first thing on
-            game day. The component returns null if no rules/venue/prize
-            are configured, so older tournaments are unaffected. */}
-        <CaptainsPackage tournament={tournament} />
-
+        {/* Team-first: the hub opens with "pick your team" → your schedule
+            and standing, so players land on their own view immediately.
+            Captain's Package (rules/venue reference) moved below. */}
         <TournamentHubClient slug={slug} initialData={tournament} />
+
+        <div className="mt-10">
+          <CaptainsPackage tournament={tournament} />
+        </div>
 
         {/* Secondary bracket CTA for completed/live tournaments (upcoming already has the sticky CTA above) */}
         {!(isUpcoming && hasFutureDate) && (

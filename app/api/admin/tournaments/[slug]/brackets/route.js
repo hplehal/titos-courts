@@ -435,9 +435,23 @@ async function generateCrossoverBracketAndPlayIns({ tournament, pools }) {
  */
 async function generateRankedSplitBrackets({ tournament, pools }) {
   const kickoff = tournament.date ? new Date(tournament.date) : null
-  const start = kickoff
-    ? new Date(kickoff.getTime() + RANKED_SPLIT_START_OFFSET_MINUTES * 60_000)
-    : null
+  // Prefer deriving playoff start from the REAL pool schedule: last pool
+  // round start + 45 min (game + changeover) + 30 min lunch/seeding buffer.
+  // Falls back to the fixed offset when pool matches carry no times.
+  let lastPoolStart = null
+  for (const pool of tournament.pools ?? []) {
+    for (const m of pool.matches ?? []) {
+      if (m.scheduledTime) {
+        const t = new Date(m.scheduledTime)
+        if (!lastPoolStart || t > lastPoolStart) lastPoolStart = t
+      }
+    }
+  }
+  const start = lastPoolStart
+    ? new Date(lastPoolStart.getTime() + (45 + 30) * 60_000)
+    : kickoff
+      ? new Date(kickoff.getTime() + RANKED_SPLIT_START_OFFSET_MINUTES * 60_000)
+      : null
   const slotTime = (round) => start
     ? new Date(start.getTime() + round * RANKED_SPLIT_ROUND_MINUTES * 60_000)
     : null

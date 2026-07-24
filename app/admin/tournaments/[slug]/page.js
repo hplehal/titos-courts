@@ -713,8 +713,15 @@ function BracketPanel({ tournament, onChange }) {
 
   const generateBrackets = async () => {
     setBusy('generate'); setErr(''); setPending([])
-    // datetime-local is local time; convert to UTC ISO like the create form
-    const startISO = bracketStart ? new Date(bracketStart).toISOString() : null
+    // Time-only input: combine with the tournament's (local) date, then
+    // convert to UTC ISO like the create form does.
+    let startISO = null
+    if (bracketStart) {
+      const d = new Date(tournament.date)
+      const [h, m] = bracketStart.split(':').map(Number)
+      d.setHours(h, m, 0, 0)
+      startISO = d.toISOString()
+    }
     const res = await adminPost(`/api/admin/tournaments/${tournament.slug}/brackets`, startISO ? { bracketStart: startISO } : {})
     if (!res.ok) {
       const d = await res.json().catch(() => ({}))
@@ -747,7 +754,7 @@ function BracketPanel({ tournament, onChange }) {
             <>
             <label className="flex items-center gap-1.5 text-[11px] text-titos-gray-400">
               Playoffs start
-              <input type="datetime-local" value={bracketStart} onChange={e => setBracketStart(e.target.value)}
+              <input type="time" value={bracketStart} onChange={e => setBracketStart(e.target.value)}
                 className="px-2 py-1.5 bg-titos-elevated border border-titos-border rounded text-titos-white text-xs focus:outline-none focus:border-titos-gold/50 [color-scheme:dark]"
                 title="Optional — leave blank to auto-schedule from the last pool round" />
             </label>

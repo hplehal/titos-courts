@@ -231,7 +231,7 @@ function Inner({ slug }) {
                 <p className="text-[11px] text-titos-gray-400">
                   {currentRoundObj.matches.length} courts in play
                   {refSeedForRound(currentRoundObj.roundNumber) != null && (
-                    <> · <span className="text-titos-gold font-semibold">seed {refSeedForRound(currentRoundObj.roundNumber)} refs</span></>
+                    tournament?.hasRefs !== false && <> · <span className="text-titos-gold font-semibold">seed {refSeedForRound(currentRoundObj.roundNumber)} refs</span></>
                   )}
                 </p>
               </div>

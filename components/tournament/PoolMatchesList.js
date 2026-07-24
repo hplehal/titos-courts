@@ -29,7 +29,7 @@ function summarize(matches) {
   return { live, final, scheduled }
 }
 
-export default function PoolMatchesList({ matches, poolTeams }) {
+export default function PoolMatchesList({ matches, poolTeams, showRef = true }) {
   const sorted = useMemo(() => {
     return (matches || []).slice().sort((a, b) => {
       const ra = a.roundNumber ?? 0
@@ -83,6 +83,7 @@ export default function PoolMatchesList({ matches, poolTeams }) {
       <div className="px-2 pb-2 pt-1 space-y-1.5 border-t border-titos-border/30">
         {sorted.map(m => (
           <MatchCard
+            showRef={showRef}
             key={m.id}
             match={m}
             variant="pool"

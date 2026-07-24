@@ -199,7 +199,7 @@ function HubBody({ slug, tournament }) {
                     expanded automatically; past rounds collapse with a
                     compact summary so users aren't scrolling through a wall
                     of final scores. */}
-                <PoolMatchesList matches={pool.matches} poolTeams={pool.teams} />
+                <PoolMatchesList matches={pool.matches} poolTeams={pool.teams} showRef={tournament?.hasRefs !== false} />
               </div>
             ))}
           </div>

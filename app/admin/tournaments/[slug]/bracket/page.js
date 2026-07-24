@@ -16,27 +16,37 @@ import { cleanTeamName } from '@/lib/tournament/displayName'
 function MatchIdentity({ match }) {
   const home = cleanTeamName(match.homeTeam?.name) || match.homeSeedLabel || 'TBD'
   const away = cleanTeamName(match.awayTeam?.name) || match.awaySeedLabel || 'TBD'
-  const statusTone =
-    match.status === 'live' ? 'text-status-live'
-    : match.status === 'completed' ? 'text-status-success'
-    : 'text-titos-gray-500'
+  const homeWon = match.status === 'completed' && match.winnerId && match.winnerId === match.homeTeamId
+  const awayWon = match.status === 'completed' && match.winnerId && match.winnerId === match.awayTeamId
+  const pill =
+    match.status === 'live' ? 'bg-status-live/15 text-status-live border-status-live/30'
+    : match.status === 'completed' ? 'bg-status-success/15 text-status-success border-status-success/30'
+    : 'bg-titos-charcoal/60 text-titos-gray-400 border-titos-border/50'
   const statusLabel =
     match.status === 'live' ? 'Live'
     : match.status === 'completed' ? 'Final'
     : 'Scheduled'
+  const time = match.scheduledTime
+    ? new Date(match.scheduledTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    : null
   return (
-    <div className="px-3 py-2 bg-titos-elevated/40 border-b border-titos-border/40 flex items-center gap-3 flex-wrap">
-      <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${statusTone}`}>
+    <div className="px-3 py-2.5 bg-titos-elevated/60 border-b border-titos-border/40 flex items-center gap-2.5 flex-wrap">
+      <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider shrink-0 ${pill}`}>
         {match.status === 'live' && (
           <span className="w-1.5 h-1.5 rounded-full bg-status-live animate-pulse" aria-hidden="true" />
         )}
         {statusLabel}
       </span>
-      <span className="text-sm font-semibold text-titos-white truncate flex-1 min-w-0">
-        {home}
-        <span className="text-titos-gray-600 mx-1.5">vs</span>
-        {away}
+      <span className="text-[15px] font-bold truncate flex-1 min-w-0">
+        <span className={homeWon ? 'text-status-success' : 'text-titos-white'}>{home}</span>
+        <span className="text-titos-gray-600 mx-1.5 font-normal text-xs">vs</span>
+        <span className={awayWon ? 'text-status-success' : 'text-titos-white'}>{away}</span>
       </span>
+      {(time || match.courtNumber) && (
+        <span className="text-[11px] text-titos-gray-400 tabular-nums shrink-0">
+          {time}{time && match.courtNumber ? ' · ' : ''}{match.courtNumber ? `Court ${match.courtNumber}` : ''}
+        </span>
+      )}
     </div>
   )
 }
@@ -106,19 +116,21 @@ function Inner({ slug }) {
             const isOpenBracket = bracket.division === 'Open'
             return (
               <section key={bracket.id} className="card-flat rounded-xl overflow-hidden">
-                <header className="px-5 py-3 border-b border-titos-border/30 bg-titos-gold/5 flex items-center gap-2">
+                <header className={`px-5 py-3 border-b border-titos-border/30 flex items-center gap-2 ${bracket.division === 'Silver' ? 'bg-titos-gray-400/5' : 'bg-titos-gold/5'}`}>
                   {bracket.division === 'Gold' || isOpenBracket
                     ? <Trophy className="w-4 h-4 text-titos-gold" />
                     : <Medal className="w-4 h-4 text-titos-gray-300" />}
-                  <h2 className="font-display font-bold text-titos-gold text-sm">
+                  <h2 className={`font-display font-bold text-sm ${bracket.division === 'Silver' ? 'text-titos-gray-200' : 'text-titos-gold'}`}>
                     {isOpenBracket ? 'Playoffs' : `${bracket.division} Division`}
                   </h2>
                 </header>
                 <div className="p-4 space-y-5">
                   {Object.entries(byRound).sort(([a], [b]) => Number(a) - Number(b)).map(([round, matches]) => (
                     <div key={round}>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-titos-gray-500 mb-2">
+                      <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-titos-gray-300 mb-2.5">
+                        <span className="w-1 h-3.5 rounded-full bg-titos-gold/70" aria-hidden="true" />
                         {ROUND_LABEL_FOR(Number(round))}
+                        <span className="text-titos-gray-600 normal-case font-semibold tracking-normal">· {matches.length} match{matches.length === 1 ? '' : 'es'}</span>
                       </h3>
                       {/* 2-up at md+ so 4 QFs become 2 rows instead of 4.
                           SFs + Finals also pair up nicely when both divisions
@@ -131,7 +143,7 @@ function Inner({ slug }) {
                           // of editing the wrong row's court/ref.
                           <div
                             key={m.id}
-                            className="card-flat rounded-lg overflow-hidden border border-titos-border/40"
+                            className={`card-flat rounded-lg overflow-hidden border ${m.status === 'live' ? 'border-status-live/40 ring-1 ring-status-live/20' : m.status === 'completed' ? 'border-status-success/25' : 'border-titos-border/40'}`}
                             data-status={m.status}
                           >
                             <MatchIdentity match={m} />

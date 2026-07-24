@@ -709,10 +709,13 @@ function BracketPanel({ tournament, onChange }) {
   const [busy, setBusy] = useState('')
   const [err, setErr] = useState('')
   const [pending, setPending] = useState([])
+  const [bracketStart, setBracketStart] = useState('')
 
   const generateBrackets = async () => {
     setBusy('generate'); setErr(''); setPending([])
-    const res = await adminPost(`/api/admin/tournaments/${tournament.slug}/brackets`, {})
+    // datetime-local is local time; convert to UTC ISO like the create form
+    const startISO = bracketStart ? new Date(bracketStart).toISOString() : null
+    const res = await adminPost(`/api/admin/tournaments/${tournament.slug}/brackets`, startISO ? { bracketStart: startISO } : {})
     if (!res.ok) {
       const d = await res.json().catch(() => ({}))
       setErr(d.error || 'Failed')
@@ -741,10 +744,18 @@ function BracketPanel({ tournament, onChange }) {
       action={
         <div className="flex flex-wrap gap-2">
           {tournament.brackets.length === 0 ? (
+            <>
+            <label className="flex items-center gap-1.5 text-[11px] text-titos-gray-400">
+              Playoffs start
+              <input type="datetime-local" value={bracketStart} onChange={e => setBracketStart(e.target.value)}
+                className="px-2 py-1.5 bg-titos-elevated border border-titos-border rounded text-titos-white text-xs focus:outline-none focus:border-titos-gold/50 [color-scheme:dark]"
+                title="Optional — leave blank to auto-schedule from the last pool round" />
+            </label>
             <button onClick={generateBrackets} disabled={busy === 'generate'} className="btn-primary text-xs py-2">
               {busy === 'generate' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trophy className="w-3.5 h-3.5" />}
               Generate Brackets
             </button>
+            </>
           ) : (
             <>
               <Link href={`/admin/tournaments/${tournament.slug}/bracket`} className="btn-primary text-xs py-2">

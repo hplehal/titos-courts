@@ -35,6 +35,10 @@ export async function POST(request, { params }) {
   if (!checkAdminPassword(request)) return unauthorized()
   const { slug } = await params
   try {
+    // Optional admin override for when playoffs actually start (lunch ran
+    // long, courts opened late, ...). Applies to ranked-split scheduling.
+    const body = await request.json().catch(() => ({}))
+    const bracketStartOverride = body?.bracketStart ? new Date(body.bracketStart) : null
     const t = await prisma.tournament.findUnique({
       where: { slug },
       include: {
@@ -83,6 +87,7 @@ export async function POST(request, { params }) {
       const result = await generateRankedSplitBrackets({
         tournament: t,
         pools: poolsForSeeding,
+        startOverride: bracketStartOverride,
       })
       if (result.error) {
         return NextResponse.json({ error: result.error }, { status: 400 })
@@ -433,7 +438,7 @@ async function generateCrossoverBracketAndPlayIns({ tournament, pools }) {
  * after kickoff. Losers of the SFs are routed into the 3rd-place match by
  * advanceBracketWinner (it looks for the FINAL-round, position-1 shell).
  */
-async function generateRankedSplitBrackets({ tournament, pools }) {
+async function generateRankedSplitBrackets({ tournament, pools, startOverride = null }) {
   const kickoff = tournament.date ? new Date(tournament.date) : null
   // Prefer deriving playoff start from the REAL pool schedule: last pool
   // round start + 45 min (game + changeover) + 30 min lunch/seeding buffer.
@@ -447,7 +452,9 @@ async function generateRankedSplitBrackets({ tournament, pools }) {
       }
     }
   }
-  const start = lastPoolStart
+  const start = startOverride && !Number.isNaN(startOverride.getTime())
+    ? startOverride
+    : lastPoolStart
     ? new Date(lastPoolStart.getTime() + (45 + 30) * 60_000)
     : kickoff
       ? new Date(kickoff.getTime() + RANKED_SPLIT_START_OFFSET_MINUTES * 60_000)

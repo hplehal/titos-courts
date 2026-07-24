@@ -25,7 +25,7 @@ function CreateTournamentForm({ onCreated }) {
   const [err, setErr] = useState('')
   const [form, setForm] = useState({
     name: '', date: '', endDate: '', venue: '',
-    poolSize: 4, poolCount: 4, courtCount: 4, bracketFormat: 'gold-silver',
+    poolSize: 4, poolCount: 4, courtCount: 4, bracketFormat: 'gold-silver', hasRefs: true,
   })
   const [image, setImage] = useState(null) // { dataUrl, type, name }
   const [imgErr, setImgErr] = useState('')
@@ -77,7 +77,7 @@ function CreateTournamentForm({ onCreated }) {
       if (!res.ok) throw new Error(data.error || 'Failed to create')
       onCreated()
       setOpen(false)
-      setForm({ name: '', date: '', endDate: '', venue: '', poolSize: 4, poolCount: 4, courtCount: 4, bracketFormat: 'gold-silver' })
+      setForm({ name: '', date: '', endDate: '', venue: '', poolSize: 4, poolCount: 4, courtCount: 4, bracketFormat: 'gold-silver', hasRefs: true })
       setImage(null)
     } catch (e) {
       setErr(e.message)
@@ -144,6 +144,11 @@ function CreateTournamentForm({ onCreated }) {
         </label>
         <label className="block"><span className="text-xs text-titos-gray-400">Pool Count</span>
           <input type="number" inputMode="numeric" min="2" max="12" value={form.poolCount} onChange={e => setForm({ ...form, poolCount: e.target.value })} className={inputCls} />
+        </label>
+        <label className="flex items-center gap-2 md:col-span-2 text-sm text-titos-gray-300 cursor-pointer">
+          <input type="checkbox" checked={form.hasRefs} onChange={e => setForm({ ...form, hasRefs: e.target.checked })}
+            className="w-4 h-4 accent-[#F2A527]" />
+          Teams ref each other&apos;s matches (show ref duties + rotation)
         </label>
         <label className="block"><span className="text-xs text-titos-gray-400">Bracket format</span>
           <select value={form.bracketFormat} onChange={e => setForm({ ...form, bracketFormat: e.target.value })} className={inputCls}>

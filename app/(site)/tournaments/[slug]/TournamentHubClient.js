@@ -113,7 +113,7 @@ function HubBody({ slug, tournament }) {
       />
 
       {mySelection && (
-        <TeamSchedule team={mySelection.team} pool={mySelection.pool} />
+        <TeamSchedule team={mySelection.team} pool={mySelection.pool} hasRefs={tournament?.hasRefs !== false} />
       )}
 
       {/* Live spotlight — shows every currently-live match across pools +

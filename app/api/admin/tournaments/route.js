@@ -29,7 +29,7 @@ export async function POST(request) {
     const {
       name, slug, date, endDate, venue, poolSize, poolCount, courtCount,
       description, format, bracketFormat, registrationFee, maxTeams, registrationDeadline,
-      imageBase64, imageType,
+      imageBase64, imageType, hasRefs,
     } = body
 
     // Poster upload arrives as a base64 data payload (client downscales to
@@ -63,6 +63,7 @@ export async function POST(request) {
         poolSize: poolSize ? Number(poolSize) : null,
         poolCount: poolCount ? Number(poolCount) : null,
         courtCount: courtCount ? Number(courtCount) : null,
+        hasRefs: hasRefs !== false,
         imageData,
         imageType: imageData ? (imageType || 'image/jpeg') : null,
         description: description || null,

@@ -85,7 +85,7 @@ function computeResultText(match, myTeamId) {
   return { text: `Tied ${mine}–${theirs}`, tone: 'neutral' }
 }
 
-export default function TeamSchedule({ team, pool }) {
+export default function TeamSchedule({ team, pool, hasRefs = true }) {
   if (!team || !pool) return null
 
   const teamId = team.id
@@ -116,12 +116,12 @@ export default function TeamSchedule({ team, pool }) {
   // surface ref duties. 5-team pools (May 23 Titos REC) always rely on
   // the explicit refTeamId — the canonical rotation only handles 4-team
   // pools.
-  const refDuties = allMatches.filter((m) => {
+  const refDuties = hasRefs ? allMatches.filter((m) => {
     if (m.homeTeamId === teamId || m.awayTeamId === teamId) return false
     if (m.refTeamId) return m.refTeamId === teamId
     const refs = refAssignmentForMatch(m, poolTeams)
     return refs.ref?.id === teamId
-  })
+  }) : []
 
   const nextMatch =
     myMatches.find((m) => m.status === 'live') ||
@@ -246,6 +246,7 @@ export default function TeamSchedule({ team, pool }) {
         </div>
 
         {/* Ref duties */}
+        {hasRefs && (
         <div className="p-5">
           <h3 className="text-[10px] font-bold uppercase tracking-wider text-titos-gray-400 mb-3 inline-flex items-center gap-1.5">
             <Mic className="w-3 h-3" aria-hidden="true" />
@@ -277,6 +278,7 @@ export default function TeamSchedule({ team, pool }) {
             )}
           </ul>
         </div>
+        )}
       </div>
     </section>
   )

@@ -255,7 +255,10 @@ function Inner({ slug }) {
 
         <div id="scoresheet" className="space-y-5">
           {rounds.map((r) => {
-            const isCurrent = r.roundNumber === currentRound
+            // Once the whole round robin is final there is no "current"
+            // round anymore — highlighting one (round 1 by fallback) reads
+            // as if play went backwards. Drop all round accents instead.
+            const isCurrent = !allPoolDone && r.roundNumber === currentRound
             const defaultOpen = !r.allFinal || isCurrent
             return (
               <RoundSection

@@ -81,7 +81,55 @@ export async function POST(request, { params }) {
     // Flatten all match creates into a single createMany. Much faster than
     // one round-trip per match when you've got 6 matches × 4 pools = 24 rows.
     const rows = []
-    for (const [poolIdx, pool] of t.pools.entries()) {
+
+    // ── Canonical beach grid (ranked-split, 3 pools of 4, ≥4 courts) ──
+    // Matches the printed plan exactly: pools interleave across all four
+    // courts so pool play wraps in 5 rounds instead of 6 sequential ones.
+    //   R1  A:1v4,2v3 (C1,C2)   B:1v4,2v3 (C3,C4)
+    //   R2  C:1v4,2v3 (C1,C2)   B:1v3,2v4 (C3,C4)
+    //   R3  C:1v3,2v4 (C1,C2)   A:1v3,2v4 (C3,C4)
+    //   R4  A:1v2,3v4 (C1,C2)   B:1v2,3v4 (C3,C4)
+    //   R5  C:1v2,3v4 (C1,C2)   — courts 3+4 free
+    const isBeachGrid =
+      t.bracketFormat === 'ranked-split' &&
+      t.pools.length === 3 &&
+      (t.courtCount ?? 4) >= 4 &&
+      t.pools.every(pl => pl.teams.length === 4) &&
+      t.pools.every(pl => pl.matches.length === 0)
+
+    if (isBeachGrid) {
+      const PAIRS = [
+        [[0, 3], [1, 2]], // 1v4, 2v3
+        [[0, 2], [1, 3]], // 1v3, 2v4
+        [[0, 1], [2, 3]], // 1v2, 3v4
+      ]
+      const GRID = [
+        { round: 1, blocks: [{ pool: 0, set: 0, courts: [1, 2] }, { pool: 1, set: 0, courts: [3, 4] }] },
+        { round: 2, blocks: [{ pool: 2, set: 0, courts: [1, 2] }, { pool: 1, set: 1, courts: [3, 4] }] },
+        { round: 3, blocks: [{ pool: 2, set: 1, courts: [1, 2] }, { pool: 0, set: 1, courts: [3, 4] }] },
+        { round: 4, blocks: [{ pool: 0, set: 2, courts: [1, 2] }, { pool: 1, set: 2, courts: [3, 4] }] },
+        { round: 5, blocks: [{ pool: 2, set: 2, courts: [1, 2] }] },
+      ]
+      for (const { round, blocks } of GRID) {
+        for (const b of blocks) {
+          const pool = t.pools[b.pool]
+          PAIRS[b.set].forEach(([hi, ai], slotIdx) => {
+            rows.push({
+              poolId: pool.id,
+              homeTeamId: pool.teams[hi].id,
+              awayTeamId: pool.teams[ai].id,
+              roundNumber: round,
+              gameOrder: b.courts[slotIdx],
+              courtNumber: b.courts[slotIdx],
+              scheduledTime: slotFor(round),
+              status: MATCH_STATUS.SCHEDULED,
+            })
+          })
+        }
+      }
+    }
+
+    for (const [poolIdx, pool] of (isBeachGrid ? [] : t.pools).entries()) {
       if (pool.matches.length > 0) continue // skip — already scheduled
       if (pool.teams.length < 2) continue   // need at least 2 teams
 

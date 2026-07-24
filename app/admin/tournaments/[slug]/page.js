@@ -10,17 +10,30 @@ import AuthGate from '@/components/admin/AuthGate'
 import { adminFetch, adminPost, adminPatch, adminDelete } from '@/lib/adminFetch'
 import { TOURNAMENT_STATUS } from '@/lib/tournament/constants'
 
-function Panel({ title, children, action }) {
+function Panel({ title, children, action, collapsible = false, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen)
+  const bodyHidden = collapsible && !open
   return (
     <section className="card-flat rounded-xl overflow-hidden">
-      <header className="px-4 sm:px-5 py-3 border-b border-titos-border/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h2 className="font-display font-bold text-titos-white">{title}</h2>
-        {action && <div className="flex flex-wrap gap-2">{action}</div>}
+      <header
+        className={cnPanel('px-4 sm:px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3', !bodyHidden && 'border-b border-titos-border/30', collapsible && 'cursor-pointer select-none hover:bg-titos-white/[0.02]')}
+        onClick={collapsible ? () => setOpen(o => !o) : undefined}
+      >
+        <h2 className="font-display font-bold text-titos-white flex items-center gap-2">
+          {title}
+          {collapsible && (
+            <svg className={cnPanel('w-4 h-4 text-titos-gray-400 transition-transform', open && 'rotate-180')} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          )}
+        </h2>
+        {action && <div className="flex flex-wrap gap-2" onClick={e => e.stopPropagation()}>{action}</div>}
       </header>
-      <div className="p-4 sm:p-5">{children}</div>
+      {!bodyHidden && <div className="p-4 sm:p-5">{children}</div>}
     </section>
   )
 }
+
+// Tiny local class combiner so Panel doesn't need the full cn import chain.
+function cnPanel(...parts) { return parts.filter(Boolean).join(' ') }
 
 // Convert a UTC ISO string to a local-time string suitable for
 // <input type="datetime-local">. Native datetime-local expects "YYYY-MM-DDTHH:mm"
@@ -855,7 +868,7 @@ function Inner({ slug }) {
           </div>
         </div>
 
-        <Panel title="Config">
+        <Panel title="Config" collapsible defaultOpen={false}>
           <ConfigForm tournament={tournament} onSaved={load} />
         </Panel>
 

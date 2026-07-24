@@ -28,7 +28,7 @@ export async function POST(request) {
     const body = await request.json()
     const {
       name, slug, date, endDate, venue, poolSize, poolCount, courtCount,
-      description, format, registrationFee, maxTeams, registrationDeadline,
+      description, format, bracketFormat, registrationFee, maxTeams, registrationDeadline,
       imageBase64, imageType,
     } = body
 
@@ -67,6 +67,7 @@ export async function POST(request) {
         imageType: imageData ? (imageType || 'image/jpeg') : null,
         description: description || null,
         format: format || null,
+        ...(bracketFormat ? { bracketFormat } : {}),
         registrationFee: registrationFee ? Number(registrationFee) : null,
         maxTeams: maxTeams ? Number(maxTeams) : null,
         registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : null,

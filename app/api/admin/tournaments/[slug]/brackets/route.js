@@ -5,6 +5,7 @@ import { revalidateTournament } from '@/lib/server/tournaments'
 import { diagnoseBracketReadiness } from '@/lib/tournament/canStartBrackets'
 import { generateBracketSeeding } from '@/lib/tournament/generateBracketSeeding'
 import { generateCrossoverBracket, generatePlayInMatches } from '@/lib/tournament/generateCrossoverBracket'
+import { rankRankedSplitDivision, RANKED_SPLIT_ROUND_MINUTES, RANKED_SPLIT_START_OFFSET_MINUTES } from '@/lib/tournament/generateRankedSplit'
 import { computeStandingsFromMatches } from '@/lib/tournament/calculateStandings'
 import {
   courtFor,
@@ -78,6 +79,18 @@ export async function POST(request, { params }) {
     // double-brackets. The new crossover-single-elim flow builds 2 play-in
     // matches (Pool A 4-vs-5, Pool B 4-vs-5) plus the 8-team single-elim
     // bracket described in the May 23 Captain's Package.
+    if (t.bracketFormat === 'ranked-split') {
+      const result = await generateRankedSplitBrackets({
+        tournament: t,
+        pools: poolsForSeeding,
+      })
+      if (result.error) {
+        return NextResponse.json({ error: result.error }, { status: 400 })
+      }
+      revalidateTournament(slug)
+      return NextResponse.json(result, { status: 201 })
+    }
+
     if (t.bracketFormat === 'crossover-single-elim') {
       const result = await generateCrossoverBracketAndPlayIns({
         tournament: t,
@@ -409,4 +422,129 @@ async function generateCrossoverBracketAndPlayIns({ tournament, pools }) {
     semifinals: 2,
     final: 1,
   }
+}
+
+
+/**
+ * Ranked-split flow (July 25 beach plan): per division, 6 seeds ranked by
+ * pool finish → 2 QFs (#3v#6, #4v#5), SFs with #1/#2 byes, Final + 3rd
+ * place. Gold on courts 1–2, Silver on 3–4; QF/SF/F rounds are
+ * RANKED_SPLIT_ROUND_MINUTES apart starting RANKED_SPLIT_START_OFFSET_MINUTES
+ * after kickoff. Losers of the SFs are routed into the 3rd-place match by
+ * advanceBracketWinner (it looks for the FINAL-round, position-1 shell).
+ */
+async function generateRankedSplitBrackets({ tournament, pools }) {
+  const kickoff = tournament.date ? new Date(tournament.date) : null
+  const start = kickoff
+    ? new Date(kickoff.getTime() + RANKED_SPLIT_START_OFFSET_MINUTES * 60_000)
+    : null
+  const slotTime = (round) => start
+    ? new Date(start.getTime() + round * RANKED_SPLIT_ROUND_MINUTES * 60_000)
+    : null
+
+  const createdBrackets = []
+  for (const [dIdx, division] of DIVISIONS.entries()) {
+    const seeds = rankRankedSplitDivision(pools, division)
+    if (seeds.length !== 6) {
+      return { error: `${division}: ranked-split needs exactly 6 teams per division (got ${seeds.length}). Check pool sizes.` }
+    }
+    const baseCourt = dIdx === 0 ? 1 : 3
+
+    const bracket = await prisma.tournamentBracket.create({
+      data: { tournamentId: tournament.id, division },
+    })
+
+    // Downstream-first so nextMatchId FKs resolve: Final + 3rd, then SFs, then QFs.
+    const finalMatch = await prisma.tournamentMatch.create({
+      data: {
+        bracketId: bracket.id,
+        bracketRound: BRACKET_ROUND.FINAL,
+        bracketPosition: 0,
+        homeSeedLabel: 'SF1 Winner',
+        awaySeedLabel: 'SF2 Winner',
+        status: MATCH_STATUS.SCHEDULED,
+        courtNumber: baseCourt,
+        scheduledTime: slotTime(2),
+      },
+    })
+    await prisma.tournamentMatch.create({
+      data: {
+        bracketId: bracket.id,
+        bracketRound: BRACKET_ROUND.FINAL,
+        bracketPosition: 1, // 3rd-place shell — advanceBracketWinner fills it with SF losers
+        homeSeedLabel: 'SF1 Loser',
+        awaySeedLabel: 'SF2 Loser',
+        status: MATCH_STATUS.SCHEDULED,
+        courtNumber: baseCourt + 1,
+        scheduledTime: slotTime(2),
+      },
+    })
+
+    // SFs: #1 v W(QF2), #2 v W(QF1) — byes pre-filled in the home slot.
+    const sf1 = await prisma.tournamentMatch.create({
+      data: {
+        bracketId: bracket.id,
+        bracketRound: BRACKET_ROUND.SEMIFINAL,
+        bracketPosition: 0,
+        homeTeamId: seeds[0].teamId,
+        homeSeedLabel: seeds[0].seedLabel,
+        awaySeedLabel: 'Winner #4 v #5',
+        status: MATCH_STATUS.SCHEDULED,
+        courtNumber: baseCourt,
+        scheduledTime: slotTime(1),
+        nextMatchId: finalMatch.id,
+      },
+    })
+    const sf2 = await prisma.tournamentMatch.create({
+      data: {
+        bracketId: bracket.id,
+        bracketRound: BRACKET_ROUND.SEMIFINAL,
+        bracketPosition: 1,
+        homeTeamId: seeds[1].teamId,
+        homeSeedLabel: seeds[1].seedLabel,
+        awaySeedLabel: 'Winner #3 v #6',
+        status: MATCH_STATUS.SCHEDULED,
+        courtNumber: baseCourt + 1,
+        scheduledTime: slotTime(1),
+        nextMatchId: finalMatch.id,
+      },
+    })
+
+    // QFs — crosswise into the SFs per the plan sheet, same-court feeds:
+    // QF1 (#3v#6, court baseCourt) → SF2; QF2 (#4v#5, baseCourt+1) → SF1.
+    await prisma.tournamentMatch.create({
+      data: {
+        bracketId: bracket.id,
+        bracketRound: BRACKET_ROUND.QUARTERFINAL,
+        bracketPosition: 0,
+        homeTeamId: seeds[2].teamId,
+        homeSeedLabel: seeds[2].seedLabel,
+        awayTeamId: seeds[5].teamId,
+        awaySeedLabel: seeds[5].seedLabel,
+        status: MATCH_STATUS.SCHEDULED,
+        courtNumber: baseCourt,
+        scheduledTime: slotTime(0),
+        nextMatchId: sf2.id,
+      },
+    })
+    await prisma.tournamentMatch.create({
+      data: {
+        bracketId: bracket.id,
+        bracketRound: BRACKET_ROUND.QUARTERFINAL,
+        bracketPosition: 1,
+        homeTeamId: seeds[3].teamId,
+        homeSeedLabel: seeds[3].seedLabel,
+        awayTeamId: seeds[4].teamId,
+        awaySeedLabel: seeds[4].seedLabel,
+        status: MATCH_STATUS.SCHEDULED,
+        courtNumber: baseCourt + 1,
+        scheduledTime: slotTime(0),
+        nextMatchId: sf1.id,
+      },
+    })
+
+    createdBrackets.push({ division, bracketId: bracket.id, matches: 6 })
+  }
+
+  return { brackets: createdBrackets }
 }

@@ -775,6 +775,8 @@ function BracketPanel({ tournament, onChange }) {
         <p className="text-titos-gray-500 text-sm">
           {tournament.bracketFormat === 'crossover-single-elim'
             ? <>Bracket appears once all pool matches are FINAL. Click <span className="text-titos-white font-medium">Generate Brackets</span> to seed the play-in matches + 8-team crossover single-elimination bracket.</>
+            : tournament.bracketFormat === 'ranked-split'
+            ? <>Brackets appear once all pool matches are FINAL. Click <span className="text-titos-white font-medium">Generate Brackets</span> to rank all teams — top 2 per pool go Gold, bottom 2 Silver; seeds #1–#2 get semifinal byes, and each division gets a Final + 3rd-place match.</>
             : <>Brackets appear once all pool matches are FINAL. Click Generate Brackets to seed Gold + Silver.</>}
         </p>
       ) : (

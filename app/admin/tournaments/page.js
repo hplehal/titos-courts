@@ -25,7 +25,7 @@ function CreateTournamentForm({ onCreated }) {
   const [err, setErr] = useState('')
   const [form, setForm] = useState({
     name: '', date: '', endDate: '', venue: '',
-    poolSize: 4, poolCount: 4, courtCount: 4,
+    poolSize: 4, poolCount: 4, courtCount: 4, bracketFormat: 'gold-silver',
   })
   const [image, setImage] = useState(null) // { dataUrl, type, name }
   const [imgErr, setImgErr] = useState('')
@@ -77,7 +77,7 @@ function CreateTournamentForm({ onCreated }) {
       if (!res.ok) throw new Error(data.error || 'Failed to create')
       onCreated()
       setOpen(false)
-      setForm({ name: '', date: '', endDate: '', venue: '', poolSize: 4, poolCount: 4, courtCount: 4 })
+      setForm({ name: '', date: '', endDate: '', venue: '', poolSize: 4, poolCount: 4, courtCount: 4, bracketFormat: 'gold-silver' })
       setImage(null)
     } catch (e) {
       setErr(e.message)
@@ -101,9 +101,9 @@ function CreateTournamentForm({ onCreated }) {
       {/* Format presets — one click fills pools/courts */}
       <div className="flex flex-wrap gap-2">
         {[
-          { label: 'Beach · 12 teams · 3 pools of 4 · 4 courts', preset: { poolCount: 3, poolSize: 4, courtCount: 4 } },
-          { label: 'Classic · 16 teams · 4 pools of 4 · 4 courts', preset: { poolCount: 4, poolSize: 4, courtCount: 4 } },
-          { label: 'Crossover · 2 pools · 4 courts', preset: { poolCount: 2, poolSize: 6, courtCount: 4 } },
+          { label: 'Beach · 12 teams · 3 pools of 4 · Gold/Silver split', preset: { poolCount: 3, poolSize: 4, courtCount: 4, bracketFormat: 'ranked-split' } },
+          { label: 'Classic · 16 teams · 4 pools of 4 · Gold/Silver', preset: { poolCount: 4, poolSize: 4, courtCount: 4, bracketFormat: 'gold-silver' } },
+          { label: 'Crossover · 2 pools · single-elim', preset: { poolCount: 2, poolSize: 6, courtCount: 4, bracketFormat: 'crossover-single-elim' } },
         ].map(p => (
           <button key={p.label} type="button" onClick={() => applyPreset(p.preset)}
             className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-titos-elevated text-titos-gray-300 border border-titos-border hover:text-titos-gold hover:border-titos-gold/40 transition-colors">
@@ -144,6 +144,13 @@ function CreateTournamentForm({ onCreated }) {
         </label>
         <label className="block"><span className="text-xs text-titos-gray-400">Pool Count</span>
           <input type="number" inputMode="numeric" min="2" max="12" value={form.poolCount} onChange={e => setForm({ ...form, poolCount: e.target.value })} className={inputCls} />
+        </label>
+        <label className="block"><span className="text-xs text-titos-gray-400">Bracket format</span>
+          <select value={form.bracketFormat} onChange={e => setForm({ ...form, bracketFormat: e.target.value })} className={inputCls}>
+            <option value="gold-silver">Gold/Silver (4 pools, paired)</option>
+            <option value="ranked-split">Ranked split (3 pools — top 2 Gold, byes for #1–#2)</option>
+            <option value="crossover-single-elim">Crossover single-elim (2 pools)</option>
+          </select>
         </label>
         <label className="block"><span className="text-xs text-titos-gray-400">Courts available</span>
           <input type="number" inputMode="numeric" min="1" max="12" value={form.courtCount} onChange={e => setForm({ ...form, courtCount: e.target.value })} className={inputCls} />

@@ -73,6 +73,7 @@ function ConfigForm({ tournament, onSaved }) {
     endDate: toLocalInput(tournament.endDate),
     poolSize: tournament.poolSize || 4,
     poolCount: tournament.poolCount || 4,
+    bracketMatchFormat: tournament.bracketMatchFormat || 'bo3-25-15-cap-17',
     status: tournament.status,
     description: tournament.description || '',
   })
@@ -135,6 +136,12 @@ function ConfigForm({ tournament, onSaved }) {
         </label>
         <label className="block"><span className="text-xs text-titos-gray-400">Pool Count</span>
           <input type="number" inputMode="numeric" min="2" max="12" value={form.poolCount} onChange={e => setForm({ ...form, poolCount: e.target.value })} className={inputCls} />
+        </label>
+        <label className="block md:col-span-2"><span className="text-xs text-titos-gray-400">Playoff match format</span>
+          <select value={form.bracketMatchFormat} onChange={e => setForm({ ...form, bracketMatchFormat: e.target.value })} className={inputCls}>
+            <option value="bo3-25-15-cap-17">Best of 3 — sets to 25/15, cap 27/17</option>
+            <option value="bo3-25-15-no-cap">Best of 3 — no cap (win by 2)</option>
+          </select>
         </label>
         <label className="block md:col-span-2"><span className="text-xs text-titos-gray-400">Status</span>
           <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className={inputCls}>

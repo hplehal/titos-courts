@@ -36,6 +36,7 @@ export async function PATCH(request, { params }) {
     const allowed = [
       'name', 'venue', 'description', 'format', 'status',
       'registrationFee', 'maxTeams', 'poolSize', 'poolCount',
+      'poolMatchFormat', 'bracketMatchFormat', 'courtCount', 'hasRefs',
     ]
     const data = {}
     for (const key of allowed) {

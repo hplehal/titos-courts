@@ -143,6 +143,7 @@ function formatLabel(fmt) {
 function bracketFormatLabel(fmt) {
   if (fmt === 'crossover-single-elim') return 'Crossover single-elimination'
   if (fmt === 'gold-silver') return 'Gold / Silver brackets'
+  if (fmt === 'ranked-split') return 'Gold / Silver split — top 2 per pool go Gold, #1–#2 seeds get semifinal byes'
   return fmt || '—'
 }
 
@@ -262,6 +263,13 @@ export default function CaptainsPackage({ tournament, defaultOpen = false }) {
               <p className="text-sm font-bold text-titos-white leading-snug">
                 {bracketFormatLabel(tournament.bracketFormat)}
               </p>
+              {(tournament.poolCount || tournament.courtCount) && (
+                <p className="text-[11px] text-titos-gray-400 mt-1.5">
+                  {tournament.poolCount && tournament.poolSize ? `${tournament.poolCount} pools of ${tournament.poolSize}` : ''}
+                  {tournament.poolCount && tournament.courtCount ? ' · ' : ''}
+                  {tournament.courtCount ? `${tournament.courtCount} courts` : ''}
+                </p>
+              )}
               {tournament.poolMatchFormat && (
                 <p className="text-[11px] text-titos-gray-400 mt-1.5">
                   <span className="font-bold uppercase tracking-wider text-titos-gray-500">Pool</span>: {formatLabel(tournament.poolMatchFormat)}

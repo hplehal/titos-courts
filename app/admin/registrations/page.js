@@ -28,6 +28,15 @@ export default function RegistrationsPage() {
 
   const filtered = filter === 'all' ? registrations : registrations.filter(r => r.type === filter)
 
+  const parsePlayers = (raw) => {
+    if (!raw) return []
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) return parsed.filter(Boolean)
+    } catch {}
+    return raw.split(/[,\n]/).map(s => s.trim()).filter(Boolean)
+  }
+
   return (
     <div>
       <div className="max-w-5xl">
@@ -94,6 +103,20 @@ export default function RegistrationsPage() {
                   {reg.skillLevel && <div><span className="text-titos-gray-500 text-xs">Level:</span> {reg.skillLevel}</div>}
                   <div><span className="text-titos-gray-500 text-xs">Date:</span> {formatDate(reg.createdAt)}</div>
                 </div>
+                {(() => {
+                  const players = parsePlayers(reg.playerNames)
+                  if (players.length === 0) return null
+                  return (
+                    <div className="mt-3 pt-3 border-t border-titos-border">
+                      <div className="text-titos-gray-500 text-xs mb-2">Players ({players.length}{reg.playerCount && reg.playerCount !== players.length ? ` of ${reg.playerCount}` : ''})</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {players.map((name, i) => (
+                          <span key={i} className="px-2 py-0.5 bg-titos-elevated border border-titos-border rounded text-xs text-titos-gray-300">{name}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             ))}
           </div>

@@ -2,6 +2,9 @@ import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { slugify } from '@/lib/utils'
 import { revalidateLeague } from '@/lib/server/leagues'
+import { DIVISION_NAMES, defaultTierCount, defaultTierLayout, tierLayout } from '@/lib/league/seasonConfig'
+
+const MAX_TIERS = 20
 
 // Resolve a tier's league slug so we can bust public schedule/standings
 // caches after a write. Returns null if the tier was deleted in the same
@@ -24,6 +27,7 @@ export async function GET() {
         league: { select: { id: true, name: true, slug: true } },
         _count: { select: { teams: true } },
         tiers: { orderBy: { tierNumber: 'asc' } },
+        divisions: { orderBy: { position: 'asc' } },
         teams: {
           include: {
             players: true,
@@ -93,7 +97,7 @@ export async function POST(request) {
     }
 
     // Create new season
-    const { leagueId, name, seasonNumber, startDate, endDate } = body
+    const { leagueId, name, seasonNumber, startDate, endDate, tierCount } = body
     if (!leagueId || !name || !seasonNumber || !startDate || !endDate) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
     }
@@ -111,51 +115,16 @@ export async function POST(request) {
       },
     })
 
-    // Auto-create tiers based on league configuration
+    // Auto-create tiers. The count comes from the create form (pre-filled per
+    // league: Tuesday 8, Sunday 5, Thursday 4); courts and time slots come
+    // from the league preset and stay editable on /admin/courts.
     const league = await prisma.league.findUnique({ where: { id: leagueId } })
     if (league) {
-      const isMens = league.slug.includes('sunday') || league.slug.includes('mens')
-
-      if (isMens) {
-        // MENS: 5 tiers, 5 courts (6-10), single time slot
-        const mensTiers = [
-          { tierNumber: 1, courtNumber: 7, timeSlot: 'single' },
-          { tierNumber: 2, courtNumber: 6, timeSlot: 'single' },
-          { tierNumber: 3, courtNumber: 8, timeSlot: 'single' },
-          { tierNumber: 4, courtNumber: 9, timeSlot: 'single' },
-          { tierNumber: 5, courtNumber: 10, timeSlot: 'single' },
-        ]
-        for (const t of mensTiers) {
-          await prisma.tier.create({ data: { seasonId: season.id, ...t } })
-        }
-      } else if (league.slug.includes('thursday')) {
-        // Thursday REC COED: 4 tiers, 6:30–8:30 PM (early) for 1-2,
-        // 8:30–10:30 PM (late) for 3-4. Courts 9 & 10 only.
-        const thursdayTiers = [
-          { tierNumber: 1, courtNumber: 9, timeSlot: 'early' },
-          { tierNumber: 2, courtNumber: 10, timeSlot: 'early' },
-          { tierNumber: 3, courtNumber: 9, timeSlot: 'late' },
-          { tierNumber: 4, courtNumber: 10, timeSlot: 'late' },
-        ]
-        for (const t of thursdayTiers) {
-          await prisma.tier.create({ data: { seasonId: season.id, ...t } })
-        }
-      } else {
-        // Tuesday COED: 8 tiers, courts 6,8,9,10, early/late slots
-        const coedTiers = [
-          { tierNumber: 1, courtNumber: 6, timeSlot: 'early' },
-          { tierNumber: 2, courtNumber: 8, timeSlot: 'early' },
-          { tierNumber: 3, courtNumber: 9, timeSlot: 'early' },
-          { tierNumber: 4, courtNumber: 10, timeSlot: 'early' },
-          { tierNumber: 5, courtNumber: 6, timeSlot: 'late' },
-          { tierNumber: 6, courtNumber: 8, timeSlot: 'late' },
-          { tierNumber: 7, courtNumber: 9, timeSlot: 'late' },
-          { tierNumber: 8, courtNumber: 10, timeSlot: 'late' },
-        ]
-        for (const t of coedTiers) {
-          await prisma.tier.create({ data: { seasonId: season.id, ...t } })
-        }
-      }
+      const requested = parseInt(tierCount, 10)
+      const count = requested > 0 ? Math.min(requested, MAX_TIERS) : defaultTierCount(league.slug)
+      await prisma.tier.createMany({
+        data: defaultTierLayout(league.slug, count).map(t => ({ seasonId: season.id, ...t })),
+      })
     }
 
     return NextResponse.json({ success: true, season })
@@ -169,6 +138,85 @@ export async function POST(request) {
 export async function PATCH(request) {
   try {
     const body = await request.json()
+
+    // Rename a season. Public pages show the name, so bust league caches.
+    if (body.action === 'update-season') {
+      const { seasonId } = body
+      const name = String(body.name ?? '').trim()
+      if (!seasonId || !name) {
+        return NextResponse.json({ error: 'seasonId and a non-empty name required' }, { status: 400 })
+      }
+      const season = await prisma.season.update({
+        where: { id: seasonId },
+        data: { name },
+        include: { league: { select: { slug: true } } },
+      })
+      revalidateLeague(season.league.slug)
+      return NextResponse.json({ success: true })
+    }
+
+    // Append a tier below the current bottom tier. Court + time slot come
+    // from the league preset; existing weeks are untouched.
+    if (body.action === 'add-tier') {
+      const { seasonId } = body
+      if (!seasonId) return NextResponse.json({ error: 'seasonId required' }, { status: 400 })
+      const season = await prisma.season.findUnique({
+        where: { id: seasonId },
+        include: { league: { select: { slug: true } }, tiers: { select: { tierNumber: true } } },
+      })
+      if (!season) return NextResponse.json({ error: 'Season not found' }, { status: 404 })
+      if (season.tiers.length >= MAX_TIERS) {
+        return NextResponse.json({ error: `A season can have at most ${MAX_TIERS} tiers.` }, { status: 400 })
+      }
+      const nextNumber = Math.max(0, ...season.tiers.map(t => t.tierNumber)) + 1
+      const tier = await prisma.tier.create({
+        data: { seasonId, ...tierLayout(season.league.slug, nextNumber) },
+      })
+      revalidateLeague(season.league.slug)
+      return NextResponse.json({ success: true, tier })
+    }
+
+    // Replace a season's playoff division sizes. Allowed any time — sizes
+    // shift with team strength during the season. Standings pick it up
+    // immediately; an already-built playoff bracket is NOT rewritten (the
+    // playoffs editor flags the mismatch). An empty list deletes the rows and
+    // restores the automatic even split.
+    if (body.action === 'set-divisions') {
+      const { seasonId, divisions } = body
+      if (!seasonId || !Array.isArray(divisions)) {
+        return NextResponse.json({ error: 'seasonId and divisions array required' }, { status: 400 })
+      }
+      const rows = []
+      for (const d of divisions) {
+        const position = parseInt(d.position, 10)
+        const teamCount = parseInt(d.teamCount, 10)
+        const courtNumber = d.courtNumber === '' || d.courtNumber == null ? null : parseInt(d.courtNumber, 10)
+        if (!(position >= 1 && position <= DIVISION_NAMES.length)) {
+          return NextResponse.json({ error: 'Invalid division position' }, { status: 400 })
+        }
+        if (!(teamCount >= 0)) {
+          return NextResponse.json({ error: 'Team counts must be 0 or more' }, { status: 400 })
+        }
+        if (courtNumber !== null && !Number.isFinite(courtNumber)) {
+          return NextResponse.json({ error: 'Court must be a number' }, { status: 400 })
+        }
+        if (teamCount > 0) rows.push({ seasonId, position, teamCount, courtNumber })
+      }
+      if (new Set(rows.map(r => r.position)).size !== rows.length) {
+        return NextResponse.json({ error: 'Each division can only appear once' }, { status: 400 })
+      }
+      const season = await prisma.season.findUnique({
+        where: { id: seasonId },
+        select: { league: { select: { slug: true } } },
+      })
+      if (!season) return NextResponse.json({ error: 'Season not found' }, { status: 404 })
+      await prisma.$transaction([
+        prisma.division.deleteMany({ where: { seasonId } }),
+        prisma.division.createMany({ data: rows }),
+      ])
+      revalidateLeague(season.league.slug)
+      return NextResponse.json({ success: true, count: rows.length })
+    }
 
     // Update a single tier's court number. Propagates to existing Match
     // records ON UPCOMING WEEKS (date >= today) so the schedule view picks
@@ -293,7 +341,9 @@ export async function DELETE(request) {
       if (matchCount > 0) {
         return NextResponse.json({ error: `Tier has ${matchCount} match(es); cannot delete.` }, { status: 409 })
       }
+      const slug = await leagueSlugForTier(tierId)
       await prisma.tier.delete({ where: { id: tierId } })
+      if (slug) revalidateLeague(slug)
       return NextResponse.json({ success: true })
     }
     if (body.teamId) {
@@ -347,8 +397,9 @@ export async function DELETE(request) {
       // 6. Teams
       await prisma.team.deleteMany({ where: { seasonId } })
 
-      // 7. Tiers
+      // 7. Tiers + divisions
       await prisma.tier.deleteMany({ where: { seasonId } })
+      await prisma.division.deleteMany({ where: { seasonId } })
 
       // 8. Season
       await prisma.season.delete({ where: { id: seasonId } })

@@ -152,3 +152,61 @@ describe('advancePlayoffWinner — SF→Final', () => {
     expect(fx.matches.find(m => m.id === 'final').refTeamId).toBe(null)
   })
 })
+
+describe('advancePlayoffWinner — explicit nextSlot (5-team division)', () => {
+  // The lone QF (4 v 5) is wired to SF1's away slot. Without nextSlot the
+  // reseed path would wait forever for a sibling QF that doesn't exist.
+  function fiveTeamFixture() {
+    const weeks = {
+      w10: { id: 'w10', seasonId: 's1' },
+      w11: { id: 'w11', seasonId: 's1' },
+    }
+    const matches = [
+      { id: 'qf1', weekId: 'w10', tierNumber: 1, roundNumber: 1, gameOrder: 1, courtNumber: 9,
+        status: 'completed', winnerId: 't5', homeTeamId: 't4', awayTeamId: 't5',
+        homeSeedLabel: 'Diamond 4', awaySeedLabel: 'Diamond 5', nextMatchId: 'sf1', nextSlot: 'away' },
+      { id: 'sf1', weekId: 'w11', tierNumber: 1, roundNumber: 2, gameOrder: 1, courtNumber: 9, refTeamId: null,
+        status: 'scheduled', winnerId: null, homeTeamId: 't1', awayTeamId: null,
+        homeSeedLabel: 'Diamond 1', awaySeedLabel: 'W QF1', nextMatchId: 'final', nextSlot: 'home' },
+      { id: 'sf2', weekId: 'w11', tierNumber: 1, roundNumber: 2, gameOrder: 2, courtNumber: 10, refTeamId: null,
+        status: 'scheduled', winnerId: null, homeTeamId: 't2', awayTeamId: 't3',
+        homeSeedLabel: 'Diamond 2', awaySeedLabel: 'Diamond 3', nextMatchId: 'final', nextSlot: 'away' },
+      { id: 'final', weekId: 'w11', tierNumber: 1, roundNumber: 3, gameOrder: 1, courtNumber: null, refTeamId: null,
+        status: 'scheduled', winnerId: null, homeTeamId: null, awayTeamId: null,
+        homeSeedLabel: 'W SF1', awaySeedLabel: 'W SF2', nextMatchId: null, nextSlot: null },
+    ]
+    return { weeks, matches }
+  }
+
+  it('drops the lone QF winner straight into SF1 away', async () => {
+    const fx = fiveTeamFixture()
+    const res = await advancePlayoffWinner('qf1', makePrisma(fx))
+    expect(res).toMatchObject({ advanced: true, nextMatchId: 'sf1', slot: 'away' })
+    expect(fx.matches.find(m => m.id === 'sf1').awayTeamId).toBe('t5')
+  })
+
+  it('the QF loser refs the SF on the same court', async () => {
+    const fx = fiveTeamFixture()
+    const res = await advancePlayoffWinner('qf1', makePrisma(fx))
+    expect(res.refAssigned).toBe(true)
+    expect(fx.matches.find(m => m.id === 'sf1').refTeamId).toBe('t4')
+  })
+
+  it('re-scoring overwrites the slot with the corrected winner', async () => {
+    const fx = fiveTeamFixture()
+    const prisma = makePrisma(fx)
+    await advancePlayoffWinner('qf1', prisma)
+    fx.matches.find(m => m.id === 'qf1').winnerId = 't4'
+    await advancePlayoffWinner('qf1', prisma)
+    expect(fx.matches.find(m => m.id === 'sf1').awayTeamId).toBe('t4')
+  })
+
+  it('SF winners follow their explicit Final slots', async () => {
+    const fx = fiveTeamFixture()
+    const sf2 = fx.matches.find(m => m.id === 'sf2')
+    Object.assign(sf2, { status: 'completed', winnerId: 't3' })
+    const res = await advancePlayoffWinner('sf2', makePrisma(fx))
+    expect(res.slot).toBe('away')
+    expect(fx.matches.find(m => m.id === 'final').awayTeamId).toBe('t3')
+  })
+})

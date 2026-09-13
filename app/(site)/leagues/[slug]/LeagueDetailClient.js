@@ -122,7 +122,7 @@ export default function LeagueDetailClient({ data }) {
                 </thead>
                 <tbody>
                   {standings.map((team) => {
-                    const div = getDivisionInfo(team.rank, standings.length, leagueType)
+                    const div = getDivisionInfo(team.rank, standings.length, leagueType, season.divisions)
                     return (
                       <tr key={team.id} className={`border-b border-titos-border/30 hover:bg-titos-card/50 transition-colors ${div.bgClass}`}>
                         <td className="px-2.5 py-3 text-center">

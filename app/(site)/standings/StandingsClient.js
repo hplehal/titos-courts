@@ -236,6 +236,7 @@ export default function StandingsClient({ leagues, initialSlug, initialData, bra
   const [selected, setSelected] = useState(initialSlug || leagues[0]?.slug || '')
   const [standings, setStandings] = useState(initialForSelected ? (initialData?.standings || null) : null)
   const [tierView, setTierView] = useState(initialForSelected ? (initialData?.currentTiers || null) : null)
+  const [divisions, setDivisions] = useState(initialForSelected ? (initialData?.divisions || null) : null)
   const [view, setView] = useState('overall')
   const [loading, setLoading] = useState(!initialForSelected)
   const [myTeam, setMyTeam] = useMyTeam(selected)
@@ -258,7 +259,7 @@ export default function StandingsClient({ leagues, initialSlug, initialData, bra
     setLoading(true)
     fetch(`/api/leagues/${selected}/standings`)
       .then(r => r.json())
-      .then(data => { setStandings(data.standings); setTierView(data.currentTiers); setLoading(false) })
+      .then(data => { setStandings(data.standings); setTierView(data.currentTiers); setDivisions(data.divisions || null); setLoading(false) })
       .catch(() => setLoading(false))
   }, [selected])
 
@@ -327,7 +328,7 @@ export default function StandingsClient({ leagues, initialSlug, initialData, bra
                 <tbody>
                   {standings.map(team => {
                     const leagueType = (selected.includes('sunday') || selected.includes('mens')) ? 'mens' : 'coed'
-                    const div = getDivisionInfo(team.rank, standings.length, leagueType)
+                    const div = getDivisionInfo(team.rank, standings.length, leagueType, divisions)
                     return (
                       <tr key={team.id} className={cn('border-b border-titos-border/30 hover:bg-titos-card/50', div.bgClass, myTeam === team.name && 'bg-titos-gold/[0.08] border-l-2 border-l-titos-gold')}>
                         <td className="px-2.5 py-3 text-center">

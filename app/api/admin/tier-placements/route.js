@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { revalidateLeagueByWeek } from '@/lib/server/leagues'
+import { defaultTierLayout } from '@/lib/league/seasonConfig'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,29 +69,8 @@ export async function POST(request) {
       })
       if (!season) return NextResponse.json({ error: 'Season not found' }, { status: 404 })
 
-      const isMens = season.league.slug.includes('sunday') || season.league.slug.includes('mens')
-      const tierDefs = isMens
-        ? [
-            { tierNumber: 1, courtNumber: 7, timeSlot: 'single' },
-            { tierNumber: 2, courtNumber: 6, timeSlot: 'single' },
-            { tierNumber: 3, courtNumber: 8, timeSlot: 'single' },
-            { tierNumber: 4, courtNumber: 9, timeSlot: 'single' },
-            { tierNumber: 5, courtNumber: 10, timeSlot: 'single' },
-          ]
-        : [
-            { tierNumber: 1, courtNumber: 6, timeSlot: 'early' },
-            { tierNumber: 2, courtNumber: 8, timeSlot: 'early' },
-            { tierNumber: 3, courtNumber: 9, timeSlot: 'early' },
-            { tierNumber: 4, courtNumber: 10, timeSlot: 'early' },
-            { tierNumber: 5, courtNumber: 6, timeSlot: 'late' },
-            { tierNumber: 6, courtNumber: 8, timeSlot: 'late' },
-            { tierNumber: 7, courtNumber: 9, timeSlot: 'late' },
-            { tierNumber: 8, courtNumber: 10, timeSlot: 'late' },
-          ]
-
-      for (const t of tierDefs) {
-        await prisma.tier.create({ data: { seasonId, ...t } })
-      }
+      const tierDefs = defaultTierLayout(season.league.slug)
+      await prisma.tier.createMany({ data: tierDefs.map(t => ({ seasonId, ...t })) })
       return NextResponse.json({ success: true, count: tierDefs.length })
     }
 

@@ -1,14 +1,16 @@
 'use client'
 
-// Admin "Generate Playoff Bracket" page. Lists active seasons, lets admin
-// trigger the generator for the one whose regular season is complete.
-// Refuses generation when W1-W9 isn't all final or when matches already
-// exist. Wipes via DELETE when admin wants to regenerate.
+// Admin "Playoff Brackets" page. Lists active seasons, builds the playoff
+// draft from end-of-season standings + each season's division sizes, and
+// opens the schedule editor so every match's week, time, court, teams and
+// winner wiring can be adjusted by hand. Wipes via DELETE when admin wants to
+// start over.
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Loader2, Trophy, Check, AlertCircle, Trash2, Shield } from 'lucide-react'
+import { ArrowLeft, Loader2, Trophy, Check, AlertCircle, Trash2, Shield, CalendarClock } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import PlayoffScheduleEditor from '@/components/admin/PlayoffScheduleEditor'
 
 function AuthGate({ onAuth }) {
   const [pw, setPw] = useState('')
@@ -56,6 +58,9 @@ export default function PlayoffAdminPage() {
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState(null)
   const [msg, setMsg] = useState({ kind: '', text: '' })
+  const [editingId, setEditingId] = useState(null)
+  // Bumped after Build/Wipe so an open editor reloads its matches.
+  const [editorVersion, setEditorVersion] = useState(0)
 
   useEffect(() => {
     if (typeof window !== 'undefined' && sessionStorage.getItem('admin_auth') === 'true') setAuthed(true)
@@ -73,7 +78,7 @@ export default function PlayoffAdminPage() {
   useEffect(() => { if (authed) load() }, [authed, load])
 
   const generate = async (seasonId, leagueName, seasonName) => {
-    if (!confirm(`Generate playoff bracket for ${leagueName} — ${seasonName}?\n\nThis creates 20 playoff matches (8 QFs + 8 SFs + 4 Finals) using the current end-of-season standings.`)) return
+    if (!confirm(`Build the playoff bracket for ${leagueName} — ${seasonName}?\n\nUses the end-of-season standings and this season's division sizes. You can edit every match afterwards.`)) return
     setBusyId(seasonId); setMsg({ kind: '', text: '' })
     try {
       const res = await fetch(`/api/admin/seasons/${seasonId}/playoffs`, { method: 'POST' })
@@ -81,8 +86,9 @@ export default function PlayoffAdminPage() {
       if (!res.ok) setMsg({ kind: 'err', text: data.error || 'Failed' })
       else {
         const { qfs, sfs, finals } = data.counts || {}
-        setMsg({ kind: 'ok', text: `Created ${qfs} QFs + ${sfs} SFs + ${finals} Finals.` })
-        load()
+        setMsg({ kind: 'ok', text: `Created ${qfs} QFs + ${sfs} SFs + ${finals} Finals. Open Edit Schedule to adjust times and courts.` })
+        setEditingId(seasonId)
+        setEditorVersion(v => v + 1)
       }
     } catch { setMsg({ kind: 'err', text: 'Network error' }) }
     setBusyId(null)
@@ -95,7 +101,7 @@ export default function PlayoffAdminPage() {
       const res = await fetch(`/api/admin/seasons/${seasonId}/playoffs`, { method: 'DELETE' })
       const data = await res.json()
       if (!res.ok) setMsg({ kind: 'err', text: data.error || 'Failed' })
-      else { setMsg({ kind: 'ok', text: `Deleted ${data.deleted} playoff matches.` }); load() }
+      else { setMsg({ kind: 'ok', text: `Deleted ${data.deleted} playoff matches.` }); setEditorVersion(v => v + 1) }
     } catch { setMsg({ kind: 'err', text: 'Network error' }) }
     setBusyId(null)
   }
@@ -104,7 +110,7 @@ export default function PlayoffAdminPage() {
 
   return (
     <div className="py-10 sm:py-12 px-4">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <div className="flex items-center gap-3 mb-2">
           <Link href="/admin" className="text-titos-gray-400 hover:text-titos-gold transition-colors cursor-pointer" aria-label="Back to admin home">
             <ArrowLeft className="w-5 h-5" aria-hidden="true" />
@@ -112,7 +118,7 @@ export default function PlayoffAdminPage() {
           <h1 className="font-display text-2xl sm:text-3xl font-black text-titos-white">Playoff Brackets</h1>
         </div>
         <p className="text-titos-gray-400 text-sm mb-8 ml-8">
-          Generate the W10 + W11 single-elimination bracket per division. Top-2 byes, 3v6 + 4v5 quarterfinals, then SF + Final reseeded.
+          Build a single-elimination bracket per division from the final standings, sized by the season&apos;s division settings. Then edit any match&apos;s week, time, court, teams, or where the winner goes.
         </p>
 
         {msg.text && (
@@ -134,35 +140,54 @@ export default function PlayoffAdminPage() {
         ) : (
           <div className="space-y-3">
             {seasons.map(s => (
-              <div key={s.id} className="card-flat rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="font-display text-base font-black text-titos-white">
-                    {s.league?.name}
-                    <span className="text-titos-gray-400 font-medium ml-2">— {s.name}</span>
+              <div key={s.id} className="card-flat rounded-xl p-4 sm:p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-display text-base font-black text-titos-white">
+                      {s.league?.name}
+                      <span className="text-titos-gray-400 font-medium ml-2">— {s.name}</span>
+                    </div>
+                    <div className="text-xs text-titos-gray-500 mt-0.5">Status: {s.status}</div>
                   </div>
-                  <div className="text-xs text-titos-gray-500 mt-0.5">Status: {s.status}</div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => generate(s.id, s.league?.name, s.name)}
+                      disabled={busyId === s.id}
+                      className={cn('btn-primary text-xs py-2 px-3 cursor-pointer', busyId === s.id && 'opacity-50 cursor-not-allowed')}
+                    >
+                      {busyId === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trophy className="w-3.5 h-3.5" />}
+                      Build Bracket
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingId(editingId === s.id ? null : s.id)}
+                      aria-expanded={editingId === s.id}
+                      className={cn(
+                        'px-3 py-2 rounded-lg text-xs font-semibold border flex items-center gap-1.5 transition-colors cursor-pointer',
+                        editingId === s.id ? 'bg-titos-gold/15 text-titos-gold border-titos-gold/30' : 'bg-titos-card text-titos-gray-300 border-titos-border hover:text-titos-white',
+                      )}
+                    >
+                      <CalendarClock className="w-3.5 h-3.5" aria-hidden="true" />
+                      Edit Schedule
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => wipe(s.id, s.league?.name, s.name)}
+                      disabled={busyId === s.id}
+                      className="text-titos-gray-500 hover:text-status-live transition-colors text-xs flex items-center gap-1.5 px-2 py-2 cursor-pointer"
+                      title="Delete playoff matches for this season"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Wipe
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => generate(s.id, s.league?.name, s.name)}
-                    disabled={busyId === s.id}
-                    className={cn('btn-primary text-xs py-2 px-3 cursor-pointer', busyId === s.id && 'opacity-50 cursor-not-allowed')}
-                  >
-                    {busyId === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trophy className="w-3.5 h-3.5" />}
-                    Generate Bracket
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => wipe(s.id, s.league?.name, s.name)}
-                    disabled={busyId === s.id}
-                    className="text-titos-gray-500 hover:text-status-live transition-colors text-xs flex items-center gap-1.5 px-2 py-2 cursor-pointer"
-                    title="Delete playoff matches for this season"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    Wipe
-                  </button>
-                </div>
+                {editingId === s.id && (
+                  <div className="mt-4 pt-4 border-t border-titos-border/40">
+                    <PlayoffScheduleEditor key={editorVersion} seasonId={s.id} />
+                  </div>
+                )}
               </div>
             ))}
           </div>

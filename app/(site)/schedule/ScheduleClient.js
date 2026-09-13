@@ -8,6 +8,7 @@ import TeamFilter from '@/components/ui/TeamFilter'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { useMyTeam } from '@/lib/hooks/useMyTeam'
 import { cn, formatDate, getSlotInfo, getTeamAbbreviation } from '@/lib/utils'
+import { leagueRules } from '@/lib/league/seasonConfig'
 import PlayoffsClient from '@/app/(site)/playoffs/[slug]/PlayoffsClient'
 
 /* ─── Round-robin generator ───
@@ -112,8 +113,8 @@ function TierCard({ tier, myTeam, slotColorVar, isSelected, onClick }) {
 /* ═══════════════════════════════════════════════
    MATCH PANEL — full-width below the grid
    ═══════════════════════════════════════════════ */
-function MatchPanel({ tier, myTeam, slotColorVar, isMens, compact = false }) {
-  const numRounds = isMens ? 3 : 2
+function MatchPanel({ tier, myTeam, slotColorVar, rounds, compact = false }) {
+  const numRounds = rounds
   const teams = tier.teams || []
   const roundRobin = teams.length >= 3 ? generateRoundRobin(teams, numRounds) : []
 
@@ -244,9 +245,9 @@ function MatchPanel({ tier, myTeam, slotColorVar, isMens, compact = false }) {
 /* ═══════════════════════════════════════════════
    SLOT GROUP — manages which tier is expanded
    ═══════════════════════════════════════════════ */
-function SlotGroup({ slot, tiers, myTeam, isMens, leagueSlug }) {
+function SlotGroup({ slot, tiers, myTeam, rounds, league }) {
   const [expandedTier, setExpandedTier] = useState(null)
-  const slotInfo = getSlotInfo(tiers[0].tierNumber, slot, leagueSlug)
+  const slotInfo = getSlotInfo(tiers[0].tierNumber, slot, league)
   const slotColorVar = slot === 'early' ? 'slot-early' : slot === 'late' ? 'slot-late' : 'slot-single'
   const sorted = [...tiers].sort((a, b) => a.tierNumber - b.tierNumber)
 
@@ -283,7 +284,7 @@ function SlotGroup({ slot, tiers, myTeam, isMens, leagueSlug }) {
             {/* MOBILE ONLY — inline panel appears directly below the clicked card */}
             {expandedTier === tier.tierNumber && (
               <div className="sm:hidden">
-                <MatchPanel tier={tier} myTeam={myTeam} slotColorVar={slotColorVar} isMens={isMens} compact />
+                <MatchPanel tier={tier} myTeam={myTeam} slotColorVar={slotColorVar} rounds={rounds} compact />
               </div>
             )}
           </Fragment>
@@ -295,7 +296,7 @@ function SlotGroup({ slot, tiers, myTeam, isMens, leagueSlug }) {
           if (!tier) return null
           return (
             <div className="hidden sm:block col-span-full">
-              <MatchPanel tier={tier} myTeam={myTeam} slotColorVar={slotColorVar} isMens={isMens} />
+              <MatchPanel tier={tier} myTeam={myTeam} slotColorVar={slotColorVar} rounds={rounds} />
             </div>
           )
         })()}
@@ -322,7 +323,8 @@ export default function ScheduleClient({ leagues, initialSlug, initialData, play
   }
   const [myTeam, setMyTeam] = useMyTeam(selected)
 
-  const isMens = selected.includes('sunday') || selected.includes('mens')
+  const league = leagues.find(l => l.slug === selected)
+  const rounds = leagueRules(league).roundsPerWeek
 
   useEffect(() => {
     if (!selected) return
@@ -345,7 +347,7 @@ export default function ScheduleClient({ leagues, initialSlug, initialData, play
     for (const tier of (currentGameWeek.tiers || [])) {
       const found = tier.teams?.find(t => t.name === myTeam)
       if (found) {
-        const slot = getSlotInfo(tier.tierNumber, tier.timeSlot, selected)
+        const slot = getSlotInfo(tier.tierNumber, tier.timeSlot, league)
         const opponents = tier.teams.filter(t => t.name !== myTeam).map(t => t.name)
         return { tier: tier.tierNumber, court: tier.courtNumber, slotLabel: slot.label, opponents, slot }
       }
@@ -502,7 +504,7 @@ export default function ScheduleClient({ leagues, initialSlug, initialData, play
                     {['early', 'late', 'single'].map(slot => {
                       const slotTiers = currentGameWeek.tiers.filter(t => t.timeSlot === slot)
                       if (!slotTiers.length) return null
-                      return <SlotGroup key={slot} slot={slot} tiers={slotTiers} myTeam={myTeam} isMens={isMens} leagueSlug={selected} />
+                      return <SlotGroup key={slot} slot={slot} tiers={slotTiers} myTeam={myTeam} rounds={rounds} league={league} />
                     })}
                   </div>
                 ) : (

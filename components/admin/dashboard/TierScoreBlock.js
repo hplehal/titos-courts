@@ -7,8 +7,8 @@ const scoreEntered = (v) => v !== '' && v !== null && v !== undefined
 
 // Score entry table for a single tier — keyboard-first:
 // Tab/Enter moves to the next field, and typing 2 digits auto-advances.
-export default function TierScoreBlock({ tierNum, tierMatches, inputRefs, onScoreChange, allInputKeys, leagueSlug }) {
-  const slot = getSlotInfo(parseInt(tierNum), tierMatches[0]?.timeSlot, leagueSlug)
+export default function TierScoreBlock({ tierNum, tierMatches, inputRefs, onScoreChange, allInputKeys, league }) {
+  const slot = getSlotInfo(parseInt(tierNum), tierMatches[0]?.timeSlot, league)
   const slotVar = parseInt(tierNum) <= 4 ? 'slot-early' : parseInt(tierNum) <= 8 ? 'slot-late' : 'slot-single'
 
   const focusNext = (matchId, field) => {

@@ -1,19 +1,39 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Users, UserPlus, Trophy, X, Plus, Check, DollarSign, Calendar, Info } from 'lucide-react'
 import SectionHeading from '@/components/ui/SectionHeading'
 import FormField from '@/components/ui/FormField'
+
+function blankForm(leagueSlug = '') {
+  return {
+    leagueSlug, teamName: '', captainName: '', captainEmail: '', captainPhone: '',
+    skillLevel: '', preferredDay: '', hearAbout: '', waiverAccepted: false, playerCount: '',
+  }
+}
 
 export default function RegisterPage() {
   const [tab, setTab] = useState('league')
   const [players, setPlayers] = useState([''])
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [form, setForm] = useState({
-    leagueSlug: 'tuesday-coed', teamName: '', captainName: '', captainEmail: '', captainPhone: '',
-    skillLevel: '', preferredDay: '', hearAbout: '', waiverAccepted: false, playerCount: '',
-  })
+  // Active leagues from the database, so renamed or newly visible leagues
+  // appear here without a code change.
+  const [leagues, setLeagues] = useState([])
+  const [form, setForm] = useState(() => blankForm())
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/leagues')
+      .then(r => r.json())
+      .then(data => {
+        if (cancelled || !Array.isArray(data)) return
+        setLeagues(data)
+        setForm(prev => (prev.leagueSlug ? prev : { ...prev, leagueSlug: data[0]?.slug || '' }))
+      })
+      .catch(err => console.error(err))
+    return () => { cancelled = true }
+  }, [])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -55,7 +75,7 @@ export default function RegisterPage() {
           </div>
           <h2 className="font-display text-2xl font-bold text-titos-white mb-3">Registration Submitted!</h2>
           <p className="text-titos-gray-300 mb-6">We&apos;ll review your submission and get back to you with next steps.</p>
-          <button onClick={() => { setSuccess(false); setForm({ leagueSlug: 'tuesday-coed', teamName: '', captainName: '', captainEmail: '', captainPhone: '', skillLevel: '', preferredDay: '', hearAbout: '', waiverAccepted: false, playerCount: '' }); setPlayers(['']) }}
+          <button onClick={() => { setSuccess(false); setForm(blankForm(leagues[0]?.slug || '')); setPlayers(['']) }}
             className="px-6 py-3 bg-titos-gold hover:bg-titos-gold-light text-titos-surface font-bold rounded-lg transition-colors">
             Register Another
           </button>
@@ -63,8 +83,6 @@ export default function RegisterPage() {
       </div>
     )
   }
-
-  const leagueFees = { 'tuesday-coed': 230, 'sunday-mens': 220, 'thursday-rec-coed': 200 }
 
   return (
     <div className="py-12 px-4">
@@ -88,7 +106,7 @@ export default function RegisterPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {tab === 'league' && (
                 <FormField label="League" name="leagueSlug" type="select" required value={form.leagueSlug} onChange={handleChange}
-                  options={[{ value: 'tuesday-coed', label: 'Tuesday COED' }, { value: 'sunday-mens', label: 'Sunday MENS' }, { value: 'thursday-rec-coed', label: 'Thursday REC COED' }]} />
+                  options={leagues.map(l => ({ value: l.slug, label: l.name }))} />
               )}
               {(tab === 'league' || tab === 'tournament') && (
                 <FormField label="Team Name" name="teamName" required placeholder="e.g., Block Party" value={form.teamName} onChange={handleChange} />
@@ -102,7 +120,7 @@ export default function RegisterPage() {
               {tab === 'freeagent' && (
                 <div className="grid sm:grid-cols-2 gap-4">
                   <FormField label="Skill Level" name="skillLevel" type="select" options={['Beginner', 'Intermediate', 'Advanced']} value={form.skillLevel} onChange={handleChange} />
-                  <FormField label="Preferred League Day" name="preferredDay" type="select" options={['Tuesday (COED)', 'Sunday (MENS)', 'Thursday (REC COED)', 'Any']} value={form.preferredDay} onChange={handleChange} />
+                  <FormField label="Preferred League Day" name="preferredDay" type="select" options={[...leagues.map(l => l.name), 'Any']} value={form.preferredDay} onChange={handleChange} />
                 </div>
               )}
 

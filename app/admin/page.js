@@ -289,7 +289,7 @@ export default function AdminPage() {
                     <div className="space-y-4">
                       {Object.entries(matchesByTier).sort(([a], [b]) => a - b).map(([tierNum, tierMatches]) => (
                         <TierScoreBlock key={tierNum} tierNum={tierNum} tierMatches={tierMatches} inputRefs={inputRefs}
-                          onScoreChange={updateMatchScore} allInputKeys={allInputKeys} leagueSlug={activeLeague?.slug} />
+                          onScoreChange={updateMatchScore} allInputKeys={allInputKeys} league={activeLeague} />
                       ))}
                     </div>
                     {matches.length === 0 && <p className="text-titos-gray-400 text-center py-8">No matches for this week.</p>}
@@ -329,7 +329,7 @@ export default function AdminPage() {
                 )}
 
                 {/* RESULTS TAB */}
-                {activeTab === 'Results' && <ResultsView matches={matches} leagueSlug={activeLeague?.slug} />}
+                {activeTab === 'Results' && <ResultsView matches={matches} league={activeLeague} />}
 
                 {/* TIERS TAB */}
                 {activeTab === 'Tiers' && selectedWeek && <TiersView weekId={selectedWeek.id} weeks={weeks} onReloadMatches={loadMatches} />}

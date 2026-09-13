@@ -105,7 +105,7 @@ describe('buildDivisionBracket()', () => {
 
 describe('buildPlayoffPlan()', () => {
   it('24-team COED default split builds 4 divisions × 5 matches', () => {
-    const plan = buildPlayoffPlan(standings(24), resolveDivisions(null, 24, 'coed'))
+    const plan = buildPlayoffPlan(standings(24), resolveDivisions(null, 24, 4))
     expect(plan).toHaveLength(20)
     expect([...new Set(plan.map(m => m.divisionName))]).toEqual(['Diamond', 'Platinum', 'Gold', 'Silver'])
     expect([...new Set(plan.map(m => m.tierNumber))]).toEqual([1, 2, 3, 4])

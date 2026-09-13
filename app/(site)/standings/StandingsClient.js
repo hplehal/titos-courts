@@ -8,11 +8,12 @@ import LeagueSelector from '@/components/ui/LeagueSelector'
 import TeamFilter from '@/components/ui/TeamFilter'
 import { useMyTeam } from '@/lib/hooks/useMyTeam'
 import { cn, getDivisionInfo, getTierColor, getSlotInfo, getMovementIcon, getLeagueTimeDisplay } from '@/lib/utils'
+import { leagueRules } from '@/lib/league/seasonConfig'
 
 /* ─── Tier View Helpers ─── */
 
-function groupTiersBySlot(tiers, selected) {
-  const isMens = selected.includes('sunday') || selected.includes('mens')
+function groupTiersBySlot(tiers, league) {
+  const rules = leagueRules(league)
   const groups = []
   const slotMap = {}
 
@@ -21,17 +22,17 @@ function groupTiersBySlot(tiers, selected) {
     if (!slotMap[slot]) {
       let label, color, bg, border
       if (slot === 'single') {
-        label = 'ALL COURTS (9 PM \u2013 12 AM)'
+        label = `ALL COURTS (${rules.singleSlotLabel})`
         color = 'text-slot-single'
         bg = 'bg-slot-single/10'
         border = 'border-slot-single/30'
       } else if (slot === 'early') {
-        label = isMens ? 'EARLY SLOT (9 \u2013 10:30 PM)' : 'EARLY SLOT (8 \u2013 10 PM)'
+        label = `EARLY SLOT (${rules.earlySlotLabel})`
         color = 'text-slot-early'
         bg = 'bg-slot-early/10'
         border = 'border-slot-early/30'
       } else {
-        label = isMens ? 'LATE SLOT (10:30 PM \u2013 12 AM)' : 'LATE SLOT (10 PM \u2013 12 AM)'
+        label = `LATE SLOT (${rules.lateSlotLabel})`
         color = 'text-slot-late'
         bg = 'bg-slot-late/10'
         border = 'border-slot-late/30'
@@ -108,16 +109,11 @@ function TierSkeleton() {
 
 /* ─── Tier Card Component ─── */
 
-function TierCard({ tier, myTeam, selected }) {
+function TierCard({ tier, myTeam, league }) {
   const tierColor = getTierColor(tier.tierNumber)
-  const isMens = selected.includes('sunday') || selected.includes('mens')
   const containsMyTeam = myTeam && tier.teams.some(t => t.name === myTeam)
 
-  const timeLabel = tier.timeSlot === 'single'
-    ? '9 PM \u2013 12 AM'
-    : isMens
-      ? (tier.timeSlot === 'early' ? '9\u201310:30 PM' : '10:30 PM\u201312 AM')
-      : (tier.timeSlot === 'early' ? '8\u201310 PM' : '10 PM\u201312 AM')
+  const timeLabel = getSlotInfo(tier.tierNumber, tier.timeSlot, league).label
 
   return (
     <div
@@ -263,7 +259,8 @@ export default function StandingsClient({ leagues, initialSlug, initialData, bra
       .catch(() => setLoading(false))
   }, [selected])
 
-  const slotGroups = tierView ? groupTiersBySlot(tierView, selected) : []
+  const league = leagues.find(l => l.slug === selected)
+  const slotGroups = tierView ? groupTiersBySlot(tierView, league) : []
 
   return (
     <div className="py-12 px-4">
@@ -327,8 +324,7 @@ export default function StandingsClient({ leagues, initialSlug, initialData, bra
                 </thead>
                 <tbody>
                   {standings.map(team => {
-                    const leagueType = (selected.includes('sunday') || selected.includes('mens')) ? 'mens' : 'coed'
-                    const div = getDivisionInfo(team.rank, standings.length, leagueType, divisions)
+                    const div = getDivisionInfo(team.rank, standings.length, league?.divisionCount, divisions)
                     return (
                       <tr key={team.id} className={cn('border-b border-titos-border/30 hover:bg-titos-card/50', div.bgClass, myTeam === team.name && 'bg-titos-gold/[0.08] border-l-2 border-l-titos-gold')}>
                         <td className="px-2.5 py-3 text-center">
@@ -377,7 +373,7 @@ export default function StandingsClient({ leagues, initialSlug, initialData, bra
                       key={tier.tierNumber}
                       tier={tier}
                       myTeam={myTeam}
-                      selected={selected}
+                      league={league}
                     />
                   ))}
                 </div>

@@ -18,8 +18,8 @@ export async function POST(request) {
         season: {
           include: {
             tiers: { orderBy: { tierNumber: 'asc' } },
-            // League slug decides which tiebreaker cascade to apply.
-            league: { select: { slug: true } },
+            // The league's rules decide which tiebreaker cascade to apply.
+            league: { select: { slug: true, headToHead: true } },
           },
         },
         matches: {
@@ -39,9 +39,9 @@ export async function POST(request) {
 
     // Head-to-head point diff, built once per week from the raw scores.
     // h2h[a][b] = A's net points across every set A played against B this week.
-    // Only consulted as a tiebreaker for Sunday MENS (3 sets per matchup gives
-    // a meaningful sample — see lib/server/leagues.js for the matching rule on
-    // season standings).
+    // Only consulted when the league has the head-to-head tiebreaker on
+    // (Sunday MENS: 3 sets per matchup gives a meaningful sample — see
+    // lib/server/leagues.js for the matching rule on season standings).
     const h2h = {}
     for (const match of week.matches) {
       for (const score of match.scores) {
@@ -52,7 +52,7 @@ export async function POST(request) {
         h2h[match.awayTeamId][match.homeTeamId] = (h2h[match.awayTeamId][match.homeTeamId] || 0) - diff
       }
     }
-    const useHeadToHead = week.season.league?.slug === 'sunday-mens'
+    const useHeadToHead = !!week.season.league?.headToHead
 
     // Group placements by tier
     const tierData = {}

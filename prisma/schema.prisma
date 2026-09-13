@@ -19,6 +19,18 @@ model League {
   tiersPerSlot    Int
   teamsPerTier    Int      @default(3)
   isActive        Boolean  @default(true)
+  // Game-night rules, edited per league on /admin/leagues. Defaults match
+  // Tuesday COED — see leagueRules() in lib/league/seasonConfig.js.
+  roundsPerWeek    Int     @default(2)                // round-robin passes per tier each week
+  headToHead       Boolean @default(false)            // head-to-head points break standings ties first
+  divisionCount    Int     @default(4)                // playoff divisions in the automatic even split
+  slotMode         String  @default("two")            // 'two' = early + late time slots, 'single' = one slot
+  earlySlotLabel   String  @default("8 – 10 PM")
+  lateSlotLabel    String  @default("10 PM – 12 AM")
+  singleSlotLabel  String  @default("9 PM – 12 AM")
+  timeRangeLabel   String  @default("8 PM – 12 AM")   // the whole game night, shown on league cards
+  courts           Int[]   @default([6, 8, 9, 10])    // courts for new tiers, in order
+  defaultTierCount Int     @default(8)                // tiers pre-filled when creating a season
   seasons         Season[]
   createdAt       DateTime @default(now())
 

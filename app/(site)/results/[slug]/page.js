@@ -1,14 +1,8 @@
 import { notFound } from 'next/navigation'
 import ResultsClient from '../ResultsClient'
-import { getActiveLeagues, getLeagueSchedule } from '@/lib/server/leagues'
+import { getActiveLeagues, getLeagueName, getLeagueSchedule } from '@/lib/server/leagues'
 
 export const revalidate = 300
-
-const LEAGUE_LABEL = {
-  'tuesday-coed': 'Tuesday Coed',
-  'sunday-mens': "Sunday Men's",
-  'thursday-rec-coed': 'Thursday Rec Coed',
-}
 
 export async function generateStaticParams() {
   const leagues = await getActiveLeagues()
@@ -17,7 +11,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { slug } = await params
-  const label = LEAGUE_LABEL[slug] || slug
+  const label = await getLeagueName(slug)
   const title = `${label} Volleyball Results & Scores — Mississauga | Tito's Courts`
   const description = `Match results, tier scores, and team movement for ${label} volleyball league at Tito's Courts in Mississauga. Weekly scores, wins, losses, and playoff tracking.`
   return {
@@ -49,7 +43,7 @@ export default async function ResultsLeaguePage({ params }) {
 
   if (!leagues.some(l => l.slug === slug)) notFound()
 
-  const label = LEAGUE_LABEL[slug] || slug
+  const label = leagues.find(l => l.slug === slug).name
   return (
     <>
       <p className="sr-only">

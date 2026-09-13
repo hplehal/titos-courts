@@ -39,6 +39,7 @@ model Season {
   teams        Team[]
   tiers        Tier[]
   weeks        Week[]
+  divisions    Division[]
   createdAt    DateTime @default(now())
 
   @@index([leagueId, status, seasonNumber])
@@ -86,6 +87,23 @@ model Tier {
   placements  TierPlacement[]
 
   @@unique([seasonId, tierNumber])
+}
+
+// Playoff division sizes for a season, editable any time from the admin
+// seasons page. position 1=Diamond, 2=Platinum, 3=Gold, 4=Silver and doubles
+// as Match.tierNumber in playoff weeks. A season with no rows falls back to
+// the automatic even split (see lib/league/seasonConfig.js).
+model Division {
+  id          String @id @default(cuid())
+  seasonId    String
+  season      Season @relation(fields: [seasonId], references: [id])
+  position    Int
+  teamCount   Int
+  // Default court for this division's playoff draft. Null = use the
+  // league preset.
+  courtNumber Int?
+
+  @@unique([seasonId, position])
 }
 
 model TierPlacement {
@@ -169,6 +187,10 @@ model Match {
   // advanceLeaguePlayoffWinner based on reseeding rules.
   nextMatchId String?
   nextMatch   Match?       @relation("MatchAdvance", fields: [nextMatchId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  // Which side of nextMatch the winner fills: 'home' | 'away'. Set by the
+  // playoff draft and the admin schedule editor. Null keeps the legacy
+  // behaviour (QF→SF reseed, SF→Final by gameOrder).
+  nextSlot    String?
   feeders     Match[]      @relation("MatchAdvance")
   scores      SetScore[]
   playerStats PlayerStat[]

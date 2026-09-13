@@ -1,11 +1,11 @@
 'use client'
 
-// Public league-playoff bracket. Renders the 4 division brackets in a
-// vertical stack (each a compact 3-column tree: QF → SF → F). Refreshes
-// the data layer every 30s while the page is open so live score updates
-// surface without a manual refresh.
+// Public league-playoff bracket. Renders each division's bracket in a
+// vertical stack (each a compact tree: QF → SF → F, dropping rounds no
+// division plays). Refreshes the data layer every 30s while the page is open
+// so live score updates surface without a manual refresh.
 
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Crown, Trophy, Calendar } from 'lucide-react'
 import { useMyTeam } from '@/lib/hooks/useMyTeam'
@@ -15,10 +15,21 @@ import { useMyTeam } from '@/lib/hooks/useMyTeam'
 // both the COED split (QFs in W10, SFs+Final in W11) and the MENS single-night
 // format (everything in W11).
 const ROUND_COLUMNS = [
-  { round: 1, label: 'Quarterfinals', short: 'QF', slots: 2 },
-  { round: 2, label: 'Semifinals',    short: 'SF', slots: 2 },
-  { round: 3, label: 'Final',         short: 'F',  slots: 1 },
+  { round: 1, label: 'Quarterfinals', short: 'QF',    tag: 'QFs' },
+  { round: 2, label: 'Semifinals',    short: 'SF',    tag: 'SFs' },
+  { round: 3, label: 'Final',         short: 'Final', tag: 'Final' },
 ]
+
+const GRID_COLS = { 1: 'sm:grid-cols-1', 2: 'sm:grid-cols-2', 3: 'sm:grid-cols-3' }
+
+// Only the rounds some division actually plays — e.g. no Quarterfinals column
+// when every division is a 4-team bracket.
+function activeColumns(divisions) {
+  const rounds = new Set()
+  for (const d of divisions || []) for (const m of d.matches || []) rounds.add(m.roundNumber)
+  const cols = ROUND_COLUMNS.filter(c => rounds.has(c.round))
+  return cols.length ? cols : ROUND_COLUMNS
+}
 
 // Build { roundNumber → weekNumber } from the playoff matches, with sensible
 // fallbacks. Single-week playoffs (MENS) → every round maps to the same week.
@@ -165,7 +176,7 @@ function TeamRow({ name, seed, setWins, winner }) {
   )
 }
 
-function DivisionBracket({ division, weeks, roundWeeks, multiWeek, isMyDivision }) {
+function DivisionBracket({ division, weeks, roundWeeks, columns, multiWeek, isMyDivision }) {
   const accent = DIVISION_ACCENT[division.name] || DIVISION_ACCENT.Diamond
   const byRound = {
     1: division.matches.filter(m => m.roundNumber === 1).sort((a, b) => a.gameOrder - b.gameOrder),
@@ -175,7 +186,7 @@ function DivisionBracket({ division, weeks, roundWeeks, multiWeek, isMyDivision 
   // The "late week" only exists when the playoff spans two weeks (COED). For a
   // single-night playoff (MENS) every round is in the same week, so there's no
   // band / transition to draw.
-  const lateWeek = multiWeek ? Math.max(...Object.values(roundWeeks)) : null
+  const lateWeek = multiWeek ? Math.max(...columns.map(c => roundWeeks[c.round])) : null
 
   return (
     <section
@@ -216,10 +227,10 @@ function DivisionBracket({ division, weeks, roundWeeks, multiWeek, isMyDivision 
           • sm+: original 3-column bracket tree. W11 columns share a
             tinted band with a left border — same visual story but
             horizontal. */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-3 relative">
-        {ROUND_COLUMNS.map((col, idx) => {
+      <div className={cn('grid grid-cols-1 gap-3 sm:gap-3 relative', GRID_COLS[columns.length])}>
+        {columns.map((col, idx) => {
           const colWeek = roundWeeks[col.round]
-          const prevWeek = idx > 0 ? roundWeeks[ROUND_COLUMNS[idx - 1].round] : null
+          const prevWeek = idx > 0 ? roundWeeks[columns[idx - 1].round] : null
           // Only band/transition the late week when the playoff spans 2 weeks.
           const inLateWeek = multiWeek && colWeek === lateWeek
           const isLateStart = inLateWeek && prevWeek !== lateWeek
@@ -270,11 +281,11 @@ function DivisionBracket({ division, weeks, roundWeeks, multiWeek, isMyDivision 
               )}>
                 {byRound[col.round]?.length > 0 ? byRound[col.round].map(m => (
                   <MatchCard key={m.id} match={m} />
-                )) : Array.from({ length: col.slots }).map((_, i) => (
-                  <article key={i} className="rounded-lg bg-titos-elevated/30 ring-1 ring-titos-border/20 px-3 py-4 text-center text-xs text-titos-gray-500">
-                    TBD
+                )) : (
+                  <article className="rounded-lg bg-titos-elevated/30 ring-1 ring-titos-border/20 px-3 py-4 text-center text-xs text-titos-gray-500">
+                    No games this round
                   </article>
-                ))}
+                )}
               </div>
             </div>
           )
@@ -284,10 +295,31 @@ function DivisionBracket({ division, weeks, roundWeeks, multiWeek, isMyDivision 
   )
 }
 
-function SingleNightLegend({ weeks, roundWeeks }) {
-  // MENS-style single-night playoff: QF → SF → Final all in one week. One
-  // card that lays out the running order rather than the two-week split.
-  const wk = weeks?.[roundWeeks[1]]
+function formatTime(iso) {
+  return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+}
+
+// Per visible round: distinct start times (earliest first) and whether any
+// court is still TBD. The legend reads the real schedule so it stays right
+// after admins edit times on /admin/playoffs.
+function roundSummaries(divisions, columns) {
+  return columns.map(col => {
+    const matches = (divisions || []).flatMap(d => d.matches.filter(m => m.roundNumber === col.round))
+    const times = [...new Set(
+      matches
+        .filter(m => m.scheduledTime)
+        .sort((a, b) => new Date(a.scheduledTime) - new Date(b.scheduledTime))
+        .map(m => formatTime(m.scheduledTime)),
+    )]
+    return { ...col, times, courtsTbd: matches.some(m => m.courtNumber == null) }
+  })
+}
+
+function SingleNightLegend({ weeks, roundWeeks, summaries }) {
+  // Single-night playoff (MENS): every round in one week. One card that lays
+  // out the running order rather than a per-week split.
+  const wk = weeks?.[roundWeeks[summaries[0]?.round]]
+  const runningOrder = summaries.filter(s => s.times.length).map(s => `${s.short} ${s.times[0]}`).join(' · ')
   return (
     <div
       role="group"
@@ -300,65 +332,72 @@ function SingleNightLegend({ weeks, roundWeeks }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 flex-wrap">
           <span className="font-display text-base font-black text-titos-white">Playoff Night</span>
-          <span className="text-[10px] uppercase tracking-wider font-bold text-titos-gold bg-titos-gold/15 px-1.5 py-0.5 rounded">QF · SF · Final</span>
+          <span className="text-[10px] uppercase tracking-wider font-bold text-titos-gold bg-titos-gold/15 px-1.5 py-0.5 rounded">
+            {summaries.map(s => s.short).join(' · ')}
+          </span>
         </div>
         <p className="text-titos-gray-300 text-xs sm:text-sm mt-0.5">
-          QFs <span className="font-mono">3 vs 6</span> · <span className="font-mono">4 vs 5</span> (top 2 seeds bye), then reseeded SFs and the Final — same night.
+          Single elimination in every division — all rounds on the same night.
         </p>
         <p className="text-titos-gray-500 text-[11px] mt-1">
-          {wk?.date ? formatWeekDate(wk.date) : 'Date TBD'} · QF 9 PM · SF 10 PM · Final 11 PM
+          {wk?.date ? formatWeekDate(wk.date) : 'Date TBD'}{runningOrder && ` · ${runningOrder}`}
         </p>
       </div>
     </div>
   )
 }
 
-function WeekLegend({ weeks, roundWeeks, multiWeek }) {
+function WeekLegend({ weeks, roundWeeks, multiWeek, summaries }) {
   // Single-night playoff → compact one-card legend.
-  if (!multiWeek) return <SingleNightLegend weeks={weeks} roundWeeks={roundWeeks} />
-  // Two-week (COED) split → the original W10 / W11 two-card strip.
-  const w10 = weeks?.[roundWeeks[1]]
-  const w11 = weeks?.[roundWeeks[2]]
+  if (!multiWeek) return <SingleNightLegend weeks={weeks} roundWeeks={roundWeeks} summaries={summaries} />
+  // Multi-week split (COED: QFs one week, SFs + Final the next) → a card per week.
+  const byWeek = []
+  for (const s of summaries) {
+    const weekNumber = roundWeeks[s.round]
+    let group = byWeek.find(g => g.weekNumber === weekNumber)
+    if (!group) { group = { weekNumber, rounds: [] }; byWeek.push(group) }
+    group.rounds.push(s)
+  }
   return (
     <div
       role="group"
       aria-label="Playoff schedule legend"
-      className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6"
+      className={cn('grid grid-cols-1 gap-3 mb-6', GRID_COLS[Math.min(byWeek.length, 3)])}
     >
-      <div className="rounded-xl bg-titos-card ring-1 ring-titos-border/40 p-4 flex items-start gap-3">
-        <div className="w-9 h-9 rounded-lg bg-titos-gold/15 text-titos-gold flex items-center justify-center flex-shrink-0">
-          <Calendar className="w-4 h-4" aria-hidden="true" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="font-display text-base font-black text-titos-white">Week 10</span>
-            <span className="text-[10px] uppercase tracking-wider font-bold text-titos-gold bg-titos-gold/15 px-1.5 py-0.5 rounded">QFs</span>
+      {byWeek.map((group, idx) => {
+        const isFinalWeek = idx === byWeek.length - 1
+        const Icon = isFinalWeek ? Trophy : Calendar
+        const wk = weeks?.[group.weekNumber]
+        return (
+          <div
+            key={group.weekNumber}
+            className={cn('rounded-xl bg-titos-card ring-1 p-4 flex items-start gap-3', isFinalWeek ? 'ring-titos-gold/30' : 'ring-titos-border/40')}
+          >
+            <div className={cn('w-9 h-9 rounded-lg text-titos-gold flex items-center justify-center flex-shrink-0', isFinalWeek ? 'bg-titos-gold/25' : 'bg-titos-gold/15')}>
+              <Icon className="w-4 h-4" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="font-display text-base font-black text-titos-white">Week {group.weekNumber}</span>
+                <span className="text-[10px] uppercase tracking-wider font-bold text-titos-gold bg-titos-gold/15 px-1.5 py-0.5 rounded">
+                  {group.rounds.map(r => r.tag).join(' + ')}
+                </span>
+              </div>
+              <p className="text-titos-gray-300 text-xs sm:text-sm mt-0.5">
+                {group.rounds.map((r, i) => (
+                  <Fragment key={r.round}>
+                    {i > 0 && ' · '}
+                    {r.tag} <span className="font-mono">{r.times.length ? r.times.join(' / ') : 'time TBD'}</span>
+                  </Fragment>
+                ))}
+              </p>
+              <p className="text-titos-gray-500 text-[11px] mt-1">
+                {wk?.date ? formatWeekDate(wk.date) : 'Date TBD'}{group.rounds.some(r => r.courtsTbd) && ' · Courts TBD'}
+              </p>
+            </div>
           </div>
-          <p className="text-titos-gray-300 text-xs sm:text-sm mt-0.5">
-            <span className="font-mono">3 vs 6</span> · <span className="font-mono">4 vs 5</span> per division
-          </p>
-          <p className="text-titos-gray-500 text-[11px] mt-1">
-            {w10?.date ? formatWeekDate(w10.date) : 'Date TBD'} · 10:00 PM / 11:00 PM
-          </p>
-        </div>
-      </div>
-      <div className="rounded-xl bg-titos-card ring-1 ring-titos-gold/30 p-4 flex items-start gap-3">
-        <div className="w-9 h-9 rounded-lg bg-titos-gold/25 text-titos-gold flex items-center justify-center flex-shrink-0">
-          <Trophy className="w-4 h-4" aria-hidden="true" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="font-display text-base font-black text-titos-white">Week 11</span>
-            <span className="text-[10px] uppercase tracking-wider font-bold text-titos-gold bg-titos-gold/15 px-1.5 py-0.5 rounded">SFs + Final</span>
-          </div>
-          <p className="text-titos-gray-300 text-xs sm:text-sm mt-0.5">
-            Both SFs <span className="font-mono">10:00 PM</span>; Final <span className="font-mono">11 PM – 12 AM</span>.
-          </p>
-          <p className="text-titos-gray-500 text-[11px] mt-1">
-            {w11?.date ? formatWeekDate(w11.date) : 'Date TBD'} · Courts TBD
-          </p>
-        </div>
-      </div>
+        )
+      })}
     </div>
   )
 }
@@ -506,7 +545,9 @@ export default function PlayoffsClient({ slug, initialData }) {
   // Round → week map (data-driven) and whether the playoff spans >1 week.
   // COED = QFs in W10, SFs+Final in W11 (multiWeek). MENS = all in W11.
   const roundWeeks = useMemo(() => roundWeekMap(data.divisions), [data.divisions])
-  const multiWeek = useMemo(() => new Set(Object.values(roundWeeks)).size > 1, [roundWeeks])
+  const columns = useMemo(() => activeColumns(data.divisions), [data.divisions])
+  const summaries = useMemo(() => roundSummaries(data.divisions, columns), [data.divisions, columns])
+  const multiWeek = useMemo(() => new Set(columns.map(c => roundWeeks[c.round])).size > 1, [columns, roundWeeks])
 
   // Soft poll every 30s for live score updates. Stop when the tab is hidden.
   useEffect(() => {
@@ -526,7 +567,7 @@ export default function PlayoffsClient({ slug, initialData }) {
 
   return (
     <div>
-      <WeekLegend weeks={data.weeks} roundWeeks={roundWeeks} multiWeek={multiWeek} />
+      <WeekLegend weeks={data.weeks} roundWeeks={roundWeeks} multiWeek={multiWeek} summaries={summaries} />
       <JumpToDivision
         divisions={data.divisions}
         myDivisionName={myDivisionName}
@@ -538,6 +579,7 @@ export default function PlayoffsClient({ slug, initialData }) {
           division={d}
           weeks={data.weeks}
           roundWeeks={roundWeeks}
+          columns={columns}
           multiWeek={multiWeek}
           isMyDivision={myDivisionName === d.name}
         />

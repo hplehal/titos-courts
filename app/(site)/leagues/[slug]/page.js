@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import LeagueDetailClient from './LeagueDetailClient'
 import { getActiveLeagues } from '@/lib/server/leagues'
+import { tierFactor } from '@/lib/league/seasonConfig'
 
 // ISR — 5 minute revalidation. Admin mutations bust the cache via revalidateTag.
 export const revalidate = 300
@@ -65,6 +66,7 @@ async function getLeagueData(slug) {
         include: {
           teams: { orderBy: { name: 'asc' } },
           tiers: { orderBy: { tierNumber: 'asc' } },
+          divisions: { orderBy: { position: 'asc' } },
           weeks: {
             orderBy: { weekNumber: 'asc' },
             include: {
@@ -131,9 +133,9 @@ async function getLeagueData(slug) {
     for (const [teamId, data] of Object.entries(weekTeamSets)) {
       if (teamStats[teamId]) {
         // Tier 1 = 8 base points, Tier 2 = 7, ... Tier 8 = 1
-        const tierFactor = Math.max(1, 9 - data.tierNumber)
-        teamStats[teamId].basePoints += tierFactor
-        teamStats[teamId].totalPoints += tierFactor + data.sets
+        const factor = tierFactor(data.tierNumber, season.tiers.length)
+        teamStats[teamId].basePoints += factor
+        teamStats[teamId].totalPoints += factor + data.sets
         teamStats[teamId].weeksPlayed++
       }
     }

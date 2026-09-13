@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, Archive, Loader2, Check, Users, Calendar, ChevronDown, ChevronRight, Pencil, Save, X, Trash2, ListOrdered } from 'lucide-react'
+import { Plus, Archive, Loader2, Check, Users, Calendar, ChevronDown, ChevronRight, Pencil, Save, X, Trash2, ListOrdered, Settings } from 'lucide-react'
 import AdminPageHeader from '@/components/admin/AdminPageHeader'
 import { cn, getTierColor } from '@/lib/utils'
+import { DIVISION_NAMES, defaultTierCount, leagueTypeFor, resolveDivisions } from '@/lib/league/seasonConfig'
 
 export default function SeasonsPage() {
   const [seasons, setSeasons] = useState([])
@@ -15,7 +16,7 @@ export default function SeasonsPage() {
   // Forms
   const [showNewForm, setShowNewForm] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [newSeason, setNewSeason] = useState({ leagueId: '', name: '', seasonNumber: '', startDate: '', endDate: '' })
+  const [newSeason, setNewSeason] = useState({ leagueId: '', name: '', seasonNumber: '', startDate: '', endDate: '', tierCount: '' })
 
   // Season actions
   const [archiving, setArchiving] = useState({})
@@ -24,6 +25,7 @@ export default function SeasonsPage() {
   // Expanded sections
   const [expandedWeeks, setExpandedWeeks] = useState({})
   const [expandedTeams, setExpandedTeams] = useState({})
+  const [expandedSettings, setExpandedSettings] = useState({})
 
   // Week data
   const [weeksBySeason, setWeeksBySeason] = useState({})
@@ -72,6 +74,10 @@ export default function SeasonsPage() {
     setExpandedTeams(prev => ({ ...prev, [seasonId]: !prev[seasonId] }))
   }
 
+  const toggleSettings = (seasonId) => {
+    setExpandedSettings(prev => ({ ...prev, [seasonId]: !prev[seasonId] }))
+  }
+
   // Auto-fill season defaults when a league is picked: next season number,
   // matching name, start today, end 11 weeks out. Everything stays editable.
   const applyLeagueDefaults = (leagueId) => {
@@ -88,6 +94,7 @@ export default function SeasonsPage() {
       seasonNumber: String(nextNumber),
       startDate: iso(start),
       endDate: iso(end),
+      tierCount: String(defaultTierCount(league?.slug)),
     })
   }
 
@@ -105,7 +112,7 @@ export default function SeasonsPage() {
       if (data.success) {
         setMessage('Season created!')
         setShowNewForm(false)
-        setNewSeason({ leagueId: '', name: '', seasonNumber: '', startDate: '', endDate: '' })
+        setNewSeason({ leagueId: '', name: '', seasonNumber: '', startDate: '', endDate: '', tierCount: '' })
         await loadData()
       } else { setMessage(data.error || 'Error') }
     } catch (err) { setMessage('Error creating season') }
@@ -211,7 +218,7 @@ export default function SeasonsPage() {
         {showNewForm && (
           <div className="card rounded-xl p-6 mb-8">
             <h3 className="font-display text-lg font-bold text-titos-white mb-1">Create New Season</h3>
-            <p className="text-titos-gray-400 text-xs mb-4">Pick a league and everything auto-fills — next season number, name, and an 11-week schedule. Adjust anything before creating.</p>
+            <p className="text-titos-gray-400 text-xs mb-4">Pick a league and everything auto-fills — next season number, name, tier count, and an 11-week schedule. Adjust anything before creating.</p>
             <form onSubmit={handleNewSeason} className="grid sm:grid-cols-2 gap-4">
               <select value={newSeason.leagueId} onChange={(e) => applyLeagueDefaults(e.target.value)} required
                 className="px-4 py-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-white focus:outline-none focus:border-titos-gold/50">
@@ -220,8 +227,15 @@ export default function SeasonsPage() {
               </select>
               <input type="text" placeholder="Season Name (e.g. Season 10)" value={newSeason.name} onChange={(e) => setNewSeason(p => ({ ...p, name: e.target.value }))} required
                 className="px-4 py-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-white placeholder-titos-gray-500 focus:outline-none focus:border-titos-gold/50" />
-              <input type="number" placeholder="Season #" value={newSeason.seasonNumber} onChange={(e) => setNewSeason(p => ({ ...p, seasonNumber: e.target.value }))} required
-                className="px-4 py-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-white placeholder-titos-gray-500 focus:outline-none focus:border-titos-gold/50" />
+              <div className="flex gap-2">
+                <input type="number" placeholder="Season #" value={newSeason.seasonNumber} onChange={(e) => setNewSeason(p => ({ ...p, seasonNumber: e.target.value }))} required
+                  className="flex-1 min-w-0 px-4 py-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-white placeholder-titos-gray-500 focus:outline-none focus:border-titos-gold/50" />
+                <label className="flex items-center gap-2 pl-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-gray-400 text-sm focus-within:border-titos-gold/50">
+                  Tiers
+                  <input type="number" min="1" max="20" value={newSeason.tierCount} onChange={(e) => setNewSeason(p => ({ ...p, tierCount: e.target.value }))}
+                    className="w-14 py-3 pr-2 bg-transparent text-titos-white focus:outline-none" />
+                </label>
+              </div>
               <div className="flex gap-2">
                 <input type="date" value={newSeason.startDate} onChange={(e) => setNewSeason(p => ({ ...p, startDate: e.target.value }))} required
                   className="flex-1 px-4 py-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-white focus:outline-none focus:border-titos-gold/50 [color-scheme:dark]" />
@@ -265,7 +279,7 @@ export default function SeasonsPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div>
                             <div className="flex items-center gap-3">
-                              <h4 className="font-semibold text-titos-white">{season.name}</h4>
+                              <SeasonNameEditor season={season} onSaved={loadData} setMessage={setMessage} />
                               <select
                                 value={season.status}
                                 onChange={async (e) => {
@@ -291,6 +305,7 @@ export default function SeasonsPage() {
                             </div>
                             <div className="flex items-center gap-4 mt-1 text-titos-gray-400 text-sm">
                               <span>{season._count?.teams || season.teams?.length || 0} teams</span>
+                              <span>{season.tiers?.length || 0} tiers</span>
                               <span>{new Date(season.startDate).toLocaleDateString()} – {new Date(season.endDate).toLocaleDateString()}</span>
                             </div>
                           </div>
@@ -317,6 +332,10 @@ export default function SeasonsPage() {
                           <button onClick={() => toggleTeams(season.id)} className={cn('px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors',
                             expandedTeams[season.id] ? 'bg-titos-gold/15 text-titos-gold border border-titos-gold/30' : 'bg-titos-elevated text-titos-gray-300 border border-titos-border hover:text-titos-white')}>
                             <Users className="w-3.5 h-3.5" /> Teams {expandedTeams[season.id] ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                          </button>
+                          <button onClick={() => toggleSettings(season.id)} className={cn('px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors',
+                            expandedSettings[season.id] ? 'bg-titos-gold/15 text-titos-gold border border-titos-gold/30' : 'bg-titos-elevated text-titos-gray-300 border border-titos-border hover:text-titos-white')}>
+                            <Settings className="w-3.5 h-3.5" /> Tiers & Divisions {expandedSettings[season.id] ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                           </button>
                         </div>
                       </div>
@@ -452,6 +471,16 @@ export default function SeasonsPage() {
                           </div>
                         </div>
                       )}
+
+                      {/* ─── TIERS & DIVISIONS ─── */}
+                      {expandedSettings[season.id] && (
+                        <SeasonSettings
+                          key={`${season.id}:${JSON.stringify(season.divisions || [])}:${season.teams?.length || 0}`}
+                          season={season}
+                          onChanged={loadData}
+                          setMessage={setMessage}
+                        />
+                      )}
                     </div>
                   ))}
                 </div>
@@ -464,7 +493,198 @@ export default function SeasonsPage() {
   )
 }
 
-// ─── Setup Tiers Button + Modal ───
+// ─── Inline season rename ───
+function SeasonNameEditor({ season, onSaved, setMessage }) {
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(season.name)
+  const [saving, setSaving] = useState(false)
+
+  const save = async (e) => {
+    e.preventDefault()
+    const trimmed = name.trim()
+    if (!trimmed || trimmed === season.name) { setEditing(false); return }
+    setSaving(true)
+    try {
+      const res = await fetch('/api/admin/seasons', { method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update-season', seasonId: season.id, name: trimmed }) })
+      const data = await res.json()
+      if (!res.ok) { setMessage(data.error || 'Error renaming season') }
+      else { setMessage(`Renamed to "${trimmed}"`); setEditing(false); onSaved() }
+    } catch { setMessage('Error renaming season') }
+    setSaving(false)
+  }
+
+  if (!editing) return (
+    <div className="flex items-center gap-1">
+      <h4 className="font-semibold text-titos-white">{season.name}</h4>
+      <button type="button" onClick={() => { setName(season.name); setEditing(true) }} title="Rename season" aria-label={`Rename ${season.name}`}
+        className="p-1 text-titos-gray-500 hover:text-titos-white transition-colors">
+        <Pencil className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  )
+
+  return (
+    <form onSubmit={save} className="flex items-center gap-1.5">
+      <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false) }} aria-label="Season name"
+        className="px-2 py-1 bg-titos-elevated border border-titos-border rounded text-titos-white text-sm font-semibold focus:outline-none focus:border-titos-gold/50" />
+      <button type="submit" disabled={saving}
+        className="px-2 py-1 rounded text-[11px] font-semibold bg-status-success/15 text-status-success border border-status-success/30 flex items-center gap-1">
+        {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save
+      </button>
+      <button type="button" onClick={() => setEditing(false)}
+        className="px-2 py-1 rounded text-[11px] font-semibold bg-titos-card text-titos-gray-300 border border-titos-border flex items-center gap-1">
+        <X className="w-3 h-3" /> Cancel
+      </button>
+    </form>
+  )
+}
+
+// ─── Tiers & Divisions settings ───
+const DIVISION_TEXT = { Diamond: 'text-div-diamond', Platinum: 'text-div-platinum', Gold: 'text-div-gold', Silver: 'text-div-silver' }
+const TEAMS_PER_TIER = 3
+const MAX_PLAYOFF_DIVISION = 8
+
+// Start from the stored sizes, or from the automatic split standings are
+// currently showing when none are saved yet.
+function initialDivisionRows(season) {
+  const stored = season.divisions || []
+  const source = stored.length ? stored : resolveDivisions(null, season.teams?.length || 0, leagueTypeFor(season.league?.slug))
+  return DIVISION_NAMES.map((name, i) => {
+    const d = source.find(x => x.position === i + 1)
+    return {
+      position: i + 1,
+      name,
+      teamCount: String(d?.teamCount ?? 0),
+      courtNumber: stored.length && d?.courtNumber != null ? String(d.courtNumber) : '',
+    }
+  })
+}
+
+function SeasonSettings({ season, onChanged, setMessage }) {
+  const teamCount = season.teams?.length || 0
+  const tiers = (season.tiers || []).slice().sort((a, b) => a.tierNumber - b.tierNumber)
+  const lastTier = tiers[tiers.length - 1]
+  const hasCustomDivisions = (season.divisions || []).length > 0
+  const [rows, setRows] = useState(() => initialDivisionRows(season))
+  const [busy, setBusy] = useState('')
+
+  const rowTotal = rows.reduce((sum, r) => sum + (parseInt(r.teamCount, 10) || 0), 0)
+  const tierSpots = tiers.length * TEAMS_PER_TIER
+
+  const send = async (method, payload, label, successText) => {
+    setBusy(label)
+    try {
+      const res = await fetch('/api/admin/seasons', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      const data = await res.json()
+      if (!res.ok) setMessage(data.error || 'Error')
+      else { setMessage(successText); onChanged() }
+    } catch { setMessage('Network error') }
+    setBusy('')
+  }
+
+  const addTier = () => send('PATCH', { action: 'add-tier', seasonId: season.id }, 'add-tier', `Tier ${(lastTier?.tierNumber || 0) + 1} added`)
+
+  const removeLastTier = () => {
+    if (!lastTier || !confirm(`Remove Tier ${lastTier.tierNumber}? Only works if no week has placements or matches in it.`)) return
+    send('DELETE', { action: 'delete-tier', tierId: lastTier.id }, 'remove-tier', `Tier ${lastTier.tierNumber} removed`)
+  }
+
+  const updateRow = (i, field, value) => setRows(prev => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)))
+
+  const saveDivisions = () => send('PATCH', {
+    action: 'set-divisions',
+    seasonId: season.id,
+    divisions: rows.map(r => ({ position: r.position, teamCount: parseInt(r.teamCount, 10) || 0, courtNumber: r.courtNumber })),
+  }, 'divisions', 'Division sizes saved')
+
+  const resetDivisions = () => {
+    if (!confirm('Go back to the automatic even split for this season?')) return
+    send('PATCH', { action: 'set-divisions', seasonId: season.id, divisions: [] }, 'reset', 'Divisions reset to automatic split')
+  }
+
+  const smallBtn = 'px-3 py-1.5 rounded-lg text-xs font-semibold border flex items-center gap-1.5 transition-colors disabled:opacity-50'
+  const numberInput = 'w-16 px-2 py-1.5 bg-titos-elevated border border-titos-border rounded text-titos-white text-sm text-center focus:outline-none focus:border-titos-gold/50'
+
+  return (
+    <div className="border-t border-titos-border/50 px-5 py-4 bg-titos-surface/50 space-y-6">
+      {/* Tiers */}
+      <section>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <h5 className="font-display text-sm font-bold text-titos-gold uppercase tracking-wider">Tiers</h5>
+          <a href="/admin/courts" className="text-xs text-titos-gray-400 hover:text-titos-gold transition-colors">Edit courts & time slots →</a>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-titos-white text-sm font-semibold">{tiers.length} tier{tiers.length === 1 ? '' : 's'}</span>
+          <span className={cn('text-xs', tierSpots === teamCount ? 'text-status-success' : 'text-titos-gold')}>
+            {tierSpots} spots ({TEAMS_PER_TIER} per tier) · {teamCount} teams
+          </span>
+          <div className="flex gap-2 sm:ml-auto">
+            <button onClick={removeLastTier} disabled={!!busy || !lastTier}
+              className={cn(smallBtn, 'bg-status-live/5 text-status-live/70 border-status-live/15 hover:bg-status-live/10 hover:text-status-live')}>
+              {busy === 'remove-tier' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+              Remove Tier {lastTier?.tierNumber ?? ''}
+            </button>
+            <button onClick={addTier} disabled={!!busy}
+              className={cn(smallBtn, 'bg-titos-gold/15 text-titos-gold border-titos-gold/30 hover:bg-titos-gold/25')}>
+              {busy === 'add-tier' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Add Tier
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Playoff divisions */}
+      <section>
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <h5 className="font-display text-sm font-bold text-titos-gold uppercase tracking-wider">Playoff Divisions</h5>
+          <span className="text-[11px] text-titos-gray-500 uppercase tracking-wider">{hasCustomDivisions ? 'Custom sizes' : 'Automatic even split'}</span>
+        </div>
+        <p className="text-titos-gray-500 text-xs mb-3">
+          Teams per division, from the top of the standings down. Change it any time and standings update right away. A playoff bracket that&apos;s already built isn&apos;t changed; rebuild that division on the Playoffs page.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {rows.map((r, i) => {
+            const size = parseInt(r.teamCount, 10) || 0
+            return (
+              <div key={r.position} className="card-flat rounded-lg p-3 space-y-1.5">
+                <div className={cn('text-xs font-bold uppercase tracking-wider', DIVISION_TEXT[r.name])}>{r.name}</div>
+                <label className="flex items-center justify-between gap-2 text-xs text-titos-gray-400">
+                  Teams
+                  <input type="number" min="0" max="30" value={r.teamCount} onChange={(e) => updateRow(i, 'teamCount', e.target.value)} className={numberInput} />
+                </label>
+                <label className="flex items-center justify-between gap-2 text-xs text-titos-gray-400">
+                  Court
+                  <input type="number" min="1" max="20" placeholder="—" value={r.courtNumber} onChange={(e) => updateRow(i, 'courtNumber', e.target.value)} className={numberInput} />
+                </label>
+                {size > MAX_PLAYOFF_DIVISION && (
+                  <p className="text-[11px] text-titos-gold">Playoff drafts support up to {MAX_PLAYOFF_DIVISION} teams.</p>
+                )}
+              </div>
+            )
+          })}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 mt-3">
+          <span className={cn('text-xs font-semibold', rowTotal === teamCount ? 'text-status-success' : 'text-titos-gold')}>
+            {rowTotal} of {teamCount} teams placed{rowTotal !== teamCount ? ' — sizes should add up to the team count' : ''}
+          </span>
+          <div className="flex gap-2 sm:ml-auto">
+            {hasCustomDivisions && (
+              <button onClick={resetDivisions} disabled={!!busy}
+                className={cn(smallBtn, 'bg-titos-card text-titos-gray-300 border-titos-border hover:text-titos-white')}>
+                {busy === 'reset' && <Loader2 className="w-3 h-3 animate-spin" />} Use Automatic Split
+              </button>
+            )}
+            <button onClick={saveDivisions} disabled={!!busy}
+              className={cn(smallBtn, 'bg-titos-gold/15 text-titos-gold border-titos-gold/30 hover:bg-titos-gold/25')}>
+              {busy === 'divisions' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save Divisions
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
 // ─── Week Card with full controls ───
 function WeekCard({ week, season, onGenerateMatches, generatingMatches, onStatusChange, onReload, onReloadAll }) {
   const [expanded, setExpanded] = useState(false)

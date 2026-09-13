@@ -4,7 +4,7 @@ import { getLeaguePlayoffs } from '@/lib/server/playoffs'
 
 export const metadata = {
   title: "Volleyball Schedule — Mississauga Indoor League | Tito's Courts",
-  description: "Weekly game schedule for all three Tito's Courts volleyball leagues in Mississauga. Find your tier, court, opponents, and match times at Pakmen Courts and Michael Power.",
+  description: "Weekly game schedule for all Tito's Courts volleyball leagues in Mississauga. Find your tier, court, opponents, and match times at Pakmen Courts.",
   alternates: { canonical: 'https://titoscourts.com/schedule' },
   openGraph: {
     title: "Volleyball Schedule — Mississauga Indoor League",
@@ -34,7 +34,7 @@ export default async function SchedulePage() {
   return (
     <>
       <p className="sr-only">
-        Weekly volleyball schedule for Tito&apos;s Courts recreational leagues in Mississauga. Shows tier assignments, court numbers, opponents, and match times for Tuesday Coed, Sunday Men&apos;s, and Thursday Rec Coed leagues at Pakmen Courts and Michael Power High School.
+        Weekly volleyball schedule for Tito&apos;s Courts recreational leagues in Mississauga. Shows tier assignments, court numbers, opponents, and match times for Tuesday Coed, Sunday Men&apos;s, and Thursday Rec Coed leagues at Pakmen Courts.
       </p>
       <ScheduleClient
         leagues={leagues}

@@ -7,7 +7,7 @@ import { getLeagueTimeDisplay } from '@/lib/utils'
 
 export const metadata = {
   title: "Volleyball Leagues Mississauga | Tito's Courts",
-  description: 'Three weekly recreational volleyball leagues in Mississauga and Toronto. Tuesday Coed, Sunday Men\'s, and Thursday Rec Coed at Pakmen Courts and Michael Power High School. Tier-based competition, playoffs, and 150+ players.',
+  description: 'Three weekly recreational volleyball leagues in Mississauga and Toronto. Tuesday Coed, Sunday Men\'s, and Thursday Rec Coed at Pakmen Courts. Tier-based competition, playoffs, and 150+ players.',
   alternates: { canonical: 'https://titoscourts.com/leagues' },
   openGraph: {
     title: "Volleyball Leagues in Mississauga — Tito's Courts",
@@ -54,7 +54,7 @@ export default async function LeaguesPage() {
         <SectionHeading
           label="OUR LEAGUES"
           title="Volleyball Leagues"
-          description="Competitive tier-based leagues running every week across Mississauga and Etobicoke."
+          description="Competitive tier-based leagues running every week at Pakmen Courts in Mississauga."
         />
 
         {/* League Cards */}

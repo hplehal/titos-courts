@@ -14,7 +14,7 @@ export async function generateMetadata({ params }) {
   const { slug } = await params
   const label = await getLeagueName(slug)
   const title = `${label} Volleyball Schedule — Mississauga | Tito's Courts`
-  const description = `Weekly game schedule for ${label} volleyball league at Tito's Courts in Mississauga. Find your tier, court assignment, opponents, and match times at Pakmen Courts and Michael Power.`
+  const description = `Weekly game schedule for ${label} volleyball league at Tito's Courts in Mississauga. Find your tier, court assignment, opponents, and match times at Pakmen Courts.`
   return {
     title,
     description,

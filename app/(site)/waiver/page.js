@@ -11,7 +11,7 @@ const waiverSections = [
   },
   {
     title: 'Release of Liability',
-    content: `I hereby release, waive, and discharge Tito's Courts, its organizers, co-founders, volunteers, venue operators (including Pakmen Courts and Michael Power — St. Joseph High School), and all affiliated parties from any and all liability, claims, demands, or causes of action arising out of or related to any injury, illness, damage, or loss sustained during my participation in any Tito's Courts league, tournament, or event. This release applies regardless of whether such injury is caused by negligence or otherwise.`,
+    content: `I hereby release, waive, and discharge Tito's Courts, its organizers, co-founders, volunteers, venue operators (including Pakmen Courts), and all affiliated parties from any and all liability, claims, demands, or causes of action arising out of or related to any injury, illness, damage, or loss sustained during my participation in any Tito's Courts league, tournament, or event. This release applies regardless of whether such injury is caused by negligence or otherwise.`,
   },
   {
     title: 'Medical Acknowledgement',

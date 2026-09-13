@@ -79,7 +79,7 @@ const sections = [
 
 const faqs = [
   { title: 'What skill level are the leagues for?', content: 'We have options for all levels. The Tuesday and Sunday leagues are competitive rec — you should be comfortable with basic volleyball skills. Thursday REC COED is designed for beginners and casual players.' },
-  { title: 'Where do games take place?', content: 'Tuesday COED and Sunday MENS play at Pakmen Courts, 1775 Sismet Road, Mississauga. Thursday REC COED plays at Michael Power — St. Joseph High School in Etobicoke, Toronto.' },
+  { title: 'Where do games take place?', content: 'All leagues — Tuesday COED, Sunday MENS, and Thursday REC COED — play at Pakmen Courts, 1775 Sismet Road, Mississauga.' },
   { title: 'How do I pay?', content: 'Payment is via e-transfer to info@titoscourts.com with your team name as the memo. Fee details are shared upon registration confirmation.' },
   { title: 'What\'s the difference between leagues and tournaments?', content: 'Leagues are 11-week seasons with weekly games, tier movement, and playoffs. Tournaments are standalone one-day events with pool play and elimination brackets.' },
   { title: 'How does the tier system work?', content: 'Teams are grouped in tiers of 3. Each week you play round-robin within your tier. 1st place moves up a tier, 2nd stays, 3rd drops down. By season end, cumulative standings determine playoff divisions.' },

@@ -38,7 +38,6 @@ export const metadata = {
     'volleyball tournaments Mississauga',
     'rec volleyball Toronto',
     'Titos Courts',
-    'volleyball Etobicoke',
     'adult volleyball league',
   ],
   openGraph: {
@@ -112,17 +111,6 @@ const jsonLd = {
         longitude: -79.6108,
       },
     },
-    {
-      '@type': 'Place',
-      name: 'Michael Power — St. Joseph High School',
-      address: {
-        '@type': 'PostalAddress',
-        streetAddress: '105 Eringate Dr',
-        addressLocality: 'Etobicoke',
-        addressRegion: 'ON',
-        addressCountry: 'CA',
-      },
-    },
   ],
   sameAs: [
     'https://www.instagram.com/titoscourts',
@@ -131,7 +119,6 @@ const jsonLd = {
   areaServed: [
     { '@type': 'City', name: 'Mississauga' },
     { '@type': 'City', name: 'Toronto' },
-    { '@type': 'City', name: 'Etobicoke' },
   ],
 }
 

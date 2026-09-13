@@ -163,9 +163,8 @@ export default function RegisterPage() {
               <div className="flex items-center gap-3 mb-4"><Calendar className="w-5 h-5 text-titos-gold" /><h3 className="font-display font-bold text-titos-white">Season Info</h3></div>
               <ul className="space-y-2 text-sm text-titos-gray-300">
                 <li>11-week seasons (placement + 9 regular + playoffs)</li>
-                <li>Games: 8 PM – 12 AM on league night</li>
-                <li>Tue/Sun: Pakmen Courts, Mississauga</li>
-                <li>Thu: Michael Power HS, Etobicoke</li>
+                {leagues.map(l => <li key={l.slug}>{l.name}: {l.dayOfWeek}s, {l.timeRangeLabel}</li>)}
+                <li>All leagues: Pakmen Courts, Mississauga</li>
                 <li>Courts 6, 7, 8, 9</li>
               </ul>
             </div>

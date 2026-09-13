@@ -36,7 +36,7 @@ export default async function StatsLeaguePage({ params }) {
   return (
     <>
       <p className="sr-only">
-        {`Player statistics leaderboards for the ${label} recreational volleyball league at Tito's Courts in Mississauga. Tracks kills, assists, digs, aces, and blocks across the season at Pakmen Courts and Michael Power High School.`}
+        {`Player statistics leaderboards for the ${label} recreational volleyball league at Tito's Courts in Mississauga. Tracks kills, assists, digs, aces, and blocks across the season at Pakmen Courts.`}
       </p>
       <StatsClient leagues={leagues} initialSlug={slug} initialData={initialData} />
     </>

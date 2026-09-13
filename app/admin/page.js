@@ -8,6 +8,7 @@ import TierScoreBlock from '@/components/admin/dashboard/TierScoreBlock'
 import ResultsView from '@/components/admin/dashboard/ResultsView'
 import TiersView from '@/components/admin/dashboard/TiersView'
 import NextWeekView from '@/components/admin/dashboard/NextWeekView'
+import { adminFetch } from '@/lib/adminFetch'
 import { cn } from '@/lib/utils'
 
 const TABS = ['Scores', 'Results', 'Tiers', 'Next Week']
@@ -44,7 +45,7 @@ export default function AdminPage() {
       const regs = d.registrations || []
       setStats(s => ({ ...s, registrations: regs.length, pendingPayments: regs.filter(r => r.paymentStatus === 'pending').length }))
     }).catch(() => {})
-    fetch('/api/waiver').then(r => r.json()).then(d => {
+    adminFetch('/api/waiver').then(r => r.json()).then(d => {
       setStats(s => ({ ...s, waivers: (d.waivers || []).length }))
     }).catch(() => {})
   }, [])

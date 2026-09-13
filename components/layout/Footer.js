@@ -153,10 +153,6 @@ export default function Footer() {
                 <span>Pakmen Courts, 1775 Sismet Rd, Mississauga</span>
               </div>
               <div className="flex items-center gap-2 text-titos-gray-400 text-xs">
-                <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-titos-gray-400" />
-                <span>Michael Power &mdash; St. Joseph HS, Etobicoke</span>
-              </div>
-              <div className="flex items-center gap-2 text-titos-gray-400 text-xs">
                 <Mail className="w-3.5 h-3.5 flex-shrink-0 text-titos-gray-400" />
                 <a
                   href="mailto:info@titoscourts.com"

@@ -52,7 +52,7 @@ export default async function StandingsLeaguePage({ params }) {
     <>
       {/* Googlebot-indexable copy — hidden visually but semantically first so crawlers see real text */}
       <p className="sr-only">
-        {`Current standings for the ${label} recreational volleyball league at Tito's Courts in Mississauga. Tracks team performance across Diamond, Platinum, Gold, and Silver divisions at Pakmen Courts and Michael Power High School.`}
+        {`Current standings for the ${label} recreational volleyball league at Tito's Courts in Mississauga. Tracks team performance across Diamond, Platinum, Gold, and Silver divisions at Pakmen Courts.`}
       </p>
       <StandingsClient
         leagues={leagues}

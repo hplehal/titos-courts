@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { checkAdminPassword, unauthorized } from '@/lib/server/adminAuth'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +33,10 @@ export async function POST(request) {
   }
 }
 
-export async function GET() {
+// Admin only: waivers hold players' contact details, birth dates and emergency
+// contacts. Signing a waiver (POST) stays public.
+export async function GET(request) {
+  if (!checkAdminPassword(request)) return unauthorized()
   try {
     const waivers = await prisma.waiver.findMany({
       orderBy: { createdAt: 'desc' },

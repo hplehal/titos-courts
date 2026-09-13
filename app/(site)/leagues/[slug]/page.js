@@ -13,7 +13,7 @@ export const revalidate = 300
 const LEAGUE_BLURB = {
   'tuesday-coed': "Our flagship recreational coed volleyball league in Mississauga. 8 tiers, 24 teams, weekly Tuesday matches at Pakmen Courts.",
   'sunday-mens': "Competitive men's volleyball league in Mississauga. Tier-based competition with 15 teams playing every Sunday at Pakmen Courts.",
-  'thursday-rec-coed': "Thursday recreational coed volleyball at Michael Power High School in Etobicoke. Beginner and intermediate friendly.",
+  'thursday-rec-coed': "Thursday recreational coed volleyball at Pakmen Courts in Mississauga. Beginner and intermediate friendly.",
 }
 
 export async function generateStaticParams() {

@@ -60,8 +60,8 @@ export default function AboutPage() {
 
         {/* Venues */}
         <section className="mb-20">
-          <SectionHeading label="OUR VENUES" title="Where We Play" />
-          <div className="mt-10 grid md:grid-cols-2 gap-4">
+          <SectionHeading label="OUR VENUE" title="Where We Play" />
+          <div className="mt-10 grid gap-4 max-w-2xl">
             <div className="card rounded-xl p-6">
               <div className="flex items-start gap-4">
                 <MapPin className="w-5 h-5 text-titos-gold flex-shrink-0 mt-1" />
@@ -69,25 +69,11 @@ export default function AboutPage() {
                   <h3 className="font-display text-base font-bold text-titos-white mb-1">Pakmen Courts</h3>
                   <p className="text-titos-gray-400 text-sm mb-3">1775 Sismet Road, Mississauga, ON</p>
                   <p className="text-titos-gray-300 text-sm leading-relaxed mb-2">
-                    Our primary home. Four full-size indoor courts (Courts 6–9) with professional nets and hardwood floors.
+                    Home to every Tito&apos;s Courts league. Four full-size indoor courts (Courts 6–9) with professional nets and hardwood floors.
                   </p>
                   <div className="flex items-center gap-3 mt-3 text-titos-gray-400 text-xs">
                     <span className="px-2 py-0.5 bg-titos-card rounded border border-titos-border/30">Tue COED</span>
                     <span className="px-2 py-0.5 bg-titos-card rounded border border-titos-border/30">Sun MENS</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="card rounded-xl p-6">
-              <div className="flex items-start gap-4">
-                <MapPin className="w-5 h-5 text-titos-gold flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="font-display text-base font-bold text-titos-white mb-1">Michael Power — St. Joseph High School</h3>
-                  <p className="text-titos-gray-400 text-sm mb-3">Etobicoke, Toronto, ON</p>
-                  <p className="text-titos-gray-300 text-sm leading-relaxed mb-2">
-                    Our second location for the Thursday REC COED league. A great gym space in the heart of Etobicoke.
-                  </p>
-                  <div className="flex items-center gap-3 mt-3 text-titos-gray-400 text-xs">
                     <span className="px-2 py-0.5 bg-titos-card rounded border border-titos-border/30">Thu REC COED</span>
                   </div>
                 </div>

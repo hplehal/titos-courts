@@ -9,7 +9,6 @@ import {
   Trophy,
   ArrowUpDown,
   MapPin,
-  Clock,
   Calendar,
   ChevronRight,
   Star,
@@ -70,6 +69,9 @@ function toLeagueCard(league) {
     icon: copy.icon || Award,
     teams: season?._count?.teams || league.maxTeams,
     tiers: season?._count?.tiers || league.defaultTierCount,
+    hours: league.timeRangeLabel,
+    // "Thursday REC COED" → "REC COED" when the day badge already says THU.
+    shortName: league.name.replace(new RegExp(`^${league.dayOfWeek}\\s+`, 'i'), '') || league.name,
     status,
     statusColor,
   }
@@ -81,6 +83,13 @@ const COUNT_WORDS = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN']
 function nightsHeading(count) {
   if (!count) return 'GAME NIGHTS.'
   return `${COUNT_WORDS[count] || count} NIGHT${count === 1 ? '' : 'S'}.`
+}
+
+// "Three nights a week." for the hero subtext.
+function nightsPerWeek(count) {
+  if (!count) return 'Games every week.'
+  const word = COUNT_WORDS[count] ? COUNT_WORDS[count][0] + COUNT_WORDS[count].slice(1).toLowerCase() : String(count)
+  return `${word} night${count === 1 ? '' : 's'} a week.`
 }
 
 const steps = [
@@ -233,8 +242,8 @@ export default function HomePageClient({ initialResults, leagues = [] }) {
                 className="text-titos-gray-300 text-base sm:text-lg max-w-lg mb-8 leading-relaxed animate-fade-in"
                 style={{ animationDelay: '0.3s' }}
               >
-                Mississauga&apos;s premier recreational volleyball leagues.
-                Three nights a week. Tier-based competition where every match matters.
+                Mississauga&apos;s premier recreational volleyball leagues.{' '}
+                {nightsPerWeek(leagueCards.length)} Tier-based competition where every match matters.
               </p>
 
               {/* CTAs */}
@@ -247,22 +256,37 @@ export default function HomePageClient({ initialResults, leagues = [] }) {
                 </Link>
               </div>
 
-              {/* Venue info */}
-              <div className="mt-10 space-y-2 animate-fade-in" style={{ animationDelay: '0.5s' }}>
-                <div className="flex flex-wrap items-center gap-3 text-titos-gray-400 text-xs uppercase tracking-wider">
-                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>Pakmen Courts, Mississauga</span>
-                  <span className="text-titos-gray-500">|</span>
-                  <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>Tue 8PM-12AM &middot; Sun 9PM-12AM</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-3 text-titos-gray-400 text-xs uppercase tracking-wider">
-                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>Michael Power - St. Joseph HS, Etobicoke</span>
-                  <span className="text-titos-gray-500">|</span>
-                  <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>Thu 8PM-12AM</span>
-                </div>
+              {/* League nights — one chip per league with its day, name and
+                  hours (set on /admin/leagues). Every league plays at Pakmen. */}
+              <div className="mt-10 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                <p className="flex items-center gap-2 text-titos-gray-200 text-sm font-medium mb-3">
+                  <MapPin className="w-4 h-4 text-titos-gold flex-shrink-0" aria-hidden="true" />
+                  Pakmen Courts · 1775 Sismet Rd, Mississauga
+                </p>
+                {leagueCards.length > 0 && (
+                  <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-2xl" aria-label="League nights">
+                    {leagueCards.map(l => (
+                      <li key={l.slug}>
+                        <Link
+                          href={`/leagues/${l.slug}`}
+                          className="group flex items-center gap-3 h-full rounded-xl bg-black/60 backdrop-blur-md ring-1 ring-white/10 hover:ring-titos-gold/50 px-2.5 py-2 transition-colors"
+                        >
+                          <span className="flex-shrink-0 w-11 py-2 rounded-lg bg-titos-gold text-titos-surface text-center font-display font-black text-xs leading-none tracking-wide">
+                            {l.day}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-titos-white text-sm font-semibold leading-tight break-words group-hover:text-titos-gold transition-colors">
+                              {l.shortName}
+                            </span>
+                            <span className="block text-titos-gray-300 text-xs leading-tight mt-0.5 tabular-nums whitespace-nowrap">
+                              {l.hours}
+                            </span>
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {/* Social */}

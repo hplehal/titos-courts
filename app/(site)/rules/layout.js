@@ -61,7 +61,7 @@ const faqJsonLd = {
       name: 'Where do games take place?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: "Tuesday Coed and Sunday Men's leagues play at Pakmen Courts (1775 Sismet Road, Mississauga). Thursday Rec Coed plays at Michael Power — St. Joseph High School in Etobicoke.",
+        text: "All leagues — Tuesday Coed, Sunday Men's, and Thursday Rec Coed — play at Pakmen Courts (1775 Sismet Road, Mississauga).",
       },
     },
   ],

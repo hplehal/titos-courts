@@ -41,7 +41,7 @@ async function getLeagues() {
     ...l,
     currentSeason: l.seasons[0] || null,
     teamCount: l.seasons[0]?._count?.teams || 0,
-    tierCount: l.seasons[0]?._count?.tiers || l.tiersPerSlot * 2,
+    tierCount: l.seasons[0]?._count?.tiers || l.defaultTierCount,
   }))
 }
 
@@ -65,7 +65,7 @@ export default async function LeaguesPage() {
                 {league.name}
               </h3>
               <p className="text-titos-gold text-sm font-semibold mb-3">
-                {league.dayOfWeek}s &middot; {getLeagueTimeDisplay(league.slug)}
+                {league.dayOfWeek}s &middot; {getLeagueTimeDisplay(league)}
               </p>
 
               {league.currentSeason && (

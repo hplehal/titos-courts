@@ -40,44 +40,48 @@ const mensChampions = [
   { season: 6, team: 'Spartans', image: '/images/champions/spartans.jpg' },
 ]
 
-const leagues = [
-  {
-    name: 'Tuesday COED',
-    slug: 'tuesday-coed',
-    day: 'TUE',
-    badge: 'FLAGSHIP',
-    teams: 24,
-    tiers: 8,
-    tagline: 'The original. The biggest. 24 teams across 8 tiers.',
-    status: 'SEASON 9 ACTIVE',
-    statusColor: 'text-status-success',
-    icon: Star,
-  },
-  {
-    name: 'Sunday MENS',
-    slug: 'sunday-mens',
-    day: 'SUN',
-    badge: 'COMPETITIVE',
-    teams: 15,
-    tiers: 5,
-    tagline: 'High-level men\'s volleyball. 15 teams, 5 tiers.',
-    status: 'SEASON 7 ACTIVE',
-    statusColor: 'text-status-success',
-    icon: Zap,
-  },
-  {
-    name: 'Thursday REC COED',
-    slug: 'thursday-rec-coed',
-    day: 'THU',
-    badge: 'NEW',
-    teams: 12,
-    tiers: 4,
-    tagline: 'Beginner-friendly. The perfect entry point.',
-    status: 'REGISTRATION OPEN',
-    statusColor: 'text-status-info',
-    icon: Target,
-  },
-]
+// Curated homepage copy for the original leagues. Names, team/tier counts and
+// season status come from the database, so renamed and newly visible leagues
+// show up; a league without curated copy gets a generic card.
+const LEAGUE_CARD_COPY = {
+  'tuesday-coed': { badge: 'FLAGSHIP', tagline: 'The original. The biggest. 24 teams across 8 tiers.', icon: Star },
+  'sunday-mens': { badge: 'COMPETITIVE', tagline: 'High-level men\'s volleyball. 15 teams, 5 tiers.', icon: Zap },
+  'thursday-rec-coed': { badge: 'NEW', tagline: 'Beginner-friendly. The perfect entry point.', icon: Target },
+}
+
+const SEASON_STATUS = {
+  active: season => ({ status: `SEASON ${season.seasonNumber} ACTIVE`, statusColor: 'text-status-success' }),
+  playoffs: season => ({ status: `SEASON ${season.seasonNumber} PLAYOFFS`, statusColor: 'text-titos-gold' }),
+  registration: () => ({ status: 'REGISTRATION OPEN', statusColor: 'text-status-info' }),
+  completed: () => ({ status: 'OFF-SEASON', statusColor: 'text-titos-gray-400' }),
+}
+
+function toLeagueCard(league) {
+  const copy = LEAGUE_CARD_COPY[league.slug] || {}
+  const { season } = league
+  const { status, statusColor } = (season && SEASON_STATUS[season.status]?.(season))
+    || { status: 'COMING SOON', statusColor: 'text-status-info' }
+  return {
+    name: league.name,
+    slug: league.slug,
+    day: league.dayOfWeek.slice(0, 3).toUpperCase(),
+    badge: copy.badge || 'NEW',
+    tagline: copy.tagline || league.description || `${league.dayOfWeek} volleyball at Tito's Courts.`,
+    icon: copy.icon || Award,
+    teams: season?._count?.teams || league.maxTeams,
+    tiers: season?._count?.tiers || league.defaultTierCount,
+    status,
+    statusColor,
+  }
+}
+
+const COUNT_WORDS = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN']
+
+// "THREE NIGHTS." — follows the number of visible leagues.
+function nightsHeading(count) {
+  if (!count) return 'GAME NIGHTS.'
+  return `${COUNT_WORDS[count] || count} NIGHT${count === 1 ? '' : 'S'}.`
+}
 
 const steps = [
   { num: '01', title: 'REGISTER', desc: 'Sign up with 6+ players. Pick your league night. Pay via e-transfer.', icon: Users },
@@ -124,7 +128,8 @@ function AnimatedStat({ value, label }) {
 }
 
 /* ═══ PAGE ═══ */
-export default function HomePageClient({ initialResults }) {
+export default function HomePageClient({ initialResults, leagues = [] }) {
+  const leagueCards = leagues.map(toLeagueCard)
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
   const [videoReady, setVideoReady] = useState(false)
   const videoRef = useRef(null)
@@ -282,7 +287,7 @@ export default function HomePageClient({ initialResults }) {
       <section className="relative z-10 border-y border-titos-border/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {stats.map((stat) => (
+            {stats.map(stat => (stat.label === 'Leagues Weekly' && leagueCards.length ? { ...stat, value: String(leagueCards.length) } : stat)).map((stat) => (
               <AnimatedStat key={stat.label} value={stat.value} label={stat.label} />
             ))}
           </div>
@@ -304,7 +309,7 @@ export default function HomePageClient({ initialResults }) {
             <div>
               <span className="section-label">Our Leagues</span>
               <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-titos-white leading-none">
-                THREE NIGHTS.<br />
+                {nightsHeading(leagueCards.length)}<br />
                 <span className="text-titos-gray-400">EVERY WEEK.</span>
               </h2>
             </div>
@@ -315,7 +320,7 @@ export default function HomePageClient({ initialResults }) {
 
           {/* League cards */}
           <div className="grid lg:grid-cols-3 gap-5">
-            {leagues.map((league) => {
+            {leagueCards.map((league) => {
               const Icon = league.icon
               return (
                 <Link

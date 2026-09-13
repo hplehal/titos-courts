@@ -46,6 +46,17 @@ export default function WaiverPage() {
   // the public /api/tournaments endpoint. Quietly falls back to empty on
   // failure — the field becomes a freeform text input as a graceful degrade.
   const [tournaments, setTournaments] = useState([])
+  // Active league names for the League dropdown (renamed/new leagues included).
+  const [leagueNames, setLeagueNames] = useState([])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/leagues')
+      .then(r => r.ok ? r.json() : [])
+      .then(list => { if (!cancelled && Array.isArray(list)) setLeagueNames(list.map(l => l.name)) })
+      .catch(() => { /* endpoint down — only "Tournament Only" is offered */ })
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -175,9 +186,7 @@ export default function WaiverPage() {
                 <select name="leagueDay" value={form.leagueDay} onChange={handleChange}
                   className="w-full px-4 py-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-white text-sm focus:outline-none focus:border-titos-gold/50">
                   <option value="">Select league...</option>
-                  <option value="Tuesday COED">Tuesday COED</option>
-                  <option value="Sunday MENS">Sunday MENS</option>
-                  <option value="Thursday REC COED">Thursday REC COED</option>
+                  {leagueNames.map(name => <option key={name} value={name}>{name}</option>)}
                   <option value="Tournament">Tournament Only</option>
                 </select>
               </div>

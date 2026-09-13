@@ -5,13 +5,14 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Shield, LayoutDashboard, Calendar, Users, FileText, Trophy,
-  ExternalLink, LogOut, Menu, X, MapPin, BarChart3, Medal,
+  ExternalLink, LogOut, Menu, X, MapPin, BarChart3, Medal, Layers,
 } from 'lucide-react'
 import AuthGate, { ADMIN_AUTH_KEY, ADMIN_PW_KEY } from '@/components/admin/AuthGate'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+  { href: '/admin/leagues', label: 'Leagues', icon: Layers },
   { href: '/admin/seasons', label: 'Seasons & Teams', icon: Calendar },
   { href: '/admin/courts', label: 'Courts', icon: MapPin },
   { href: '/admin/playoffs', label: 'Playoffs', icon: Medal },

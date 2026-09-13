@@ -2,7 +2,7 @@ import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { slugify } from '@/lib/utils'
 import { revalidateLeague } from '@/lib/server/leagues'
-import { DIVISION_NAMES, defaultTierCount, defaultTierLayout, tierLayout } from '@/lib/league/seasonConfig'
+import { DIVISION_NAMES, defaultTierLayout, leagueRules, tierLayout } from '@/lib/league/seasonConfig'
 
 const MAX_TIERS = 20
 
@@ -24,7 +24,7 @@ export async function GET() {
   try {
     const seasons = await prisma.season.findMany({
       include: {
-        league: { select: { id: true, name: true, slug: true } },
+        league: { select: { id: true, name: true, slug: true, divisionCount: true } },
         _count: { select: { teams: true } },
         tiers: { orderBy: { tierNumber: 'asc' } },
         divisions: { orderBy: { position: 'asc' } },
@@ -115,15 +115,15 @@ export async function POST(request) {
       },
     })
 
-    // Auto-create tiers. The count comes from the create form (pre-filled per
-    // league: Tuesday 8, Sunday 5, Thursday 4); courts and time slots come
-    // from the league preset and stay editable on /admin/courts.
+    // Auto-create tiers. The count comes from the create form (pre-filled from
+    // the league's default tier count); courts and time slots come from the
+    // league's rules and stay editable on /admin/courts.
     const league = await prisma.league.findUnique({ where: { id: leagueId } })
     if (league) {
       const requested = parseInt(tierCount, 10)
-      const count = requested > 0 ? Math.min(requested, MAX_TIERS) : defaultTierCount(league.slug)
+      const count = requested > 0 ? Math.min(requested, MAX_TIERS) : leagueRules(league).defaultTierCount
       await prisma.tier.createMany({
-        data: defaultTierLayout(league.slug, count).map(t => ({ seasonId: season.id, ...t })),
+        data: defaultTierLayout(league, count).map(t => ({ seasonId: season.id, ...t })),
       })
     }
 
@@ -162,7 +162,7 @@ export async function PATCH(request) {
       if (!seasonId) return NextResponse.json({ error: 'seasonId required' }, { status: 400 })
       const season = await prisma.season.findUnique({
         where: { id: seasonId },
-        include: { league: { select: { slug: true } }, tiers: { select: { tierNumber: true } } },
+        include: { league: true, tiers: { select: { tierNumber: true } } },
       })
       if (!season) return NextResponse.json({ error: 'Season not found' }, { status: 404 })
       if (season.tiers.length >= MAX_TIERS) {
@@ -170,7 +170,7 @@ export async function PATCH(request) {
       }
       const nextNumber = Math.max(0, ...season.tiers.map(t => t.tierNumber)) + 1
       const tier = await prisma.tier.create({
-        data: { seasonId, ...tierLayout(season.league.slug, nextNumber) },
+        data: { seasonId, ...tierLayout(season.league, nextNumber) },
       })
       revalidateLeague(season.league.slug)
       return NextResponse.json({ success: true, tier })

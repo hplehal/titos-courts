@@ -269,6 +269,15 @@ async function main() {
       maxTeams: 15,
       tiersPerSlot: 5,
       teamsPerTier: 3,
+      roundsPerWeek: 3,
+      headToHead: true,
+      divisionCount: 2,
+      slotMode: 'single',
+      earlySlotLabel: '9 – 10:30 PM',
+      lateSlotLabel: '10:30 PM – 12 AM',
+      timeRangeLabel: '9 PM – 12 AM',
+      courts: [7, 6, 8, 9, 10],
+      defaultTierCount: 5,
     },
   })
 
@@ -282,6 +291,11 @@ async function main() {
       maxTeams: 12,
       tiersPerSlot: 4,
       teamsPerTier: 3,
+      earlySlotLabel: '6:30 – 8:30 PM',
+      lateSlotLabel: '8:30 – 10:30 PM',
+      timeRangeLabel: '6:30 – 10:30 PM',
+      courts: [9, 10],
+      defaultTierCount: 4,
     },
   })
   console.log(`  Created 3 leagues: Tuesday COED, Sunday MENS, Thursday REC COED\n`)

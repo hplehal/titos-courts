@@ -5,7 +5,8 @@ import { createPortal } from 'react-dom'
 import { Plus, Archive, Loader2, Check, Users, Calendar, ChevronDown, ChevronRight, Pencil, Save, X, Trash2, ListOrdered, Settings } from 'lucide-react'
 import AdminPageHeader from '@/components/admin/AdminPageHeader'
 import { cn, getTierColor } from '@/lib/utils'
-import { DIVISION_NAMES, defaultTierCount, leagueTypeFor, resolveDivisions } from '@/lib/league/seasonConfig'
+import { DIVISION_NAMES, leagueRules, resolveDivisions } from '@/lib/league/seasonConfig'
+import { adminFetch } from '@/lib/adminFetch'
 
 export default function SeasonsPage() {
   const [seasons, setSeasons] = useState([])
@@ -46,10 +47,12 @@ export default function SeasonsPage() {
     try {
       const [seasonsRes, leaguesRes] = await Promise.all([
         fetch('/api/admin/seasons').then(r => r.json()),
-        fetch('/api/leagues').then(r => r.json()),
+        // All leagues, hidden ones included, so a season can be set up before
+        // the league goes live.
+        adminFetch('/api/admin/leagues').then(r => r.json()),
       ])
       setSeasons(seasonsRes.seasons || seasonsRes || [])
-      setLeagues(leaguesRes || [])
+      setLeagues(leaguesRes.leagues || [])
     } catch (err) { console.error(err) }
     setLoading(false)
   }, [])
@@ -94,7 +97,7 @@ export default function SeasonsPage() {
       seasonNumber: String(nextNumber),
       startDate: iso(start),
       endDate: iso(end),
-      tierCount: String(defaultTierCount(league?.slug)),
+      tierCount: String(leagueRules(league).defaultTierCount),
     })
   }
 
@@ -223,7 +226,7 @@ export default function SeasonsPage() {
               <select value={newSeason.leagueId} onChange={(e) => applyLeagueDefaults(e.target.value)} required
                 className="px-4 py-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-white focus:outline-none focus:border-titos-gold/50">
                 <option value="">Select league...</option>
-                {leagues.map(l => <option key={l.id || l.slug} value={l.id}>{l.name}</option>)}
+                {leagues.map(l => <option key={l.id || l.slug} value={l.id}>{l.name}{l.isActive ? '' : ' (hidden)'}</option>)}
               </select>
               <input type="text" placeholder="Season Name (e.g. Season 10)" value={newSeason.name} onChange={(e) => setNewSeason(p => ({ ...p, name: e.target.value }))} required
                 className="px-4 py-3 bg-titos-elevated border border-titos-border rounded-lg text-titos-white placeholder-titos-gray-500 focus:outline-none focus:border-titos-gold/50" />
@@ -549,7 +552,7 @@ const MAX_PLAYOFF_DIVISION = 8
 // currently showing when none are saved yet.
 function initialDivisionRows(season) {
   const stored = season.divisions || []
-  const source = stored.length ? stored : resolveDivisions(null, season.teams?.length || 0, leagueTypeFor(season.league?.slug))
+  const source = stored.length ? stored : resolveDivisions(null, season.teams?.length || 0, season.league?.divisionCount)
   return DIVISION_NAMES.map((name, i) => {
     const d = source.find(x => x.position === i + 1)
     return {

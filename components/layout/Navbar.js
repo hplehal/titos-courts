@@ -7,25 +7,24 @@ import { usePathname } from 'next/navigation'
 import { Menu, X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const leagueDropdown = [
-  { href: '/leagues/tuesday-coed', label: 'Tuesday COED' },
-  { href: '/leagues/sunday-mens', label: 'Sunday MENS' },
-  { href: '/leagues/thursday-rec-coed', label: 'Thursday REC COED' },
-]
+// The Leagues dropdown lists the active leagues passed in by the site layout,
+// so renamed or newly visible leagues show up automatically.
+function buildNavLinks(leagues) {
+  return [
+    { href: '/', label: 'Home' },
+    { href: '/leagues', label: 'Leagues', children: leagues.map(l => ({ href: `/leagues/${l.slug}`, label: l.name })) },
+    { href: '/tournaments', label: 'Tournaments' },
+    { href: '/standings', label: 'Standings' },
+    { href: '/schedule', label: 'Schedule' },
+    { href: '/results', label: 'Results' },
+    { href: '/stats', label: 'Stats' },
+    { href: '/rules', label: 'Rules & Info' },
+    { href: '/about', label: 'About' },
+  ]
+}
 
-const navLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/leagues', label: 'Leagues', children: leagueDropdown },
-  { href: '/tournaments', label: 'Tournaments' },
-  { href: '/standings', label: 'Standings' },
-  { href: '/schedule', label: 'Schedule' },
-  { href: '/results', label: 'Results' },
-  { href: '/stats', label: 'Stats' },
-  { href: '/rules', label: 'Rules & Info' },
-  { href: '/about', label: 'About' },
-]
-
-export default function Navbar() {
+export default function Navbar({ leagues = [] }) {
+  const navLinks = buildNavLinks(leagues)
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mobileSubmenuOpen, setMobileSubmenuOpen] = useState(null) // tracks which mobile submenu is open by label

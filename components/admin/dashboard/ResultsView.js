@@ -3,7 +3,7 @@
 import { cn, getSlotInfo } from '@/lib/utils'
 
 // Per-tier standings computed from the week's scored matches
-export default function ResultsView({ matches, leagueSlug }) {
+export default function ResultsView({ matches, league }) {
   const byTier = {}
   for (const m of matches) {
     if (!byTier[m.tierNumber]) byTier[m.tierNumber] = []
@@ -13,7 +13,7 @@ export default function ResultsView({ matches, leagueSlug }) {
   return (
     <div className="space-y-4">
       {Object.entries(byTier).sort(([a], [b]) => a - b).map(([tierNum, tierMatches]) => {
-        const slot = getSlotInfo(parseInt(tierNum), tierMatches[0]?.timeSlot, leagueSlug)
+        const slot = getSlotInfo(parseInt(tierNum), tierMatches[0]?.timeSlot, league)
         const slotVar = parseInt(tierNum) <= 4 ? 'slot-early' : parseInt(tierNum) <= 8 ? 'slot-late' : 'slot-single'
         // Build team stats
         const stats = {}

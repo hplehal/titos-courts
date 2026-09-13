@@ -7,6 +7,7 @@ import StatusBadge from '@/components/ui/StatusBadge'
 import PhotosLink from '@/components/PhotosLink'
 import { getLeaguePhotosUrl } from '@/lib/photoLinks'
 import { cn, formatDate, getTierColor, getSlotInfo, getDivisionInfo, getMovementIcon, getTeamAbbreviation, getLeagueTimeDisplay } from '@/lib/utils'
+import { leagueRules } from '@/lib/league/seasonConfig'
 
 export default function LeagueDetailClient({ data }) {
   const { league, season, standings, weeks } = data
@@ -31,17 +32,12 @@ export default function LeagueDetailClient({ data }) {
   const completedWeeks = weeks.filter(w => w.status === 'completed')
   const lastCompletedWeek = completedWeeks[completedWeeks.length - 1]
 
-  const leagueType = (league.slug && (league.slug.includes('sunday') || league.slug.includes('mens'))) ? 'mens' : 'coed'
-  const timeDisplay = getLeagueTimeDisplay(league.slug)
-
-  // Time slot labels vary by league type. Thursday REC COED runs an
-  // earlier schedule than Tuesday COED, so we don't hardcode 8/10 PM.
-  const isMens = leagueType === 'mens'
-  const isThursday = league.slug && league.slug.includes('thursday')
-  const singleSlotLabel = '9:00 PM – 12:00 AM'
-  const earlySlotLabel = isThursday ? '6:30 PM – 8:30 PM' : '8:00 PM – 10:00 PM'
-  const lateSlotLabel = isThursday ? '8:30 PM – 10:30 PM' : '10:00 PM – 12:00 AM'
-  const numRounds = isMens ? 3 : 2
+  // Time labels, rounds per week and playoff divisions come from the league's
+  // own rules (set on /admin/leagues).
+  const rules = leagueRules(league)
+  const timeDisplay = getLeagueTimeDisplay(league)
+  const { singleSlotLabel, earlySlotLabel, lateSlotLabel } = rules
+  const numRounds = rules.roundsPerWeek
 
   return (
     <div className="py-12 px-4">
@@ -122,7 +118,7 @@ export default function LeagueDetailClient({ data }) {
                 </thead>
                 <tbody>
                   {standings.map((team) => {
-                    const div = getDivisionInfo(team.rank, standings.length, leagueType, season.divisions)
+                    const div = getDivisionInfo(team.rank, standings.length, rules.divisionCount, season.divisions)
                     return (
                       <tr key={team.id} className={`border-b border-titos-border/30 hover:bg-titos-card/50 transition-colors ${div.bgClass}`}>
                         <td className="px-2.5 py-3 text-center">
@@ -481,7 +477,7 @@ function ResultsTab({ weeks, league, completedWeeks, lastCompletedWeek, currentW
 
           <div className="space-y-4">
             {tiers.map(({ tier, teams, matches }) => {
-              const slot = getSlotInfo(tier.tierNumber, tier.timeSlot, league.slug)
+              const slot = getSlotInfo(tier.tierNumber, tier.timeSlot, league)
               const slotVar = tier.tierNumber <= 4 ? 'slot-early' : 'slot-late'
               const sortedTeams = [...teams].sort((a, b) => (a.finishPosition || 99) - (b.finishPosition || 99))
 
@@ -630,8 +626,7 @@ function ScheduleTab({ weeks, league }) {
     // Use a ref-free approach: just set on first render logic
   }
 
-  const isMens = league.slug?.includes('sunday') || league.slug?.includes('mens')
-  const timeDisplay = isMens ? '9 PM – 12 AM' : '8 PM – 12 AM'
+  const timeDisplay = getLeagueTimeDisplay(league)
 
   return (
     <div>
@@ -706,7 +701,7 @@ function ScheduleTab({ weeks, league }) {
                   {filteredTiers.length > 0 ? (
                     <div className="space-y-4">
                       {filteredTiers.map(({ tier, teams, matches }) => {
-                        const slotC = getSlotInfo(tier.tierNumber, tier.timeSlot, league.slug)
+                        const slotC = getSlotInfo(tier.tierNumber, tier.timeSlot, league)
                         const slotVar = tier.tierNumber <= 4 ? 'slot-early' : 'slot-late'
                         return (
                           <div key={tier.tierNumber} className="bg-titos-surface rounded-xl overflow-hidden border border-titos-border/30">

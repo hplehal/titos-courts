@@ -65,11 +65,11 @@ export async function POST(request) {
 
       const season = await prisma.season.findUnique({
         where: { id: seasonId },
-        include: { league: { select: { slug: true } } },
+        include: { league: true },
       })
       if (!season) return NextResponse.json({ error: 'Season not found' }, { status: 404 })
 
-      const tierDefs = defaultTierLayout(season.league.slug)
+      const tierDefs = defaultTierLayout(season.league)
       await prisma.tier.createMany({ data: tierDefs.map(t => ({ seasonId, ...t })) })
       return NextResponse.json({ success: true, count: tierDefs.length })
     }

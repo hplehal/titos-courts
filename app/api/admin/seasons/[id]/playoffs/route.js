@@ -22,7 +22,7 @@ import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { revalidateLeague } from '@/lib/server/leagues'
 import { buildPlayoffPlan } from '@/lib/league/generatePlayoffBracket'
-import { leagueTypeFor, resolveDivisions, tierFactor } from '@/lib/league/seasonConfig'
+import { resolveDivisions, tierFactor } from '@/lib/league/seasonConfig'
 import { deletePlayoffMatches } from '@/lib/server/playoffMatches'
 
 export const dynamic = 'force-dynamic'
@@ -41,7 +41,7 @@ export async function POST(request, { params }) {
     const season = await prisma.season.findUnique({
       where: { id: seasonId },
       include: {
-        league: { select: { slug: true } },
+        league: { select: { slug: true, divisionCount: true } },
         weeks: { orderBy: { weekNumber: 'asc' } },
         divisions: { orderBy: { position: 'asc' } },
       },
@@ -67,7 +67,7 @@ export async function POST(request, { params }) {
     // Build the plan BEFORE touching any rows so a bad division setup never
     // leaves the season half-wiped.
     const standings = await computeEndOfSeasonStandings(seasonId)
-    const divisions = resolveDivisions(season.divisions, standings.length, leagueTypeFor(season.league.slug))
+    const divisions = resolveDivisions(season.divisions, standings.length, season.league.divisionCount)
     const placed = divisions.reduce((sum, d) => sum + d.teamCount, 0)
     if (season.divisions.length && placed !== standings.length) {
       return NextResponse.json(

@@ -7,19 +7,13 @@ import { tierFactor } from '@/lib/league/seasonConfig'
 // ISR — 5 minute revalidation. Admin mutations bust the cache via revalidateTag.
 export const revalidate = 300
 
-const LEAGUE_META = {
-  'tuesday-coed': {
-    label: 'Tuesday Coed',
-    blurb: "Our flagship recreational coed volleyball league in Mississauga. 8 tiers, 24 teams, weekly Tuesday matches at Pakmen Courts.",
-  },
-  'sunday-mens': {
-    label: "Sunday Men's",
-    blurb: "Competitive men's volleyball league in Mississauga. Tier-based competition with 15 teams playing every Sunday at Pakmen Courts.",
-  },
-  'thursday-rec-coed': {
-    label: 'Thursday Rec Coed',
-    blurb: "Thursday recreational coed volleyball at Michael Power High School in Etobicoke. Beginner and intermediate friendly.",
-  },
+// Hand-written SEO descriptions for the original leagues. Titles use the
+// league's current name from the database, so renames show up; leagues
+// without a blurb use their admin description.
+const LEAGUE_BLURB = {
+  'tuesday-coed': "Our flagship recreational coed volleyball league in Mississauga. 8 tiers, 24 teams, weekly Tuesday matches at Pakmen Courts.",
+  'sunday-mens': "Competitive men's volleyball league in Mississauga. Tier-based competition with 15 teams playing every Sunday at Pakmen Courts.",
+  'thursday-rec-coed': "Thursday recreational coed volleyball at Michael Power High School in Etobicoke. Beginner and intermediate friendly.",
 }
 
 export async function generateStaticParams() {
@@ -29,12 +23,10 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { slug } = await params
-  const league = await prisma.league.findUnique({ where: { slug }, select: { name: true } })
-  if (!league) return { title: 'League Not Found' }
-  const meta = LEAGUE_META[slug]
-  const label = meta?.label || league.name
-  const title = `${label} Volleyball League Mississauga | Tito's Courts`
-  const description = meta?.blurb || `${league.name} at Tito's Courts — recreational volleyball league in Mississauga with tier-based competition, weekly matches, and playoff championships.`
+  const league = await prisma.league.findUnique({ where: { slug }, select: { name: true, description: true, isActive: true } })
+  if (!league?.isActive) return { title: 'League Not Found' }
+  const title = `${league.name} Volleyball League Mississauga | Tito's Courts`
+  const description = LEAGUE_BLURB[slug] || league.description || `${league.name} at Tito's Courts — recreational volleyball league in Mississauga with tier-based competition, weekly matches, and playoff championships.`
   return {
     title,
     description,
@@ -92,7 +84,8 @@ async function getLeagueData(slug) {
     },
   })
 
-  if (!league) return null
+  // Hidden leagues 404 until they're made visible on /admin/leagues.
+  if (!league?.isActive) return null
 
   const season = league.seasons[0]
   if (!season) return { league, season: null, standings: [], weeks: [] }

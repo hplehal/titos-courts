@@ -11,7 +11,7 @@
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { revalidateLeague } from '@/lib/server/leagues'
-import { leagueTypeFor, resolveDivisions } from '@/lib/league/seasonConfig'
+import { resolveDivisions } from '@/lib/league/seasonConfig'
 import { loadPlayoffContext, parsePlayoffMatchInput } from '@/lib/server/playoffMatches'
 
 export const dynamic = 'force-dynamic'
@@ -26,7 +26,7 @@ export async function GET(_request, { params }) {
       season: { id: season.id, name: season.name, league: season.league },
       weeks: ctx.weeks,
       teams: ctx.teams,
-      divisions: resolveDivisions(season.divisions, ctx.teams.length, leagueTypeFor(season.league.slug)),
+      divisions: resolveDivisions(season.divisions, ctx.teams.length, season.league.divisionCount),
       matches: ctx.matches,
     })
   } catch (error) {

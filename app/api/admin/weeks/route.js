@@ -247,7 +247,7 @@ async function handleGenerateMatches({ weekId }) {
     include: {
       season: {
         include: {
-          league: { select: { slug: true } },
+          league: { select: { slug: true, roundsPerWeek: true } },
         },
       },
       matches: true,
@@ -262,10 +262,8 @@ async function handleGenerateMatches({ weekId }) {
     return NextResponse.json({ error: 'Matches already exist for this week. Delete them first to regenerate.' }, { status: 400 })
   }
 
-  // Determine COED vs MENS
-  const leagueSlug = week.season.league.slug
-  const isMens = leagueSlug.includes('sunday') || leagueSlug.includes('mens')
-  const rounds = isMens ? 3 : 2
+  // Round-robin passes per tier each week — a per-league rule (/admin/leagues).
+  const rounds = week.season.league.roundsPerWeek
 
   // Get tier placements for this week
   const placements = await prisma.tierPlacement.findMany({

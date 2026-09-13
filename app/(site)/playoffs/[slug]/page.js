@@ -1,21 +1,15 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Trophy, ArrowLeft } from 'lucide-react'
-import { getActiveLeagues } from '@/lib/server/leagues'
+import { getActiveLeagues, getLeagueName } from '@/lib/server/leagues'
 import { getLeaguePlayoffs } from '@/lib/server/playoffs'
 import PlayoffsClient from './PlayoffsClient'
 
 export const revalidate = 60
 
-const LEAGUE_LABEL = {
-  'tuesday-coed': 'Tuesday Coed',
-  'sunday-mens': "Sunday Men's",
-  'thursday-rec-coed': 'Thursday Rec Coed',
-}
-
 export async function generateMetadata({ params }) {
   const { slug } = await params
-  const label = LEAGUE_LABEL[slug] || slug
+  const label = await getLeagueName(slug)
   const title = `${label} Playoff Bracket — Mississauga | Tito's Courts`
   const description = `Live playoff bracket for ${label} at Tito's Courts in Mississauga. Diamond / Platinum / Gold / Silver division brackets — top-2 byes, 3v6 + 4v5 quarterfinals, reseeded SF + Final.`
   return {
@@ -33,7 +27,7 @@ export default async function PlayoffsLeaguePage({ params }) {
   ])
   if (!leagues.some(l => l.slug === slug)) notFound()
 
-  const label = LEAGUE_LABEL[slug] || slug
+  const label = leagues.find(l => l.slug === slug).name
 
   return (
     <div className="py-10 sm:py-12 px-4">

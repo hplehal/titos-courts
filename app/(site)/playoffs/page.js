@@ -6,12 +6,6 @@ import { getLeaguePlayoffs } from '@/lib/server/playoffs'
 
 export const revalidate = 300
 
-const LEAGUE_LABEL = {
-  'tuesday-coed': 'Tuesday Coed',
-  'sunday-mens': "Sunday Men's",
-  'thursday-rec-coed': 'Thursday Rec Coed',
-}
-
 export const metadata = {
   title: "Playoff Brackets — Mississauga Volleyball | Tito's Courts",
   description: "Championship brackets for all Tito's Courts volleyball leagues in Mississauga. Diamond / Platinum / Gold / Silver division playoffs.",
@@ -52,7 +46,7 @@ export default async function PlayoffsIndexPage() {
 
         <div className="space-y-3">
           {states.map((l) => {
-            const label = LEAGUE_LABEL[l.slug] || l.name
+            const label = l.name
             return (
               <Link
                 key={l.slug}

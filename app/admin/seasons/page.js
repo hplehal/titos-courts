@@ -563,14 +563,13 @@ function initialDivisionRows(season) {
 
 function SeasonSettings({ season, onChanged, setMessage }) {
   const teamCount = season.teams?.length || 0
-  const tiers = (season.tiers || []).slice().sort((a, b) => a.tierNumber - b.tierNumber)
-  const lastTier = tiers[tiers.length - 1]
+  const tierCount = season.tiers?.length || 0
   const hasCustomDivisions = (season.divisions || []).length > 0
   const [rows, setRows] = useState(() => initialDivisionRows(season))
   const [busy, setBusy] = useState('')
 
   const rowTotal = rows.reduce((sum, r) => sum + (parseInt(r.teamCount, 10) || 0), 0)
-  const tierSpots = tiers.length * TEAMS_PER_TIER
+  const tierSpots = tierCount * TEAMS_PER_TIER
 
   const send = async (method, payload, label, successText) => {
     setBusy(label)
@@ -581,13 +580,6 @@ function SeasonSettings({ season, onChanged, setMessage }) {
       else { setMessage(successText); onChanged() }
     } catch { setMessage('Network error') }
     setBusy('')
-  }
-
-  const addTier = () => send('PATCH', { action: 'add-tier', seasonId: season.id }, 'add-tier', `Tier ${(lastTier?.tierNumber || 0) + 1} added`)
-
-  const removeLastTier = () => {
-    if (!lastTier || !confirm(`Remove Tier ${lastTier.tierNumber}? Only works if no week has placements or matches in it.`)) return
-    send('DELETE', { action: 'delete-tier', tierId: lastTier.id }, 'remove-tier', `Tier ${lastTier.tierNumber} removed`)
   }
 
   const updateRow = (i, field, value) => setRows(prev => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)))
@@ -610,26 +602,16 @@ function SeasonSettings({ season, onChanged, setMessage }) {
     <div className="border-t border-titos-border/50 px-5 py-4 bg-titos-surface/50 space-y-6">
       {/* Tiers */}
       <section>
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <h5 className="font-display text-sm font-bold text-titos-gold uppercase tracking-wider">Tiers</h5>
-          <a href="/admin/courts" className="text-xs text-titos-gray-400 hover:text-titos-gold transition-colors">Edit courts & time slots →</a>
-        </div>
+        <h5 className="font-display text-sm font-bold text-titos-gold uppercase tracking-wider mb-2">Tiers</h5>
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-titos-white text-sm font-semibold">{tiers.length} tier{tiers.length === 1 ? '' : 's'}</span>
+          <span className="text-titos-white text-sm font-semibold">{tierCount} tier{tierCount === 1 ? '' : 's'}</span>
           <span className={cn('text-xs', tierSpots === teamCount ? 'text-status-success' : 'text-titos-gold')}>
             {tierSpots} spots ({TEAMS_PER_TIER} per tier) · {teamCount} teams
           </span>
-          <div className="flex gap-2 sm:ml-auto">
-            <button onClick={removeLastTier} disabled={!!busy || !lastTier}
-              className={cn(smallBtn, 'bg-status-live/5 text-status-live/70 border-status-live/15 hover:bg-status-live/10 hover:text-status-live')}>
-              {busy === 'remove-tier' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-              Remove Tier {lastTier?.tierNumber ?? ''}
-            </button>
-            <button onClick={addTier} disabled={!!busy}
-              className={cn(smallBtn, 'bg-titos-gold/15 text-titos-gold border-titos-gold/30 hover:bg-titos-gold/25')}>
-              {busy === 'add-tier' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Add Tier
-            </button>
-          </div>
+          <a href={`/admin/courts?season=${season.id}`}
+            className={cn(smallBtn, 'sm:ml-auto bg-titos-gold/15 text-titos-gold border-titos-gold/30 hover:bg-titos-gold/25')}>
+            Add or remove tiers in Court Assignments →
+          </a>
         </div>
       </section>
 

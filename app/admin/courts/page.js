@@ -1,14 +1,17 @@
 'use client'
 
-// Admin: edit tier → court mappings per league/season.
+// Admin: manage each season's tiers — add a tier, remove the bottom tier, and
+// edit which court / time slot each tier plays on.
 // Updating a tier's court number also rewrites the courtNumber on all
 // matches scheduled for upcoming weeks so the public schedule reflects
 // the change immediately. Completed weeks stay historical.
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Loader2, Save, Check, Trash2, Shield } from 'lucide-react'
+import { ArrowLeft, Loader2, Save, Check, Trash2, Shield, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+const TEAMS_PER_TIER = 3
 
 function AuthGate({ onAuth }) {
   const [pw, setPw] = useState('')
@@ -48,7 +51,7 @@ function AuthGate({ onAuth }) {
   )
 }
 
-function TierRow({ tier, onSaved }) {
+function TierRow({ tier, isBottom, onSaved }) {
   const [court, setCourt] = useState(String(tier.courtNumber))
   const [slot, setSlot] = useState(tier.timeSlot || 'early')
   const [saving, setSaving] = useState(false)
@@ -91,7 +94,7 @@ function TierRow({ tier, onSaved }) {
   }
 
   const remove = async () => {
-    if (!confirm(`Delete Tier ${tier.tierNumber}? Only works if it has no placements or matches.`)) return
+    if (!confirm(`Remove Tier ${tier.tierNumber}? Only works if no week has placements or matches in it.`)) return
     setDeleting(true); setErr(''); setMsg('')
     try {
       const res = await fetch('/api/admin/seasons', {
@@ -141,15 +144,19 @@ function TierRow({ tier, onSaved }) {
         {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
         Save
       </button>
-      <button
-        onClick={remove}
-        disabled={deleting}
-        className="text-titos-gray-500 hover:text-status-live transition-colors px-2 py-1.5 text-xs flex items-center gap-1"
-        title="Delete tier (must have no placements or matches)"
-      >
-        {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-        Delete
-      </button>
+      {/* Only the bottom tier can be removed — tiers must stay numbered 1..N
+          for weekly placement and up/down movement. */}
+      {isBottom && (
+        <button
+          onClick={remove}
+          disabled={deleting}
+          className="text-titos-gray-500 hover:text-status-live transition-colors px-2 py-1.5 text-xs flex items-center gap-1"
+          title="Remove the bottom tier (must have no placements or matches)"
+        >
+          {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+          Delete
+        </button>
+      )}
       <div className="flex-1 min-w-[10rem] text-right">
         {msg && <span className="text-status-success text-xs flex items-center justify-end gap-1"><Check className="w-3 h-3" />{msg}</span>}
         {err && <span className="text-status-live text-xs">{err}</span>}
@@ -163,6 +170,8 @@ export default function CourtsAdminPage() {
   const [seasons, setSeasons] = useState([])
   const [selectedSeasonId, setSelectedSeasonId] = useState('')
   const [loading, setLoading] = useState(true)
+  const [adding, setAdding] = useState(false)
+  const [pageMsg, setPageMsg] = useState({ kind: '', text: '' })
 
   useEffect(() => {
     if (typeof window !== 'undefined' && sessionStorage.getItem('admin_auth') === 'true') setAuthed(true)
@@ -174,7 +183,11 @@ export default function CourtsAdminPage() {
       const res = await fetch('/api/admin/seasons').then(r => r.json())
       const list = (res.seasons || []).filter(s => s.status !== 'archived')
       setSeasons(list)
-      if (list.length && !selectedSeasonId) setSelectedSeasonId(list[0].id)
+      if (list.length && !selectedSeasonId) {
+        // ?season=<id> (linked from Seasons → Tiers & Divisions) preselects it.
+        const requested = new URLSearchParams(window.location.search).get('season')
+        setSelectedSeasonId(list.some(s => s.id === requested) ? requested : list[0].id)
+      }
     } catch (e) { console.error(e) }
     setLoading(false)
   }, [selectedSeasonId])
@@ -185,6 +198,28 @@ export default function CourtsAdminPage() {
 
   const selected = seasons.find(s => s.id === selectedSeasonId)
   const tiers = (selected?.tiers || []).slice().sort((a, b) => a.tierNumber - b.tierNumber)
+  const nextTierNumber = (tiers[tiers.length - 1]?.tierNumber || 0) + 1
+  const teamCount = selected?.teams?.length || 0
+  const spots = tiers.length * TEAMS_PER_TIER
+
+  const addTier = async () => {
+    setAdding(true)
+    setPageMsg({ kind: '', text: '' })
+    try {
+      const res = await fetch('/api/admin/seasons', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add-tier', seasonId: selectedSeasonId }),
+      })
+      const data = await res.json()
+      if (!res.ok) setPageMsg({ kind: 'err', text: data.error || 'Failed to add tier' })
+      else {
+        const { tierNumber, courtNumber, timeSlot } = data.tier
+        setPageMsg({ kind: 'ok', text: `Tier ${tierNumber} added on Court ${courtNumber} (${timeSlot}) — change it above if needed.` })
+        await load()
+      }
+    } catch { setPageMsg({ kind: 'err', text: 'Network error' }) }
+    setAdding(false)
+  }
 
   return (
     <div className="py-12 px-4">
@@ -197,14 +232,14 @@ export default function CourtsAdminPage() {
         </div>
 
         <p className="text-titos-gray-400 text-sm mb-6">
-          Edit which court each tier plays on. Saving updates the tier and rewrites the court number on every match scheduled for an upcoming week. Completed weeks are not touched.
+          Add or remove tiers and edit which court each tier plays on. Saving a court rewrites the court number on every match scheduled for an upcoming week; completed weeks are not touched. Only the bottom tier can be removed, and only while no week uses it.
         </p>
 
         <div className="mb-6">
           <label className="block text-sm font-medium text-titos-gray-300 mb-2">Season</label>
           <select
             value={selectedSeasonId}
-            onChange={(e) => setSelectedSeasonId(e.target.value)}
+            onChange={(e) => { setSelectedSeasonId(e.target.value); setPageMsg({ kind: '', text: '' }) }}
             className="w-full px-4 py-3 bg-titos-card border border-titos-border rounded-lg text-titos-white focus:outline-none focus:border-titos-gold/50"
           >
             {seasons.map(s => (
@@ -221,14 +256,36 @@ export default function CourtsAdminPage() {
               <div key={i} className="card-flat rounded-xl h-16 animate-pulse" />
             ))}
           </div>
-        ) : tiers.length === 0 ? (
-          <p className="text-titos-gray-500 text-sm">No tiers in this season.</p>
         ) : (
-          <div className="space-y-3">
-            {tiers.map(t => (
-              <TierRow key={t.id} tier={t} onSaved={load} />
-            ))}
-          </div>
+          <>
+            {tiers.length === 0 ? (
+              <p className="text-titos-gray-500 text-sm">No tiers in this season.</p>
+            ) : (
+              <div className="space-y-3">
+                {tiers.map((t, i) => (
+                  <TierRow key={t.id} tier={t} isBottom={i === tiers.length - 1} onSaved={load} />
+                ))}
+              </div>
+            )}
+            {selected && (
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={addTier}
+                  disabled={adding}
+                  className={cn('btn-primary text-xs py-2', adding && 'opacity-50 cursor-not-allowed')}
+                >
+                  {adding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                  Add Tier {nextTierNumber}
+                </button>
+                <span className={cn('text-xs', spots === teamCount ? 'text-status-success' : 'text-titos-gold')}>
+                  {tiers.length} tier{tiers.length === 1 ? '' : 's'} · {spots} spots ({TEAMS_PER_TIER} per tier) · {teamCount} teams
+                </span>
+                {pageMsg.text && (
+                  <span className={cn('text-xs', pageMsg.kind === 'ok' ? 'text-status-success' : 'text-status-live')}>{pageMsg.text}</span>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

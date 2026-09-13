@@ -331,6 +331,16 @@ export async function DELETE(request) {
       if (!tierId) return NextResponse.json({ error: 'tierId required' }, { status: 400 })
       const tier = await prisma.tier.findUnique({ where: { id: tierId } })
       if (!tier) return NextResponse.json({ error: 'Tier not found' }, { status: 404 })
+      // Only the bottom tier can go: weekly placement copying and up/down
+      // movement assume tiers are numbered 1..N with no gaps.
+      const bottom = await prisma.tier.findFirst({
+        where: { seasonId: tier.seasonId },
+        orderBy: { tierNumber: 'desc' },
+        select: { tierNumber: true },
+      })
+      if (bottom && bottom.tierNumber !== tier.tierNumber) {
+        return NextResponse.json({ error: `Only the bottom tier (Tier ${bottom.tierNumber}) can be removed — tiers must stay numbered 1 to ${bottom.tierNumber}.` }, { status: 409 })
+      }
       const placementCount = await prisma.tierPlacement.count({ where: { tierId } })
       if (placementCount > 0) {
         return NextResponse.json({ error: `Tier has ${placementCount} placement(s); remove them first.` }, { status: 409 })

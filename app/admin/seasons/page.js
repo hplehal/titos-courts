@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Plus, Archive, Loader2, Check, Users, Calendar, ChevronDown, ChevronRight, Pencil, Save, X, Trash2, ListOrdered, Settings } from 'lucide-react'
 import AdminPageHeader from '@/components/admin/AdminPageHeader'
-import { cn, getTierColor } from '@/lib/utils'
-import { DIVISION_NAMES, leagueRules, resolveDivisions } from '@/lib/league/seasonConfig'
+import { cn, divisionStyle, getTierColor } from '@/lib/utils'
+import { MAX_DIVISIONS, divisionName, leagueRules, resolveDivisions } from '@/lib/league/seasonConfig'
 import { adminFetch } from '@/lib/adminFetch'
 
 export default function SeasonsPage() {
@@ -544,22 +544,25 @@ function SeasonNameEditor({ season, onSaved, setMessage }) {
 }
 
 // ─── Tiers & Divisions settings ───
-const DIVISION_TEXT = { Diamond: 'text-div-diamond', Platinum: 'text-div-platinum', Gold: 'text-div-gold', Silver: 'text-div-silver' }
 const TEAMS_PER_TIER = 3
 const MAX_PLAYOFF_DIVISION = 8
 
 // Start from the stored sizes, or from the automatic split standings are
-// currently showing when none are saved yet.
+// currently showing when none are saved yet. A blank `name` means "use the
+// default name for this position", so the field can be cleared to undo a
+// rename rather than needing a separate reset.
 function initialDivisionRows(season) {
   const stored = season.divisions || []
-  const source = stored.length ? stored : resolveDivisions(null, season.teams?.length || 0, season.league?.divisionCount)
-  return DIVISION_NAMES.map((name, i) => {
+  const custom = stored.length > 0
+  const source = custom ? stored : resolveDivisions(null, season.teams?.length || 0, season.league?.divisionCount)
+  const count = Math.min(Math.max(source.length, 1), MAX_DIVISIONS)
+  return Array.from({ length: count }, (_, i) => {
     const d = source.find(x => x.position === i + 1)
     return {
       position: i + 1,
-      name,
+      name: custom ? (d?.name ?? '') : '',
       teamCount: String(d?.teamCount ?? 0),
-      courtNumber: stored.length && d?.courtNumber != null ? String(d.courtNumber) : '',
+      courtNumber: custom && d?.courtNumber != null ? String(d.courtNumber) : '',
     }
   })
 }
@@ -590,8 +593,15 @@ function SeasonSettings({ season, onChanged, setMessage }) {
   const saveDivisions = () => send('PATCH', {
     action: 'set-divisions',
     seasonId: season.id,
-    divisions: rows.map(r => ({ position: r.position, teamCount: parseInt(r.teamCount, 10) || 0, courtNumber: r.courtNumber })),
-  }, 'divisions', 'Division sizes saved')
+    divisions: rows.map(r => ({ position: r.position, teamCount: parseInt(r.teamCount, 10) || 0, name: r.name, courtNumber: r.courtNumber })),
+  }, 'divisions', 'Divisions saved')
+
+  // New divisions start empty — the admin moves teams into them by editing
+  // the sizes above, so nothing is reshuffled until they say so.
+  const addDivision = () => setRows(prev => (
+    prev.length >= MAX_DIVISIONS ? prev : [...prev, { position: prev.length + 1, name: '', teamCount: '0', courtNumber: '' }]
+  ))
+  const removeLastDivision = () => setRows(prev => (prev.length <= 1 ? prev : prev.slice(0, -1)))
 
   const resetDivisions = () => {
     if (!confirm('Go back to the automatic even split for this season?')) return
@@ -625,14 +635,24 @@ function SeasonSettings({ season, onChanged, setMessage }) {
           <span className="text-[11px] text-titos-gray-500 uppercase tracking-wider">{hasCustomDivisions ? 'Custom sizes' : 'Automatic even split'}</span>
         </div>
         <p className="text-titos-gray-500 text-xs mb-3">
-          Teams per division, from the top of the standings down. Change it any time and standings update right away. A playoff bracket that&apos;s already built isn&apos;t changed; rebuild that division on the Playoffs page.
+          Teams per division, from the top of the standings down. Rename a division by typing over its name, or leave the field blank to use the default. Change any of it at any time and standings update right away. A playoff bracket that&apos;s already built isn&apos;t changed; rebuild that division on the Playoffs page.
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {rows.map((r, i) => {
             const size = parseInt(r.teamCount, 10) || 0
             return (
               <div key={r.position} className="card-flat rounded-lg p-3 space-y-1.5">
-                <div className={cn('text-xs font-bold uppercase tracking-wider', DIVISION_TEXT[r.name])}>{r.name}</div>
+                <input
+                  value={r.name}
+                  onChange={(e) => updateRow(i, 'name', e.target.value)}
+                  placeholder={divisionName(r.position)}
+                  maxLength={24}
+                  aria-label={`Division ${r.position} name`}
+                  className={cn(
+                    'w-full px-1.5 py-1 bg-transparent border border-transparent hover:border-titos-border focus:border-titos-gold/50 rounded text-xs font-bold uppercase tracking-wider focus:outline-none',
+                    divisionStyle(r.position).textClass,
+                  )}
+                />
                 <label className="flex items-center justify-between gap-2 text-xs text-titos-gray-400">
                   Teams
                   <input type="number" min="0" max="30" value={r.teamCount} onChange={(e) => updateRow(i, 'teamCount', e.target.value)} className={numberInput} />
@@ -647,6 +667,19 @@ function SeasonSettings({ season, onChanged, setMessage }) {
               </div>
             )
           })}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 mt-2">
+          <button onClick={addDivision} disabled={rows.length >= MAX_DIVISIONS}
+            className={cn(smallBtn, 'bg-titos-gold/15 text-titos-gold border-titos-gold/30 hover:bg-titos-gold/25')}>
+            <Plus className="w-3 h-3" /> Add Division
+          </button>
+          <button onClick={removeLastDivision} disabled={rows.length <= 1}
+            className={cn(smallBtn, 'bg-titos-card text-titos-gray-300 border-titos-border hover:text-titos-white')}>
+            <Trash2 className="w-3 h-3" /> Remove Last
+          </button>
+          <span className="text-[11px] text-titos-gray-500">
+            {rows.length} of {MAX_DIVISIONS} divisions
+          </span>
         </div>
         <div className="flex flex-wrap items-center gap-2 mt-3">
           <span className={cn('text-xs font-semibold', rowTotal === teamCount ? 'text-status-success' : 'text-titos-gold')}>

@@ -2,7 +2,7 @@ import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { slugify } from '@/lib/utils'
 import { revalidateLeague } from '@/lib/server/leagues'
-import { DIVISION_NAMES, defaultTierLayout, leagueRules, tierLayout } from '@/lib/league/seasonConfig'
+import { MAX_DIVISIONS, defaultTierLayout, leagueRules, tierLayout } from '@/lib/league/seasonConfig'
 
 const MAX_TIERS = 20
 
@@ -191,16 +191,21 @@ export async function PATCH(request) {
         const position = parseInt(d.position, 10)
         const teamCount = parseInt(d.teamCount, 10)
         const courtNumber = d.courtNumber === '' || d.courtNumber == null ? null : parseInt(d.courtNumber, 10)
-        if (!(position >= 1 && position <= DIVISION_NAMES.length)) {
-          return NextResponse.json({ error: 'Invalid division position' }, { status: 400 })
+        // Blank name = keep the default name for the position.
+        const name = typeof d.name === 'string' && d.name.trim() ? d.name.trim() : null
+        if (!(position >= 1 && position <= MAX_DIVISIONS)) {
+          return NextResponse.json({ error: `Divisions are limited to ${MAX_DIVISIONS} per season` }, { status: 400 })
         }
         if (!(teamCount >= 0)) {
           return NextResponse.json({ error: 'Team counts must be 0 or more' }, { status: 400 })
         }
+        if (name && name.length > 24) {
+          return NextResponse.json({ error: 'Division names must be 24 characters or fewer' }, { status: 400 })
+        }
         if (courtNumber !== null && !Number.isFinite(courtNumber)) {
           return NextResponse.json({ error: 'Court must be a number' }, { status: 400 })
         }
-        if (teamCount > 0) rows.push({ seasonId, position, teamCount, courtNumber })
+        if (teamCount > 0) rows.push({ seasonId, position, teamCount, name, courtNumber })
       }
       if (new Set(rows.map(r => r.position)).size !== rows.length) {
         return NextResponse.json({ error: 'Each division can only appear once' }, { status: 400 })

@@ -7,8 +7,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Loader2, Plus, RefreshCw, Save, Trash2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { DIVISION_NAMES } from '@/lib/league/seasonConfig'
+import { cn, divisionStyle } from '@/lib/utils'
+import { divisionName } from '@/lib/league/seasonConfig'
 
 const ROUNDS = [
   { value: 1, label: 'QF' },
@@ -17,7 +17,6 @@ const ROUNDS = [
 ]
 const roundLabel = n => ROUNDS.find(r => r.value === Number(n))?.label || `Round ${n}`
 
-const DIVISION_TEXT = { Diamond: 'text-div-diamond', Platinum: 'text-div-platinum', Gold: 'text-div-gold', Silver: 'text-div-silver' }
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
 const field = 'px-2 py-1.5 bg-titos-surface border border-titos-border rounded text-titos-white text-xs focus:outline-none focus:border-titos-gold/50'
 const smallBtn = 'px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase border flex items-center gap-1 transition-colors disabled:opacity-50'
@@ -246,7 +245,7 @@ function DivisionPanel({ division, matches, seasonId, weeks, teams, onChanged, s
   return (
     <section className="rounded-xl ring-1 ring-titos-border/40 p-3 sm:p-4 space-y-3">
       <header className="flex flex-wrap items-center gap-2">
-        <h3 className={cn('font-display text-lg font-black', DIVISION_TEXT[division.name] || 'text-titos-white')}>{division.name}</h3>
+        <h3 className={cn('font-display text-lg font-black', divisionStyle(division.position).textClass)}>{division.name}</h3>
         <span className="text-xs text-titos-gray-400">
           {division.teamCount} team{division.teamCount === 1 ? '' : 's'}{division.courtNumber ? ` · Court ${division.courtNumber}` : ''}
         </span>
@@ -314,7 +313,7 @@ export default function PlayoffScheduleEditor({ seasonId }) {
     const list = [...data.divisions]
     for (const m of data.matches) {
       if (!list.some(d => d.position === m.tierNumber)) {
-        list.push({ position: m.tierNumber, name: DIVISION_NAMES[m.tierNumber - 1] || `Division ${m.tierNumber}`, teamCount: 0, courtNumber: null })
+        list.push({ position: m.tierNumber, name: divisionName(m.tierNumber), teamCount: 0, courtNumber: null })
       }
     }
     return list.sort((a, b) => a.position - b.position)

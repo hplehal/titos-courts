@@ -17,7 +17,7 @@ export async function generateMetadata({ params }) {
   const { slug } = await params
   const label = await getLeagueName(slug)
   const title = `${label} Volleyball Standings — Mississauga | Tito's Courts`
-  const description = `Live standings for ${label} volleyball league at Tito's Courts in Mississauga. Track team rankings, wins, losses, point differentials, and playoff divisions across Diamond, Platinum, Gold, and Silver tiers.`
+  const description = `Live standings for ${label} volleyball league at Tito's Courts in Mississauga. Track team rankings, wins, losses, point differentials, and playoff divisions.`
   return {
     title,
     description,
@@ -52,7 +52,7 @@ export default async function StandingsLeaguePage({ params }) {
     <>
       {/* Googlebot-indexable copy — hidden visually but semantically first so crawlers see real text */}
       <p className="sr-only">
-        {`Current standings for the ${label} recreational volleyball league at Tito's Courts in Mississauga. Tracks team performance across Diamond, Platinum, Gold, and Silver divisions at Pakmen Courts.`}
+        {`Current standings for the ${label} recreational volleyball league at Tito's Courts in Mississauga. Tracks team performance and playoff divisions at Pakmen Courts.`}
       </p>
       <StandingsClient
         leagues={leagues}

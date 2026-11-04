@@ -579,7 +579,12 @@ export default function HomePageClient({ initialResults, leagues = [] }) {
                       that cuts heads off the top and the trophy off the bottom. */}
                   <div className="relative aspect-[4/3]">
                     {champ.image ? (
-                      <Image src={champ.image} alt={champ.team} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                      <Image src={champ.image} alt={champ.team} fill
+                        // Team photos put people in the upper-middle and floor at the
+                        // bottom, so bias the crop upward: a centred crop clips the back
+                        // row's heads on square and portrait shots.
+                        style={{ objectPosition: 'center 25%' }}
+                        className="object-cover group-hover:scale-105 transition-transform duration-700" />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-titos-card to-titos-elevated flex items-center justify-center">
                         <Trophy className="w-12 h-12 text-titos-gold/30" />
@@ -613,7 +618,12 @@ export default function HomePageClient({ initialResults, leagues = [] }) {
                       that cuts heads off the top and the trophy off the bottom. */}
                   <div className="relative aspect-[4/3]">
                     {champ.image ? (
-                      <Image src={champ.image} alt={champ.team} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                      <Image src={champ.image} alt={champ.team} fill
+                        // Team photos put people in the upper-middle and floor at the
+                        // bottom, so bias the crop upward: a centred crop clips the back
+                        // row's heads on square and portrait shots.
+                        style={{ objectPosition: 'center 25%' }}
+                        className="object-cover group-hover:scale-105 transition-transform duration-700" />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-titos-card to-titos-elevated flex items-center justify-center">
                         <Trophy className="w-12 h-12 text-titos-gold/30" />

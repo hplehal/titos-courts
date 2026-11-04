@@ -17,7 +17,7 @@ import {
   Award,
 } from 'lucide-react'
 import LatestResults from '@/components/home/LatestResults'
-import { coedChampions, isBackToBack, mensChampions } from '@/lib/champions'
+import { championFocus, coedChampions, isBackToBack, mensChampions } from '@/lib/champions'
 
 /* ═══ DATA ═══ */
 
@@ -580,10 +580,7 @@ export default function HomePageClient({ initialResults, leagues = [] }) {
                   <div className="relative aspect-[4/3]">
                     {champ.image ? (
                       <Image src={champ.image} alt={champ.team} fill
-                        // Team photos put people in the upper-middle and floor at the
-                        // bottom, so bias the crop upward: a centred crop clips the back
-                        // row's heads on square and portrait shots.
-                        style={{ objectPosition: 'center 25%' }}
+                        style={{ objectPosition: championFocus(champ) }}
                         className="object-cover group-hover:scale-105 transition-transform duration-700" />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-titos-card to-titos-elevated flex items-center justify-center">
@@ -619,10 +616,7 @@ export default function HomePageClient({ initialResults, leagues = [] }) {
                   <div className="relative aspect-[4/3]">
                     {champ.image ? (
                       <Image src={champ.image} alt={champ.team} fill
-                        // Team photos put people in the upper-middle and floor at the
-                        // bottom, so bias the crop upward: a centred crop clips the back
-                        // row's heads on square and portrait shots.
-                        style={{ objectPosition: 'center 25%' }}
+                        style={{ objectPosition: championFocus(champ) }}
                         className="object-cover group-hover:scale-105 transition-transform duration-700" />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-titos-card to-titos-elevated flex items-center justify-center">

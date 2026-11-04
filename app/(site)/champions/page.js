@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Trophy, Crown } from 'lucide-react'
 
 const coedChampions = [
+  { season: 9, team: "O'Fosho", image: '/images/champions/oFosho.jpg', year: '2026' },
   { season: 8, team: 'Net Losses', image: '/images/champions/netLosses2.jpg', year: '2026' },
   { season: 7, team: 'Net Losses', image: '/images/champions/netLosses.jpg', year: '2025' },
   { season: 6, team: 'BounceTown', image: '/images/champions/bounceTown.jpg', year: '2025' },
@@ -16,6 +17,7 @@ const coedChampions = [
 ]
 
 const mensChampions = [
+  { season: 7, team: 'Tsunami Riptide', image: '/images/champions/tsunamiRiptide.jpg', year: '2026' },
   { season: 6, team: 'Spartans', image: '/images/champions/spartans.jpg', year: '2026' },
   { season: 5, team: "Brandy's Angels", image: '/images/champions/bAngels.jpg', year: '2025' },
   { season: 4, team: "David's Dictatorship", image: '/images/champions/davidDictatorship.jpg', year: '2025' },
@@ -24,7 +26,12 @@ const mensChampions = [
   { season: 1, team: 'Sets With Jerhomies', image: '/images/champions/jerhomies.jpg', year: '2024' },
 ]
 
-function ChampionCard({ champ, index, featured = false }) {
+// Thursday REC COED — a newer league, so this list starts at Season 1.
+const recChampions = [
+  { season: 1, team: "Tomo's Lizards", image: '/images/champions/tomosLizards.jpg', year: '2026' },
+]
+
+function ChampionCard({ champ, index, featured = false, wide = false }) {
   const isLatest = index === 0
 
   return (
@@ -34,7 +41,7 @@ function ChampionCard({ champ, index, featured = false }) {
         isLatest
           ? 'border-titos-gold/50 shadow-lg shadow-titos-gold/10 group-hover:shadow-titos-gold/20'
           : 'border-titos-border/30 group-hover:border-titos-gold/30'
-      } ${featured ? 'aspect-[3/4]' : 'aspect-square'}`}>
+      } ${wide ? 'aspect-[16/9]' : featured ? 'aspect-[3/4]' : 'aspect-square'}`}>
         {champ.image ? (
           <Image src={champ.image} alt={`${champ.team} — Season ${champ.season} Champions`} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
@@ -148,6 +155,29 @@ export default function ChampionsPage() {
                 <ChampionCard key={champ.season} champ={champ} index={i + 1} />
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* ═══ REC COED CHAMPIONS ═══ */}
+        <div className="mb-16">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-10 h-0.5 bg-titos-gold" />
+            <h2 className="font-display text-2xl font-black text-titos-white uppercase tracking-tight">REC COED Champions</h2>
+            <div className="flex-1 h-px bg-titos-border/30" />
+            <span className="text-titos-gray-500 text-xs font-bold uppercase tracking-wider">{recChampions.length} Season{recChampions.length === 1 ? '' : 's'}</span>
+          </div>
+
+          {/* A newer league — until there are a few seasons the featured card
+              sits on its own rather than beside a half-empty grid. */}
+          <div className={recChampions.length > 1 ? 'grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-4' : 'max-w-2xl'}>
+            <ChampionCard champ={recChampions[0]} index={0} featured wide={recChampions.length === 1} />
+            {recChampions.length > 1 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {recChampions.slice(1).map((champ, i) => (
+                  <ChampionCard key={champ.season} champ={champ} index={i + 1} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

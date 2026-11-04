@@ -111,6 +111,9 @@ model Division {
   season      Season @relation(fields: [seasonId], references: [id])
   position    Int
   teamCount   Int
+  // What this season calls the division. Null = the default name for the
+  // position (Diamond, Platinum, ...). Renamed on /admin/seasons.
+  name        String?
   // Default court for this division's playoff draft. Null = use the
   // league preset.
   courtNumber Int?

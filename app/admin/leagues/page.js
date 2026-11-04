@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Plus, Loader2, Pencil, Save, X, Eye, EyeOff } from 'lucide-react'
 import AdminPageHeader from '@/components/admin/AdminPageHeader'
 import { adminFetch } from '@/lib/adminFetch'
-import { leagueRules } from '@/lib/league/seasonConfig'
+import { MAX_DIVISIONS, leagueRules } from '@/lib/league/seasonConfig'
 import { DAYS_OF_WEEK } from '@/lib/league/leagueInput'
 import { cn, slugify } from '@/lib/utils'
 
@@ -176,7 +176,7 @@ function LeagueForm({ league, leagues, onSaved, onCancel }) {
             <input type="number" min="1" max="5" value={form.roundsPerWeek} onChange={(e) => set('roundsPerWeek', e.target.value)} required className={field} />
           </Field>
           <Field label="Playoff divisions" hint="Diamond, Platinum, Gold, Silver — used for the automatic split">
-            <input type="number" min="1" max="4" value={form.divisionCount} onChange={(e) => set('divisionCount', e.target.value)} required className={field} />
+            <input type="number" min="1" max={MAX_DIVISIONS} value={form.divisionCount} onChange={(e) => set('divisionCount', e.target.value)} required className={field} />
           </Field>
           <Field label="Tiers per new season">
             <input type="number" min="1" max="20" value={form.defaultTierCount} onChange={(e) => set('defaultTierCount', e.target.value)} required className={field} />

@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import {
   LEAGUE_RULE_DEFAULTS,
+  MAX_DIVISIONS,
   defaultDivisionSizes,
+  divisionName,
   defaultTierLayout,
   divisionForRank,
   leagueRules,
@@ -115,8 +117,70 @@ describe('division sizes', () => {
   it('getDivisionInfo uses stored sizes when given (5-team Thursday Diamond)', () => {
     const stored = [{ position: 1, teamCount: 5 }, { position: 2, teamCount: 7 }]
     expect(getDivisionInfo(5, 12, 4, stored).name).toBe('Diamond')
-    expect(getDivisionInfo(6, 12, 4, stored)).toEqual({ name: 'Platinum', color: 'div-platinum', bgClass: 'division-platinum' })
+    expect(getDivisionInfo(6, 12, 4, stored)).toEqual({ name: 'Platinum', color: 'div-2', bgClass: 'division-2', textClass: 'text-div-2' })
     // Without stored rows the automatic 3/3/3/3 split still applies.
     expect(getDivisionInfo(4, 12).name).toBe('Platinum')
+  })
+})
+
+describe('division names', () => {
+  it('falls back to the default name for a position', () => {
+    expect(divisionName(1)).toBe('Diamond')
+    expect(divisionName(5)).toBe('Bronze')
+    expect(divisionName(8)).toBe('Iron')
+  })
+
+  it('uses a season\'s own name when it has one, trimming whitespace', () => {
+    expect(divisionName(1, 'A Division')).toBe('A Division')
+    expect(divisionName(2, '  Championship  ')).toBe('Championship')
+  })
+
+  it('treats a blank name as "use the default"', () => {
+    expect(divisionName(3, '')).toBe('Gold')
+    expect(divisionName(3, '   ')).toBe('Gold')
+    expect(divisionName(3, null)).toBe('Gold')
+  })
+
+  it('numbers positions past the default list', () => {
+    expect(divisionName(9)).toBe('Division 9')
+  })
+
+  it('resolveDivisions carries stored names through and defaults the rest', () => {
+    const stored = [
+      { position: 1, teamCount: 4, name: 'Championship' },
+      { position: 2, teamCount: 4, name: null },
+    ]
+    expect(resolveDivisions(stored, 8).map(d => d.name)).toEqual(['Championship', 'Platinum'])
+  })
+})
+
+describe('more than four divisions', () => {
+  it('splits evenly across six divisions', () => {
+    expect(defaultDivisionSizes(24, 6)).toEqual([4, 4, 4, 4, 4, 4])
+    expect(defaultDivisionSizes(26, 6)).toEqual([5, 5, 4, 4, 4, 4])
+  })
+
+  it('splits evenly across eight divisions', () => {
+    expect(defaultDivisionSizes(24, 8)).toEqual([3, 3, 3, 3, 3, 3, 3, 3])
+  })
+
+  it('clamps to MAX_DIVISIONS rather than the length of the name list', () => {
+    expect(defaultDivisionSizes(24, 99)).toHaveLength(MAX_DIVISIONS)
+  })
+
+  it('names and colours a fifth division instead of folding it into the fourth', () => {
+    const stored = Array.from({ length: 5 }, (_, i) => ({ position: i + 1, teamCount: 4 }))
+    // Rank 17 is the first team in the fifth division (4 per division).
+    const fifth = getDivisionInfo(17, 20, 5, stored)
+    expect(fifth.name).toBe('Bronze')
+    expect(fifth.bgClass).toBe('division-5')
+    expect(fifth.textClass).toBe('text-div-5')
+  })
+
+  it('colours a division by position, so a rename keeps its colour', () => {
+    const stored = [{ position: 1, teamCount: 4, name: 'Open' }, { position: 2, teamCount: 4 }]
+    expect(getDivisionInfo(1, 8, 2, stored)).toEqual({
+      name: 'Open', color: 'div-1', bgClass: 'division-1', textClass: 'text-div-1',
+    })
   })
 })

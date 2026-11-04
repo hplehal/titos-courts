@@ -50,12 +50,19 @@ function formatWeekDate(iso) {
   } catch { return null }
 }
 
-const DIVISION_ACCENT = {
-  Diamond:  { color: 'text-div-diamond',  ring: 'ring-div-diamond/30',  bg: 'bg-div-diamond/[0.04]' },
-  Platinum: { color: 'text-div-platinum', ring: 'ring-div-platinum/30', bg: 'bg-div-platinum/[0.04]' },
-  Gold:     { color: 'text-div-gold',     ring: 'ring-div-gold/30',     bg: 'bg-div-gold/[0.04]' },
-  Silver:   { color: 'text-div-silver',   ring: 'ring-div-silver/30',   bg: 'bg-div-silver/[0.04]' },
-}
+// Accent per division POSITION (1 = top division), not per name — seasons
+// rename their divisions, and a rename shouldn't change the colour. Spelled
+// out in full so Tailwind can find the class names.
+const DIVISION_ACCENT = [
+  { color: 'text-div-1', ring: 'ring-div-1/30', bg: 'bg-div-1/[0.04]' },
+  { color: 'text-div-2', ring: 'ring-div-2/30', bg: 'bg-div-2/[0.04]' },
+  { color: 'text-div-3', ring: 'ring-div-3/30', bg: 'bg-div-3/[0.04]' },
+  { color: 'text-div-4', ring: 'ring-div-4/30', bg: 'bg-div-4/[0.04]' },
+  { color: 'text-div-5', ring: 'ring-div-5/30', bg: 'bg-div-5/[0.04]' },
+  { color: 'text-div-6', ring: 'ring-div-6/30', bg: 'bg-div-6/[0.04]' },
+  { color: 'text-div-7', ring: 'ring-div-7/30', bg: 'bg-div-7/[0.04]' },
+  { color: 'text-div-8', ring: 'ring-div-8/30', bg: 'bg-div-8/[0.04]' },
+]
 
 function setScoreLine(scores) {
   if (!scores?.length) return null
@@ -177,7 +184,7 @@ function TeamRow({ name, seed, setWins, winner }) {
 }
 
 function DivisionBracket({ division, weeks, roundWeeks, columns, multiWeek, isMyDivision }) {
-  const accent = DIVISION_ACCENT[division.name] || DIVISION_ACCENT.Diamond
+  const accent = DIVISION_ACCENT[(division.tier || 1) - 1] || DIVISION_ACCENT[0]
   const byRound = {
     1: division.matches.filter(m => m.roundNumber === 1).sort((a, b) => a.gameOrder - b.gameOrder),
     2: division.matches.filter(m => m.roundNumber === 2).sort((a, b) => a.gameOrder - b.gameOrder),

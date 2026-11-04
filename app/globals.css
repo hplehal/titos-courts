@@ -41,10 +41,16 @@
   --color-status-info: #0A84FF;
 
   /* Division Colors */
-  --color-div-diamond: #F2A527;
-  --color-div-platinum: #C0C0C0;
-  --color-div-gold: #D4911E;
-  --color-div-silver: #808080;
+  /* Playoff division palette, by position — 1 is the top division. Keyed by
+     position, not name, because seasons rename their divisions. */
+  --color-div-1: #F2A527;
+  --color-div-2: #C0C0C0;
+  --color-div-3: #D4911E;
+  --color-div-4: #808080;
+  --color-div-5: #C97B5A;
+  --color-div-6: #7E9FB5;
+  --color-div-7: #8F9E6B;
+  --color-div-8: #9B8AA6;
   --color-div-bronze: #CD7F32;
   --color-div-copper: #B87333;
 
@@ -291,10 +297,14 @@ img { max-width: 100%; }
 /* ══════════════════════════════════════════════
    DIVISION HIGHLIGHTS
    ══════════════════════════════════════════════ */
-.division-diamond { background: rgba(242, 165, 39, 0.06); border-left: 3px solid var(--color-div-diamond); }
-.division-platinum { background: rgba(192, 192, 192, 0.04); border-left: 3px solid var(--color-div-platinum); }
-.division-gold { background: rgba(212, 145, 30, 0.04); border-left: 3px solid var(--color-div-gold); }
-.division-silver { background: rgba(128, 128, 128, 0.03); border-left: 3px solid var(--color-div-silver); }
+.division-1 { background: rgba(242, 165, 39, 0.06); border-left: 3px solid var(--color-div-1); }
+.division-2 { background: rgba(192, 192, 192, 0.04); border-left: 3px solid var(--color-div-2); }
+.division-3 { background: rgba(212, 145, 30, 0.04); border-left: 3px solid var(--color-div-3); }
+.division-4 { background: rgba(128, 128, 128, 0.03); border-left: 3px solid var(--color-div-4); }
+.division-5 { background: rgba(201, 123, 90, 0.05); border-left: 3px solid var(--color-div-5); }
+.division-6 { background: rgba(126, 159, 181, 0.05); border-left: 3px solid var(--color-div-6); }
+.division-7 { background: rgba(143, 158, 107, 0.05); border-left: 3px solid var(--color-div-7); }
+.division-8 { background: rgba(155, 138, 166, 0.05); border-left: 3px solid var(--color-div-8); }
 .division-bronze { background: rgba(205, 127, 50, 0.03); border-left: 3px solid var(--color-div-bronze); }
 .division-copper { background: rgba(184, 115, 51, 0.03); border-left: 3px solid var(--color-div-copper); }
 

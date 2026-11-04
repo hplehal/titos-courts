@@ -57,7 +57,7 @@ describe('parseLeagueInput() — create', () => {
 
   it('rejects rules outside the allowed ranges', () => {
     const bad = patch => parseLeagueInput({ ...newLeague, ...patch }, { create: true }).error
-    expect(bad({ divisionCount: 5 })).toMatch(/Playoff divisions/)
+    expect(bad({ divisionCount: 9 })).toMatch(/Playoff divisions/)
     expect(bad({ roundsPerWeek: '0' })).toMatch(/Rounds per week/)
     expect(bad({ roundsPerWeek: '2.5' })).toMatch(/Rounds per week/)
     expect(bad({ slotMode: 'three' })).toMatch(/Time slots/)

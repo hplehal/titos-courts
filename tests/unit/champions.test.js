@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
+  DEFAULT_FOCUS,
+  championFocus,
   coedChampions,
   defendingChampion,
   isBackToBack,
@@ -58,5 +60,23 @@ describe('isBackToBack()', () => {
   it('is false for a league with a single season', () => {
     expect(isBackToBack(recChampions)).toBe(false)
     expect(isBackToBack([])).toBe(false)
+  })
+})
+
+describe('championFocus()', () => {
+  it('anchors O’Fosho to the top, where its back row stands', () => {
+    expect(championFocus(coedChampions[0])).toBe('50% 0%')
+  })
+
+  it('falls back to the default for photos that do not set one', () => {
+    expect(championFocus(mensChampions[0])).toBe(DEFAULT_FOCUS)
+    expect(championFocus({})).toBe(DEFAULT_FOCUS)
+    expect(championFocus(null)).toBe(DEFAULT_FOCUS)
+  })
+
+  it('every focus is a usable object-position', () => {
+    for (const c of [...coedChampions, ...mensChampions, ...recChampions]) {
+      expect(championFocus(c)).toMatch(/^\d+% \d+%$/)
+    }
   })
 })

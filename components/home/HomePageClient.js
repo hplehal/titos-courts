@@ -17,7 +17,7 @@ import {
   Award,
 } from 'lucide-react'
 import LatestResults from '@/components/home/LatestResults'
-import { coedChampions, isBackToBack, mensChampions } from '@/lib/champions'
+import { championFocus, coedChampions, isBackToBack, mensChampions } from '@/lib/champions'
 
 /* ═══ DATA ═══ */
 
@@ -579,7 +579,9 @@ export default function HomePageClient({ initialResults, leagues = [] }) {
                       that cuts heads off the top and the trophy off the bottom. */}
                   <div className="relative aspect-[4/3]">
                     {champ.image ? (
-                      <Image src={champ.image} alt={champ.team} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                      <Image src={champ.image} alt={champ.team} fill
+                        style={{ objectPosition: championFocus(champ) }}
+                        className="object-cover group-hover:scale-105 transition-transform duration-700" />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-titos-card to-titos-elevated flex items-center justify-center">
                         <Trophy className="w-12 h-12 text-titos-gold/30" />
@@ -613,7 +615,9 @@ export default function HomePageClient({ initialResults, leagues = [] }) {
                       that cuts heads off the top and the trophy off the bottom. */}
                   <div className="relative aspect-[4/3]">
                     {champ.image ? (
-                      <Image src={champ.image} alt={champ.team} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                      <Image src={champ.image} alt={champ.team} fill
+                        style={{ objectPosition: championFocus(champ) }}
+                        className="object-cover group-hover:scale-105 transition-transform duration-700" />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-titos-card to-titos-elevated flex items-center justify-center">
                         <Trophy className="w-12 h-12 text-titos-gold/30" />

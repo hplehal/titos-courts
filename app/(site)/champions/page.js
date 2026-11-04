@@ -3,33 +3,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Trophy, Crown } from 'lucide-react'
+import { coedChampions, isBackToBack, mensChampions, recChampions } from '@/lib/champions'
 
-const coedChampions = [
-  { season: 9, team: "O'Fosho", image: '/images/champions/oFosho.jpg', year: '2026' },
-  { season: 8, team: 'Net Losses', image: '/images/champions/netLosses2.jpg', year: '2026' },
-  { season: 7, team: 'Net Losses', image: '/images/champions/netLosses.jpg', year: '2025' },
-  { season: 6, team: 'BounceTown', image: '/images/champions/bounceTown.jpg', year: '2025' },
-  { season: 5, team: 'Sauce Walkas', image: '/images/champions/sauceWalkas.jpg', year: '2025' },
-  { season: 4, team: 'Setsy & We Know It', image: '/images/champions/sawki.jpg', year: '2024' },
-  { season: 3, team: 'Despicable Pookies', image: '/images/champions/dPookies.jpg', year: '2024' },
-  { season: 2, team: 'Tip Pics', image: '/images/champions/tipPics.jpg', year: '2024' },
-  { season: 1, team: 'Safe Sets', image: '/images/champions/safeSets.jpg', year: '2023' },
-]
-
-const mensChampions = [
-  { season: 7, team: 'Tsunami Riptide', image: '/images/champions/tsunamiRiptide.jpg', year: '2026' },
-  { season: 6, team: 'Spartans', image: '/images/champions/spartans.jpg', year: '2026' },
-  { season: 5, team: "Brandy's Angels", image: '/images/champions/bAngels.jpg', year: '2025' },
-  { season: 4, team: "David's Dictatorship", image: '/images/champions/davidDictatorship.jpg', year: '2025' },
-  { season: 3, team: 'Sari Sari Squad', image: '/images/champions/sarisari.jpg', year: '2025' },
-  { season: 2, team: 'High & Holy', image: '/images/champions/High&Holy.jpg', year: '2024' },
-  { season: 1, team: 'Sets With Jerhomies', image: '/images/champions/jerhomies.jpg', year: '2024' },
-]
-
-// Thursday REC COED — a newer league, so this list starts at Season 1.
-const recChampions = [
-  { season: 1, team: "Tomo's Lizards", image: '/images/champions/tomosLizards.jpg', year: '2026' },
-]
 
 function ChampionCard({ champ, index, featured = false, wide = false }) {
   const isLatest = index === 0
@@ -129,7 +104,7 @@ export default function ChampionsPage() {
           )}
 
           {/* Back-to-back callout */}
-          {coedChampions[0].team === coedChampions[1]?.team && (
+          {isBackToBack(coedChampions) && (
             <div className="mt-6 card-flat rounded-xl p-4 flex items-center gap-3 border-titos-gold/20">
               <Crown className="w-5 h-5 text-titos-gold flex-shrink-0" />
               <p className="text-titos-gray-200 text-sm">

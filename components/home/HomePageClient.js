@@ -17,27 +17,9 @@ import {
   Award,
 } from 'lucide-react'
 import LatestResults from '@/components/home/LatestResults'
+import { coedChampions, isBackToBack, mensChampions } from '@/lib/champions'
 
 /* ═══ DATA ═══ */
-const coedChampions = [
-  { season: 1, team: 'Safe Sets', image: '/images/champions/safeSets.jpg' },
-  { season: 2, team: 'Tip Pics', image: '/images/champions/tipPics.jpg' },
-  { season: 3, team: 'Despicable Pookies', image: '/images/champions/dPookies.jpg' },
-  { season: 4, team: 'Setsy & We Know It', image: '/images/champions/sawki.jpg' },
-  { season: 5, team: 'Sauce Walkas', image: '/images/champions/sauceWalkas.jpg' },
-  { season: 6, team: 'BounceTown', image: '/images/champions/bounceTown.jpg' },
-  { season: 7, team: 'Net Losses', image: '/images/champions/netLosses.jpg' },
-  { season: 8, team: 'Net Losses', image: '/images/champions/netLosses2.jpg' },
-]
-
-const mensChampions = [
-  { season: 1, team: 'Sets With Jerhomies', image: '/images/champions/jerhomies.jpg' },
-  { season: 2, team: 'High & Holy', image: '/images/champions/High&Holy.jpg' },
-  { season: 3, team: 'Sari Sari Squad', image: '/images/champions/sarisari.jpg' },
-  { season: 4, team: "David's Dictatorship", image: '/images/champions/davidDictatorship.jpg' },
-  { season: 5, team: "Brandy's Angels", image: '/images/champions/bAngels.jpg' },
-  { season: 6, team: 'Spartans', image: '/images/champions/spartans.jpg' },
-]
 
 // Curated homepage copy for the original leagues. Names, team/tier counts and
 // season status come from the database, so renamed and newly visible leagues
@@ -589,7 +571,7 @@ export default function HomePageClient({ initialResults, leagues = [] }) {
           <div className="grid sm:grid-cols-2 gap-5">
             {/* COED Champion */}
             {(() => {
-              const champ = coedChampions[coedChampions.length - 1]
+              const champ = coedChampions[0]
               return (
                 <Link href="/champions" className="group card-flat rounded-xl overflow-hidden">
                   <div className="relative aspect-[16/9] sm:aspect-[2/1]">
@@ -610,7 +592,7 @@ export default function HomePageClient({ initialResults, leagues = [] }) {
                       <h3 className="font-display text-2xl font-black text-titos-white group-hover:text-titos-gold transition-colors duration-300">{champ.team}</h3>
                       <span className="text-titos-gray-300 text-xs flex items-center gap-1 mt-1">
                         <Award className="w-3 h-3 text-titos-gold" />
-                        Diamond Division Champions &middot; Back-to-back
+                        Diamond Division Champions{isBackToBack(coedChampions) ? ' \u00b7 Back-to-back' : ''}
                       </span>
                     </div>
                   </div>
@@ -620,7 +602,7 @@ export default function HomePageClient({ initialResults, leagues = [] }) {
 
             {/* MENS Champion */}
             {(() => {
-              const champ = mensChampions[mensChampions.length - 1]
+              const champ = mensChampions[0]
               return (
                 <Link href="/champions" className="group card-flat rounded-xl overflow-hidden">
                   <div className="relative aspect-[16/9] sm:aspect-[2/1]">

@@ -574,7 +574,10 @@ export default function HomePageClient({ initialResults, leagues = [] }) {
               const champ = coedChampions[0]
               return (
                 <Link href="/champions" className="group card-flat rounded-xl overflow-hidden">
-                  <div className="relative aspect-[16/9] sm:aspect-[2/1]">
+                  {/* 4:3 so portrait and square team photos keep both rows and the
+                      trophy in frame. A wider card centre-crops them to a band
+                      that cuts heads off the top and the trophy off the bottom. */}
+                  <div className="relative aspect-[4/3]">
                     {champ.image ? (
                       <Image src={champ.image} alt={champ.team} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
                     ) : (
@@ -605,7 +608,10 @@ export default function HomePageClient({ initialResults, leagues = [] }) {
               const champ = mensChampions[0]
               return (
                 <Link href="/champions" className="group card-flat rounded-xl overflow-hidden">
-                  <div className="relative aspect-[16/9] sm:aspect-[2/1]">
+                  {/* 4:3 so portrait and square team photos keep both rows and the
+                      trophy in frame. A wider card centre-crops them to a band
+                      that cuts heads off the top and the trophy off the bottom. */}
+                  <div className="relative aspect-[4/3]">
                     {champ.image ? (
                       <Image src={champ.image} alt={champ.team} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
                     ) : (

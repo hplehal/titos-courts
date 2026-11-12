@@ -10,6 +10,7 @@ import TiersView from '@/components/admin/dashboard/TiersView'
 import NextWeekView from '@/components/admin/dashboard/NextWeekView'
 import { adminFetch } from '@/lib/adminFetch'
 import { cn } from '@/lib/utils'
+import { pickCurrentSeason } from '@/lib/league/seasonConfig'
 
 const TABS = ['Scores', 'Results', 'Tiers', 'Next Week']
 
@@ -18,6 +19,10 @@ export default function AdminPage() {
   const [leagues, setLeagues] = useState([])
   const [activeLeague, setActiveLeague] = useState(null)
   const [season, setSeason] = useState(null)
+  const [leagueSeasons, setLeagueSeasons] = useState([])
+  // Season the admin switched to by hand, per league slug. Kept across reloads
+  // so saving scores doesn't bounce the dashboard back to the default season.
+  const seasonChoice = useRef({})
   const [weeks, setWeeks] = useState([])
   const [selectedWeek, setSelectedWeek] = useState(null)
   const [matches, setMatches] = useState([])
@@ -58,9 +63,13 @@ export default function AdminPage() {
     setLoading(true)
     try {
       const seasonsRes = await fetch('/api/admin/seasons').then(r => r.json())
-      const leagueSeason = (seasonsRes.seasons || [])
+      const list = (seasonsRes.seasons || [])
         .filter(s => s.league?.slug === league.slug)
-        .sort((a, b) => b.seasonNumber - a.seasonNumber)[0]
+        .sort((a, b) => b.seasonNumber - a.seasonNumber)
+      setLeagueSeasons(list)
+      // Open on the season in play, not just the newest: next season is opened
+      // for registration while the current one is still being played.
+      const leagueSeason = list.find(s => s.id === seasonChoice.current[league.slug]) || pickCurrentSeason(list)
       setSeason(leagueSeason || null)
       if (!leagueSeason) { setWeeks([]); setSelectedWeek(null); setLoading(false); return }
 
@@ -201,6 +210,23 @@ export default function AdminPage() {
               )}>{l.name}</button>
           ))}
         </div>
+
+        {/* Season switcher — only when the league has more than one season,
+            e.g. next season open for registration during this one's playoffs. */}
+        {leagueSeasons.length > 1 && season && (
+          <label className="flex items-center gap-2 mb-5 text-xs font-semibold uppercase tracking-wider text-titos-gray-400">
+            Season
+            <select
+              value={season.id}
+              onChange={(e) => { seasonChoice.current[activeLeague.slug] = e.target.value; loadLeagueData(activeLeague) }}
+              className="px-3 py-1.5 bg-titos-elevated border border-titos-border rounded-lg text-titos-white text-sm font-semibold normal-case tracking-normal focus:outline-none focus:border-titos-gold/50"
+            >
+              {leagueSeasons.map(s => (
+                <option key={s.id} value={s.id}>{s.name} — {s.status}</option>
+              ))}
+            </select>
+          </label>
+        )}
 
         {loading ? (
           <div className="min-h-[2000px]">

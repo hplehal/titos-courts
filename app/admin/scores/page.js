@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Save, Check, Loader2, ChevronRight, CheckCircle2 } from 'lucide-react'
 import { cn, getTierColor, getSlotInfo } from '@/lib/utils'
+import { pickCurrentSeason } from '@/lib/league/seasonConfig'
 
 export default function ScoreEntryPage() {
   const [leagues, setLeagues] = useState([])
@@ -29,8 +30,8 @@ export default function ScoreEntryPage() {
     if (!selectedLeague) return
     fetch(`/api/admin/seasons`).then(r => r.json()).then(async (data) => {
       const seasons = data.seasons || []
-      const leagueSeasons = seasons.filter(s => s.league?.slug === selectedLeague).sort((a, b) => b.seasonNumber - a.seasonNumber)
-      const season = leagueSeasons[0]
+      // The season in play, not just the newest — see pickCurrentSeason.
+      const season = pickCurrentSeason(seasons.filter(s => s.league?.slug === selectedLeague))
       if (!season) { setWeeks([]); setSelectedWeek(''); return }
       const weeksRes = await fetch(`/api/admin/weeks?seasonId=${season.id}`)
       const weeksData = await weeksRes.json()

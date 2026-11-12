@@ -7,6 +7,7 @@ import {
   defaultTierLayout,
   divisionForRank,
   leagueRules,
+  pickCurrentSeason,
   resolveDivisions,
   tierFactor,
   tierLayout,
@@ -182,5 +183,32 @@ describe('more than four divisions', () => {
     expect(getDivisionInfo(1, 8, 2, stored)).toEqual({
       name: 'Open', color: 'div-1', bgClass: 'division-1', textClass: 'text-div-1',
     })
+  })
+})
+
+describe('pickCurrentSeason()', () => {
+  const s = (seasonNumber, status) => ({ seasonNumber, status })
+
+  it('opens on the season in play, not the newer one taking registrations', () => {
+    // Live in Nov 2026: Season 10 in its final weeks, Season 11 open for sign-ups.
+    expect(pickCurrentSeason([s(11, 'registration'), s(10, 'active'), s(9, 'completed')])).toEqual(s(10, 'active'))
+    expect(pickCurrentSeason([s(11, 'registration'), s(10, 'playoffs')])).toEqual(s(10, 'playoffs'))
+  })
+
+  it('falls back to the registration season once nothing is in play', () => {
+    expect(pickCurrentSeason([s(11, 'registration'), s(10, 'completed')])).toEqual(s(11, 'registration'))
+  })
+
+  it('falls back to the latest finished season when that is all there is', () => {
+    expect(pickCurrentSeason([s(8, 'completed'), s(9, 'completed')])).toEqual(s(9, 'completed'))
+  })
+
+  it('breaks ties on the higher season number', () => {
+    expect(pickCurrentSeason([s(3, 'active'), s(4, 'active')])).toEqual(s(4, 'active'))
+  })
+
+  it('returns null for a league with no seasons', () => {
+    expect(pickCurrentSeason([])).toBeNull()
+    expect(pickCurrentSeason(undefined)).toBeNull()
   })
 })
